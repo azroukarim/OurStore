@@ -19,8 +19,7 @@ elif [ -f /proc/stb/info/model ]; then
     BOXTYPE=$(cat /proc/stb/info/model | tr 'A-Z' 'a-z')
 else
     echo "ERROR: Cannot detect box type"
-    read -p "Press Enter..."
-    exit 1
+        exit 1
 fi
 
 echo "Detected box: $BOXTYPE"
@@ -32,8 +31,7 @@ elif [ -d /media/usb ] && [ -w /media/usb ]; then
     TARGET="/media/usb/images"
 else
     echo "ERROR: No writable storage"
-    read -p "Press Enter..."
-    exit 1
+        exit 1
 fi
 
 mkdir -p "$TARGET"
@@ -49,8 +47,7 @@ wget -q --no-check-certificate -O "$TMP" "$PAGE_URL" 2>/dev/null
 
 if [ ! -s "$TMP" ]; then
     echo "ERROR: Cannot fetch page"
-    read -p "Press Enter..."
-    exit 1
+        exit 1
 fi
 
 echo "Page fetched ($(wc -c < $TMP) bytes)"
@@ -65,8 +62,7 @@ if [ -z "$FILENAME" ]; then
     echo "Files found in page:"
     grep -oE "[a-zA-Z0-9_.-]+\.zip" "$TMP" | sort -u | head -10
     rm -f "$TMP"
-    read -p "Press Enter..."
-    exit 1
+        exit 1
 fi
 
 echo "Latest image: $FILENAME"
@@ -103,4 +99,3 @@ fi
 
 rm -f "$TMP"
 echo ""
-read -p "Press Enter to return..."
