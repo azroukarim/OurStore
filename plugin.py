@@ -344,14 +344,19 @@ class AllStore(Screen):
                 'cd /tmp && '
                 'wget -q --no-check-certificate "' + GITHUB_BASE + '/plugin.py" -O plugin.py && '
                 'wget -q --no-check-certificate "' + GITHUB_BASE + '/plugin.png" -O plugin.png && '
+                'wget -q --no-check-certificate "' + GITHUB_BASE + '/version.json" -O version.json && '
                 'wget -q --no-check-certificate "' + GITHUB_BASE + '/feed/index.json" -O feed_index.json && '
                 'cp plugin.py ' + PLUGIN_DIR + '/plugin.py && '
                 'cp plugin.png ' + PLUGIN_DIR + '/plugin.png && '
+                'cp version.json ' + PLUGIN_DIR + '/version.json && '
                 'mkdir -p ' + PLUGIN_DIR + '/feed && '
                 'cp feed_index.json ' + PLUGIN_DIR + '/feed/index.json && '
-                'rm -f plugin.py plugin.png feed_index.json ' + PLUGIN_DIR + '/store_cache.json'
+                'rm -f plugin.py plugin.png version.json feed_index.json ' + PLUGIN_DIR + '/store_cache.json'
             )
             self.my_console.ePopen(cmd + " 2>&1", self.update_done)
+        except Exception as e:
+            self["description"].setText("Update error: " + str(e))
+            self.update_in_progress = False
         except Exception as e:
             self["description"].setText("Update error: " + str(e))
             self.update_in_progress = False
