@@ -1,0 +1,13 @@
+﻿{
+    "store_name": "AllStore",
+    "version": "1.0.0",
+    "categories": {
+        "plugins": [],
+        "skins": [],
+        "tools": [],
+        "system_images": [],
+        "picons": [],
+        "channels": [],
+        "novaler": []
+    }
+}
