@@ -257,29 +257,6 @@ class AllStore(Screen):
     # -----------------------------------------------------------------
     # SELF UPDATE - Blue button
     # -----------------------------------------------------------------
-    def open_flash_manager(self):
-        """Open Enigma2's built-in Flash Manager"""
-        try:
-            from Screens.FlashManager import FlashManager
-            self.session.open(FlashManager)
-        except ImportError:
-            try:
-                from Screens.FlashOnline import FlashOnline
-                self.session.open(FlashOnline)
-            except ImportError:
-                self.session.open(
-                    MessageBox,
-                    "Flash Manager not found on this image.\n\n"
-                    "Please use:\n"
-                    "Menu > Setup > Software Management > Flash Online",
-                    MessageBox.TYPE_INFO
-                )
-        except Exception as e:
-            self.session.open(
-                MessageBox,
-                "Error opening Flash Manager:\n" + str(e),
-                MessageBox.TYPE_ERROR
-            )
     def self_update(self):
         if self.update_in_progress:
             return
@@ -519,13 +496,6 @@ class AllStore(Screen):
     # -----------------------------------------------------------------
     def download_item(self):
         try:
-            # Check if we're in System Images category → open Flash Manager
-            cat_idx = self["categories_list"].getSelectionIndex()
-            if cat_idx >= 0:
-                cat_name = str(self.categories[cat_idx]).lower()
-                if "system" in cat_name or "image" in cat_name:
-                    self.open_flash_manager()
-                    return
 
             idx = self["items_list"].getSelectionIndex()
             if idx < 0 or idx >= len(self.visible_items):
@@ -534,10 +504,6 @@ class AllStore(Screen):
             url = item.get("file", "").strip()
             name = item.get("name", "package")
 
-            # Special: open Flash Manager
-            if url == "flash_manager://open":
-                self.open_flash_manager()
-                return
 
             if not url:
                 self.session.open(MessageBox, "Download URL not found", MessageBox.TYPE_ERROR)
