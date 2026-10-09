@@ -1,20 +1,44 @@
 #!/bin/sh
-# OpenATV Image Downloader
-# Downloads and extracts an OpenATV image for the current box
+# OpenATV Images Fetcher
+# Displays all available OpenATV versions for the current box
 
-echo "Fetching latest image from OpenATV server..."
-echo "This may take a few minutes..."
+echo "=========================================="
+echo "  OpenATV Images - All Versions"
+echo "=========================================="
+echo ""
 
-# Fetch image list
-cd /tmp
-wget -q --no-check-certificate -O openatv_list.json "https://images.mynonpublic.com/openatv/json/openatv-8.0.json" 2>/dev/null
+# Supported versions
+VERSIONS="7.6 8.0 8.1"
 
-if [ ! -f openatv_list.json ]; then
-    echo "Failed to fetch image list"
-    exit 1
-fi
+for VER in $VERSIONS; do
+    echo "-------------------------------------------"
+    echo "OpenATV $VER:"
+    echo "-------------------------------------------"
+    
+    URL="https://images.mynonpublic.com/openatv/$VER/json/openatv-$VER.json"
+    TMP="/tmp/openatv_$VER.json"
+    
+    wget -q --no-check-certificate -O "$TMP" "$URL" 2>/dev/null
+    
+    if [ -s "$TMP" ]; then
+        SIZE=$(wc -c < "$TMP")
+        COUNT=$(grep -o '"name"' "$TMP" 2>/dev/null | wc -l)
+        echo "  [OK] Available ($SIZE bytes, ~$COUNT images)"
+        echo ""
+        echo "  First 5 images:"
+        grep -o '"name":"[^"]*"' "$TMP" 2>/dev/null | head -5 | sed 's/"name":"/    - /;s/"$//'
+        echo ""
+    else
+        echo "  [--] Not available for this version"
+        echo ""
+    fi
+    
+    rm -f "$TMP"
+done
 
-echo "Image list downloaded successfully"
-cat openatv_list.json | head -20
-
-rm -f openatv_list.json
+echo "=========================================="
+echo "Note: To install an image, use:"
+echo "  Menu > Setup > Software Management > Flash Online"
+echo "=========================================="
+echo ""
+read -p "Press Enter to return to AllStore..."
