@@ -539,9 +539,23 @@ class AllStore(Screen):
             self["description"].setText("Downloading: %s\n\nPlease wait..." % name)
 
             wget_cmd = "wget -q --no-check-certificate --timeout=60 --tries=3 -O %s '%s'" % (dest, url)
-            self.my_console.ePopen(wget_cmd + " 2>&1", self.download_finished)
+            self.wget_thread = threading.Thread(target=self.run_wget, args=(wget_cmd,))
+            self.wget_thread.daemon = True
+            self.wget_thread.start()
         except Exception as e:
             self["description"].setText("Error: " + str(e))
+
+    def run_wget(self, wget_cmd):
+        import subprocess
+        try:
+            proc = subprocess.Popen(wget_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            output, _ = proc.communicate()
+            retval = proc.returncode
+            if isinstance(output, bytes):
+                output = output.decode("utf-8", "ignore")
+            self.download_finished(output, retval)
+        except Exception as e:
+            self.download_finished(str(e), 1)
 
     def download_finished(self, result, retval, extra_args=None):
         if retval != 0:
