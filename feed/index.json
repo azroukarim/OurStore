@@ -11,7 +11,14 @@
             }
         ],
         "skins": [],
-        "media": [],
+        "media": [
+            {
+                "name": "XPortal",
+                "description": "Advanced IPTV portal player for Enigma2",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/XPortal.sh",
+                "image": ""
+            }
+        ],
         "tools": [],
         "system_images": [],
         "picons": [],
