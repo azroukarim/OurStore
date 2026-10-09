@@ -576,6 +576,19 @@ class AllStore(Screen):
             self["description"].setText("Download failed:\n\n" + err)
             self.session.open(MessageBox, "Download failed!\n\n%s" % err, MessageBox.TYPE_ERROR)
             return
+
+        # For .sh scripts (system images, installers) → no "Install now?" prompt
+        if self.install_cmd and ("allstore.sh" in self.install_cmd or "addon.sh" in self.install_cmd or ".sh" in self.download_dest_path):
+            # Script already executed during "download" step
+            self.session.open(
+                MessageBox,
+                "%s\n\nOperation completed.\n\nIf applicable, use Flash Online to install the image." % self.install_item_name,
+                MessageBox.TYPE_INFO
+            )
+            self.item_changed()
+            return
+
+        # For packages (.ipk, .deb, .zip, .tar.gz) → show install prompt
         self.session.openWithCallback(
             self.install_confirm,
             MessageBox,
