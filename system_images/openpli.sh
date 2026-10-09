@@ -36,15 +36,54 @@ mkdir -p "$TARGET"
 echo "Target: $TARGET"
 echo ""
 
-# ---- Fetch page ----
-URL="https://downloads.openpli.org/builds/$BOXTYPE/"
+# ---- Determine brand for OpenPLi URL ----
+BRAND=""
+case "$BOXTYPE" in
+    vu*) BRAND="vuplus" ;;
+    sf8008*|sf4008*|sx*) BRAND="octagon" ;;
+    zgemma*) BRAND="zgemma" ;;
+    gb*) BRAND="gigablue" ;;
+    dm*) BRAND="dreambox" ;;
+    *) BRAND="" ;;
+esac
+
+# ---- Determine box display name for OpenPLi ----
+BOXNAME=""
+case "$BOXTYPE" in
+    vuduo4kse) BOXNAME="Duo+4K+SE" ;;
+    vuduo4k) BOXNAME="Duo+4K" ;;
+    vuuno4kse) BOXNAME="Uno+4K+SE" ;;
+    vuuno4k) BOXNAME="Uno+4K" ;;
+    vuultimo4k) BOXNAME="Ultimo+4K" ;;
+    vusolo4k) BOXNAME="Solo+4K" ;;
+    vuzero4k) BOXNAME="Zero+4K" ;;
+    vusolo2) BOXNAME="Solo2" ;;
+    vuduo2) BOXNAME="Duo2" ;;
+    *) BOXNAME="$BOXTYPE" ;;
+esac
+
+echo "Brand: $BRAND"
+echo "Box name: $BOXNAME"
+echo ""
+
+# ---- Try primary URL (openpli.org) ----
+URL1="https://openpli.org/download/$BRAND/$BOXNAME/"
+echo "Trying: $URL1"
 TMP="/tmp/pli_page.html"
 
-echo "Fetching image list..."
-wget -q --no-check-certificate -O "$TMP" "$URL" 2>/dev/null
+wget -q --no-check-certificate -O "$TMP" "$URL1" 2>/dev/null
+
+if [ ! -s "$TMP" ]; then
+    echo "Primary URL failed, trying alternate..."
+    URL1="https://downloads.openpli.org/builds/$BOXTYPE/"
+    wget -q --no-check-certificate -O "$TMP" "$URL1" 2>/dev/null
+fi
 
 if [ ! -s "$TMP" ]; then
     echo "ERROR: Cannot fetch page"
+    echo ""
+    echo "Please visit manually:"
+    echo "  https://openpli.org/download/"
     exit 1
 fi
 
@@ -55,23 +94,31 @@ echo ""
 FILENAME=$(grep -oE "openpli-[a-zA-Z0-9.-]+-${BOXTYPE}-[0-9]+_usb\.zip" "$TMP" | sort -r | head -1)
 
 if [ -z "$FILENAME" ]; then
-    echo "ERROR: No image found for $BOXTYPE"
+    # Try broader pattern
+    FILENAME=$(grep -oE "openpli-[a-zA-Z0-9.-]+-${BOXTYPE}-[0-9]+\.zip" "$TMP" | sort -r | head -1)
+fi
+
+if [ -z "$FILENAME" ]; then
+    echo "ERROR: No image found"
+    echo ""
+    echo "Files in page:"
+    grep -oE "[a-zA-Z0-9_.-]+\.zip" "$TMP" | sort -u | head -10
     exit 1
 fi
 
 echo "Latest image: $FILENAME"
 echo ""
 
-# ---- Download ----
-URL="https://downloads.openpli.org/builds/$BOXTYPE/$FILENAME"
+# ---- Build URL and download ----
+DL_URL="https://downloads.openpli.org/builds/$BOXTYPE/$FILENAME"
 DEST="$TARGET/$FILENAME"
 
 echo "Downloading..."
-echo "  From: $URL"
+echo "  From: $DL_URL"
 echo "  To:   $DEST"
 echo ""
 
-wget --no-check-certificate --timeout=600 -O "$DEST" "$URL"
+wget --no-check-certificate --timeout=600 -O "$DEST" "$DL_URL"
 
 if [ $? -eq 0 ] && [ -s "$DEST" ]; then
     SIZE=$(ls -lh "$DEST" | awk '{print $5}')
