@@ -23,6 +23,12 @@
                 "description": "Stalker portal IPTV player for Enigma2",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/UltraStalker.sh",
                 "image": ""
+            },
+            {
+                "name": "footonsat",
+                "description": "Stalker portal IPTV player for Enigma2",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/refs/heads/main/media/UltraStalker.sh",
+                "image": ""
             }
         ],
         "tools": [],
