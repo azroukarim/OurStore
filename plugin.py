@@ -268,7 +268,9 @@ class AllStore(Screen):
     def check_version(self):
         try:
             local_ver = "0.0.0"
-            local_file = os.path.join(PLUGIN_DIR, "version.json")
+            local_file = "/usr/lib/enigma2/python/Plugins/Extensions/AllStore/version.json"
+            if not os.path.exists(local_file):
+                local_file = os.path.join(PLUGIN_DIR, "version.json")
             if os.path.exists(local_file):
                 try:
                     with open(local_file, "r") as f:
