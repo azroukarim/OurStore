@@ -40,33 +40,54 @@ mkdir -p "$TARGET"
 echo "Target: $TARGET"
 echo ""
 
-# ---- Fetch page to find latest image ----
+# ---- Fetch page (CORRECT URL with index.php) ----
 echo "Fetching image list from OpenATV..."
-PAGE_URL="$BASE/$VER/$BOXTYPE/"
+PAGE_URL="$BASE/index.php?v=$VER&open=$BOXTYPE"
+echo "URL: $PAGE_URL"
 TMP="/tmp/atv_page.html"
 
 wget -q --no-check-certificate -O "$TMP" "$PAGE_URL" 2>/dev/null
 
 if [ ! -s "$TMP" ]; then
-    echo "ERROR: Cannot fetch page: $PAGE_URL"
+    echo "ERROR: Cannot fetch page"
+    echo "Trying alternate URL..."
+    PAGE_URL="$BASE/$VER/$BOXTYPE/"
+    wget -q --no-check-certificate -O "$TMP" "$PAGE_URL" 2>/dev/null
+fi
+
+if [ ! -s "$TMP" ]; then
+    echo "ERROR: Cannot fetch page from either URL"
     read -p "Press Enter..."
     exit 1
 fi
 
+echo "Page fetched ($(wc -c < $TMP) bytes)"
+echo ""
+
 # ---- Extract latest image filename ----
-# Look for pattern: openatv-X.X-BOXTYPE-YYYYMMDD_usb.zip
+# Look for various patterns
 FILENAME=$(grep -oE "openatv-${VER}-${BOXTYPE}-[0-9]+_usb\.zip" "$TMP" | sort -r | head -1)
 
 if [ -z "$FILENAME" ]; then
-    # Try alternate pattern
+    FILENAME=$(grep -oE "openatv-${VER}-${BOXTYPE}-[0-9]+_mmc\.zip" "$TMP" | sort -r | head -1)
+fi
+
+if [ -z "$FILENAME" ]; then
     FILENAME=$(grep -oE "openatv-[0-9.]+-${BOXTYPE}-[0-9]+_usb\.zip" "$TMP" | sort -r | head -1)
+fi
+
+if [ -z "$FILENAME" ]; then
+    FILENAME=$(grep -oE "openatv-[0-9.]+-${BOXTYPE}-[0-9]+_mmc\.zip" "$TMP" | sort -r | head -1)
 fi
 
 if [ -z "$FILENAME" ]; then
     echo "ERROR: No image found for $BOXTYPE in OpenATV $VER"
     echo ""
-    echo "Page content (first 20 lines):"
-    head -20 "$TMP"
+    echo "Looking for .zip files in page:"
+    grep -oE "[a-zA-Z0-9_.-]+\.zip" "$TMP" | head -10
+    echo ""
+    echo "Page preview (first 50 lines):"
+    head -50 "$TMP"
     rm -f "$TMP"
     read -p "Press Enter..."
     exit 1
@@ -75,8 +96,15 @@ fi
 echo "Latest image: $FILENAME"
 echo ""
 
-# ---- Download ----
+# ---- Build download URL ----
 URL="$BASE/$VER/$BOXTYPE/$FILENAME"
+
+# Try with index.php path first
+if ! wget --spider --no-check-certificate "$URL" 2>/dev/null; then
+    # Try alternate URL structure
+    URL="$BASE/$VER/$BOXTYPE/$FILENAME"
+fi
+
 DEST="$TARGET/$FILENAME"
 
 echo "Downloading..."
