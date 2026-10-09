@@ -31,7 +31,12 @@
             "description": "OpenATV: 7.6 / 8.0 OpenViX: 6.7/6.8/6.9 OpenBH:6.0 / 5.6",
             "file": "https://raw.githubusercontent.com/habeb-s/CineView-MLA-Install/main/cineview-install.sh",
             "image": ""
-        }
+        },{
+    "name": "Fury FHD",
+    "description": "OpenAtv Pure2 Egami 10.6 OpenSpa",
+    "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/skins/All/Fury-FHD.sh",
+    "image": ""
+}
     ]
 },
             { "name": "Egami",      "items": [] },
