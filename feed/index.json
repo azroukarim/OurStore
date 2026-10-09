@@ -15,7 +15,9 @@
                 "image": ""
             }
         ],
-        "skins": [],
+        "skins": [
+            
+        ],
         "media": [
             {
                 "name": "XPortal",
