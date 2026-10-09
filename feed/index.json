@@ -90,9 +90,12 @@
             {
                 "name": "OpenViX",
                 "items": [
-                     { "name": "OpenViX (Latest)", "description": "Download latest OpenViX image for your box", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openvix.sh", "image": "" }
+                   { "name": "OpenViX 6.9 (Latest)", "description": "Latest stable release", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openvix-6.9.sh", "image": "" },
+                   { "name": "OpenViX 6.8", "description": "Previous stable release", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openvix-6.8.sh", "image": "" },
+                   { "name": "OpenViX 6.7", "description": "Older stable release", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openvix-6.7.sh", "image": "" },
+                   { "name": "OpenViX 6.6", "description": "Legacy release", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openvix-6.6.sh", "image": "" }
                 ]
-            }
+            },
         ],
         "picons": [],
         "channels": []
