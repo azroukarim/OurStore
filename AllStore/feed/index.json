@@ -70,17 +70,36 @@
     {
         "name": "OpenATV",
         "items": [
-            { "name": "OpenATV 8.0 (Latest)", "description": "Download latest OpenATV 8.0", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-8.0.sh", "image": "" },
-            { "name": "OpenATV 7.6 (EOL)", "description": "Download latest OpenATV 7.6", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.6.sh", "image": "" },
-            { "name": "OpenATV 7.5.1 (EOL)", "description": "Download latest OpenATV 7.5.1", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.5.1.sh", "image": "" },
-            { "name": "OpenATV 7.5 (EOL)", "description": "Download latest OpenATV 7.5", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.5.sh", "image": "" },
-            { "name": "OpenATV 7.4 (EOL)", "description": "Download latest OpenATV 7.4", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.4.sh", "image": "" }
-        ]
-    },
-    {
-        "name": "OpenPLi",
-        "items": [
-            { "name": "OpenPLi (Latest)", "description": "Download latest OpenPLi image for your box", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openpli.sh", "image": "" }
+            {
+                "name": "OpenATV 8.0 (Latest)",
+                "description": "Download the latest OpenATV 8.0 image for your box",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-8.0.sh",
+                "image": ""
+            },
+            {
+                "name": "OpenATV 7.6 (EOL)",
+                "description": "Download the latest OpenATV 7.6 image for your box",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.6.sh",
+                "image": ""
+            },
+            {
+                "name": "OpenATV 7.5.1 (EOL)",
+                "description": "Download the latest OpenATV 7.5.1 image for your box",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.5.1.sh",
+                "image": ""
+            },
+            {
+                "name": "OpenATV 7.5 (EOL)",
+                "description": "Download the latest OpenATV 7.5 image for your box",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.5.sh",
+                "image": ""
+            },
+            {
+                "name": "OpenATV 7.4 (EOL)",
+                "description": "Download the latest OpenATV 7.4 image for your box",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.4.sh",
+                "image": ""
+            }
         ]
     }
 ],
