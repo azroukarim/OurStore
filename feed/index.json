@@ -8,57 +8,27 @@
                 "description": "Comprehensive control panel, file manager, and advanced tools for Enigma2",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/AJPanel.sh",
                 "image": ""
+            },
+            {
+                "name": "RaedQuickSignal",
+                "description": "Quick signal info and channel details for Enigma2",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/RaedQuickSignal.sh",
+                "image": ""
             }
         ],
         "skins": [
-            {
-                "name": "All",
-                "items": []
-            },
-            {
-                "name": "Egami",
-                "items": []
-            },
-            {
-                "name": "OpenATV",
-                "items": []
-            },
-            {
-                "name": "OpenPLi",
-                "items": []
-            },
-            {
-                "name": "OpenBH",
-                "items": []
-            },
-            {
-                "name": "OpenSPA",
-                "items": []
-            },
-            {
-                "name": "Pure2",
-                "items": []
-            },
-            {
-                "name": "VTi",
-                "items": []
-            },
-            {
-                "name": "OpenHDF",
-                "items": []
-            },
-            {
-                "name": "OpenVision",
-                "items": []
-            },
-            {
-                "name": "OpenViX",
-                "items": []
-            },
-            {
-                "name": "OpenDroid",
-                "items": []
-            }
+            { "name": "All",        "items": [] },
+            { "name": "Egami",      "items": [] },
+            { "name": "OpenATV",    "items": [] },
+            { "name": "OpenPLi",    "items": [] },
+            { "name": "OpenBH",     "items": [] },
+            { "name": "OpenSPA",    "items": [] },
+            { "name": "Pure2",      "items": [] },
+            { "name": "VTi",        "items": [] },
+            { "name": "OpenHDF",    "items": [] },
+            { "name": "OpenVision", "items": [] },
+            { "name": "OpenViX",    "items": [] },
+            { "name": "OpenDroid",  "items": [] }
         ],
         "media": [
             {
@@ -71,6 +41,12 @@
                 "name": "UltraStalker",
                 "description": "Stalker portal IPTV player for Enigma2",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/UltraStalker.sh",
+                "image": ""
+            },
+            {
+                "name": "FootOnSat",
+                "description": "Football matches schedule for Enigma2",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/FootOnSat.sh",
                 "image": ""
             }
         ],
