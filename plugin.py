@@ -36,10 +36,12 @@ GITHUB_BASE = "https://raw.githubusercontent.com/azroukarim/OurStore/main"
 STORE_URL = GITHUB_BASE + "/feed/index.json"
 UPDATE_SCRIPT_URL = GITHUB_BASE + "/install.sh"
 
+PLUGIN_DIR = "/usr/lib/enigma2/python/Plugins/Extensions/AllStore"
 try:
-    PLUGIN_DIR = os.path.dirname(__file__)
-except NameError:
-    PLUGIN_DIR = "/usr/lib/enigma2/python/Plugins/Extensions/AllStore"
+    if not os.path.isdir(PLUGIN_DIR):
+        PLUGIN_DIR = os.path.dirname(__file__)
+except Exception:
+    pass
 
 CACHE_FILE = os.path.join(PLUGIN_DIR, "store_cache.json")
 
