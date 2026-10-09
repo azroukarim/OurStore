@@ -197,6 +197,8 @@ class AllStore(Screen):
         self.my_console = Console()
         self.install_cmd = ""
         self.install_item_name = ""
+        self.download_dest_path = ""
+        self.script_exec_cmd = ""
         self.update_in_progress = False
 
         self["categories_list"].onSelectionChanged.append(self.category_changed)
@@ -537,6 +539,7 @@ class AllStore(Screen):
 
             self.install_cmd = cmd
             self.install_item_name = name
+            self.download_dest_path = dest
 
             self["description"].setText("Downloading: %s\n\nPlease wait..." % name)
 
