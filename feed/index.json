@@ -29,7 +29,7 @@
                 {
             "name": "CineView FHD",
             "description": "Modern and elegant FHD skin for Enigma2",
-            "file": "wget -qO /tmp/cineview-install.sh https://raw.githubusercontent.com/habeb-s/CineView-MLA-Install/main/cineview-install.sh && sh /tmp/cineview-install.sh",
+            "file": "https://raw.githubusercontent.com/habeb-s/CineView-MLA-Install/main/cineview-install.sh",
             "image": ""
         }
     ]
