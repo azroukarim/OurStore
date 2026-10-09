@@ -66,7 +66,19 @@
             }
         ],
         "tools": [],
-        "system_images": [],
+        "system_images": [
+    {
+        "name": "OpenATV",
+        "items": [
+            {
+                "name": "OpenATV 8.0 (Latest)",
+                "description": "Latest OpenATV image list for your receiver",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-fetch.sh",
+                "image": ""
+            }
+        ]
+    }
+],
         "picons": [],
         "channels": []
     }
