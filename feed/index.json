@@ -17,7 +17,17 @@
             }
         ],
         "skins": [
-            { "name": "All",        "items": [] },
+            {
+    "name": "All",
+    "items": [
+        {
+            "name": "Obsidian FHD",
+            "description": "Modern and elegant FHD skin for Enigma2",
+            "file": "https://github.com/azroukarim/plugins/raw/refs/heads/main/enigma2-plugin-skins-obsidian-fhd_1.0_all.ipk",
+            "image": ""
+        }
+    ]
+},
             { "name": "Egami",      "items": [] },
             { "name": "OpenATV",    "items": [] },
             { "name": "OpenPLi",    "items": [] },
