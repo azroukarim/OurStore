@@ -71,33 +71,9 @@
         "name": "OpenATV",
         "items": [
             {
-                "name": "OpenATV 8.0",
-                "description": "Current stable release",
-                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-8.0.sh",
-                "image": ""
-            },
-            {
-                "name": "OpenATV 7.6",
-                "description": "End of Life - stable for older boxes",
-                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.6.sh",
-                "image": ""
-            },
-            {
-                "name": "OpenATV 7.5.1",
-                "description": "End of Life",
-                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.5.1.sh",
-                "image": ""
-            },
-            {
-                "name": "OpenATV 7.4",
-                "description": "End of Life",
-                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.4.sh",
-                "image": ""
-            },
-            {
-                "name": "OpenATV 7.3",
-                "description": "End of Life",
-                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.3.sh",
+                "name": "Flash Manager",
+                "description": "Open the built-in Flash Manager to browse and install OpenATV images for your box",
+                "file": "flash_manager://open",
                 "image": ""
             }
         ]

@@ -534,6 +534,11 @@ class AllStore(Screen):
             url = item.get("file", "").strip()
             name = item.get("name", "package")
 
+            # Special: open Flash Manager
+            if url == "flash_manager://open":
+                self.open_flash_manager()
+                return
+
             if not url:
                 self.session.open(MessageBox, "Download URL not found", MessageBox.TYPE_ERROR)
                 return
