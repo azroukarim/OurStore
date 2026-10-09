@@ -68,11 +68,23 @@
         "tools": [],
         "system_images": [
     {
-        "name": "OpenATV",
+        "name": "All",
         "items": [
             {
-                "name": "OpenATV 8.0 (Latest)",
-                "description": "Latest OpenATV image list for your receiver",
+                "name": "OpenATV 7.6",
+                "description": "Download OpenATV 7.6 image for your box",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-fetch.sh",
+                "image": ""
+            },
+            {
+                "name": "OpenATV 8.0",
+                "description": "Download OpenATV 8.0 image for your box",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-fetch.sh",
+                "image": ""
+            },
+            {
+                "name": "OpenATV 8.1",
+                "description": "Download OpenATV 8.1 image for your box",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-fetch.sh",
                 "image": ""
             }
