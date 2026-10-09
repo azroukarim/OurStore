@@ -71,21 +71,33 @@
         "name": "OpenATV",
         "items": [
             {
-                "name": "OpenATV 7.6",
-                "description": "Download OpenATV 7.6 image for your box",
-                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.6.sh",
-                "image": ""
-            },
-            {
                 "name": "OpenATV 8.0",
-                "description": "Download OpenATV 8.0 image for your box",
+                "description": "Current stable release",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-8.0.sh",
                 "image": ""
             },
             {
-                "name": "OpenATV 8.1",
-                "description": "Download OpenATV 8.1 image for your box",
-                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-8.1.sh",
+                "name": "OpenATV 7.6",
+                "description": "End of Life - stable for older boxes",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.6.sh",
+                "image": ""
+            },
+            {
+                "name": "OpenATV 7.5.1",
+                "description": "End of Life",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.5.1.sh",
+                "image": ""
+            },
+            {
+                "name": "OpenATV 7.4",
+                "description": "End of Life",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.4.sh",
+                "image": ""
+            },
+            {
+                "name": "OpenATV 7.3",
+                "description": "End of Life",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.3.sh",
                 "image": ""
             }
         ]
