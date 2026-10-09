@@ -8,6 +8,11 @@
                 "description": "Comprehensive control panel, file manager, and advanced tools for Enigma2",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/AJPanel.sh",
                 "image": ""
+            },{
+                "name": "RaedQuickSignal",
+                "description": "Comprehensive control panel, file manager, and advanced tools for Enigma2",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/refs/heads/main/plugins/RaedQuickSignal.sh",
+                "image": ""
             }
         ],
         "skins": [],
