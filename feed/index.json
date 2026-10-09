@@ -8,23 +8,15 @@
                 "description": "Comprehensive control panel, file manager, and advanced tools for Enigma2",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/AJPanel.sh",
                 "image": ""
-<<<<<<< HEAD
             },
             {
                 "name": "RaedQuickSignal",
-                "description": "Quick signal info and channel details for Enigma2",
+                "description": "Quick signal info for Enigma2",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/RaedQuickSignal.sh",
-=======
-            },{
-                "name": "RaedQuickSignal",
-                "description": "Comprehensive control panel, file manager, and advanced tools for Enigma2",
-                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/refs/heads/main/plugins/RaedQuickSignal.sh",
->>>>>>> be6fc8057285ab24de3c1be7089d8f2bcc25f285
                 "image": ""
             }
         ],
         "skins": [
-<<<<<<< HEAD
             { "name": "All",        "items": [] },
             { "name": "Egami",      "items": [] },
             { "name": "OpenATV",    "items": [] },
@@ -37,9 +29,6 @@
             { "name": "OpenVision", "items": [] },
             { "name": "OpenViX",    "items": [] },
             { "name": "OpenDroid",  "items": [] }
-=======
-            
->>>>>>> be6fc8057285ab24de3c1be7089d8f2bcc25f285
         ],
         "media": [
             {
@@ -52,12 +41,6 @@
                 "name": "UltraStalker",
                 "description": "Stalker portal IPTV player for Enigma2",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/UltraStalker.sh",
-                "image": ""
-            },
-            {
-                "name": "FootOnSat",
-                "description": "Football matches schedule for Enigma2",
-                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/FootOnSat.sh",
                 "image": ""
             }
         ],
