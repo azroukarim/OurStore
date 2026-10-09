@@ -1,6 +1,6 @@
 {
     "store_name": "AllStore",
-    "version": "1.0.0",
+    "version": "1.0.5",
     "categories": {
         "plugins": [
             {
@@ -10,7 +10,56 @@
                 "image": ""
             }
         ],
-        "skins": [],
+        "skins": [
+            {
+                "name": "All",
+                "items": []
+            },
+            {
+                "name": "Egami",
+                "items": []
+            },
+            {
+                "name": "OpenATV",
+                "items": []
+            },
+            {
+                "name": "OpenPLi",
+                "items": []
+            },
+            {
+                "name": "OpenBH",
+                "items": []
+            },
+            {
+                "name": "OpenSPA",
+                "items": []
+            },
+            {
+                "name": "Pure2",
+                "items": []
+            },
+            {
+                "name": "VTi",
+                "items": []
+            },
+            {
+                "name": "OpenHDF",
+                "items": []
+            },
+            {
+                "name": "OpenVision",
+                "items": []
+            },
+            {
+                "name": "OpenViX",
+                "items": []
+            },
+            {
+                "name": "OpenDroid",
+                "items": []
+            }
+        ],
         "media": [
             {
                 "name": "XPortal",
@@ -22,12 +71,6 @@
                 "name": "UltraStalker",
                 "description": "Stalker portal IPTV player for Enigma2",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/UltraStalker.sh",
-                "image": ""
-            },
-            {
-                "name": "footonsat",
-                "description": "Stalker portal IPTV player for Enigma2",
-                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/refs/heads/main/media/UltraStalker.sh",
                 "image": ""
             }
         ],
