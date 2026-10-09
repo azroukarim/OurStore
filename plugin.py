@@ -258,12 +258,72 @@ class AllStore(Screen):
     def self_update(self):
         if self.update_in_progress:
             return
-        self.session.openWithCallback(
-            self.confirm_update,
-            MessageBox,
-            "Do you want to update AllStore plugin from GitHub?\n\nEnigma2 will restart after update.",
-            MessageBox.TYPE_YESNO
-        )
+        self["description"].setText("Checking for updates...")
+        t = threading.Thread(target=self.check_version)
+        t.daemon = True
+        t.start()
+
+    def check_version(self):
+        try:
+            local_ver = "0.0.0"
+            local_file = os.path.join(PLUGIN_DIR, "version.json")
+            if os.path.exists(local_file):
+                try:
+                    with open(local_file, "r") as f:
+                        data = json.load(f)
+                    local_ver = data.get("version", "0.0.0")
+                except Exception:
+                    pass
+
+            remote_data = load_json_network(GITHUB_BASE + "/version.json")
+            remote_ver = remote_data.get("version", "0.0.0") if remote_data else "0.0.0"
+
+            if self.version_newer(remote_ver, local_ver):
+                msg = "New update available!\n\nLocal: %s\nGitHub: %s\n\nDo you want to update now?" % (local_ver, remote_ver)
+                self.show_update_dialog(msg)
+            elif self.version_newer(local_ver, remote_ver):
+                msg = "Local version is newer (dev build)\n\nLocal: %s\nGitHub: %s" % (local_ver, remote_ver)
+                self.show_update_dialog(msg, info_only=True)
+            else:
+                msg = "You are using the latest version\n\nVersion: %s" % local_ver
+                self.show_update_dialog(msg, info_only=True)
+        except Exception as e:
+            self.update_in_progress = False
+            self["description"].setText("Check error: " + str(e))
+
+    def version_newer(self, v1, v2):
+        try:
+            parts1 = [int(x) for x in str(v1).split(".")]
+            parts2 = [int(x) for x in str(v2).split(".")]
+            while len(parts1) < len(parts2):
+                parts1.append(0)
+            while len(parts2) < len(parts1):
+                parts2.append(0)
+            return parts1 > parts2
+        except Exception:
+            return False
+
+    def show_update_dialog(self, msg, info_only=False):
+        def _apply():
+            if info_only:
+                self.session.open(MessageBox, msg, MessageBox.TYPE_INFO)
+            else:
+                self.session.openWithCallback(
+                    self.confirm_update,
+                    MessageBox,
+                    msg,
+                    MessageBox.TYPE_YESNO
+                )
+        try:
+            from twisted.internet import reactor
+            reactor.callFromThread(_apply)
+        except Exception:
+            _apply()
+        try:
+            from twisted.internet import reactor
+            reactor.callFromThread(_apply)
+        except Exception:
+            _apply()
 
     def confirm_update(self, answer):
         if not answer:
