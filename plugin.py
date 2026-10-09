@@ -522,7 +522,7 @@ class AllStore(Screen):
                 cmd = "dpkg -i %s && rm -f %s" % (dest, dest)
             elif ext == ".sh":
                 dest = "/tmp/allstore.sh"
-                cmd = "chmod +x %s && %s && rm -f %s" % (dest, dest, dest)
+                cmd = "chmod +x %s && cd /tmp && sh %s 2>&1; rm -f %s" % (dest, dest, dest)
             elif ext == ".zip":
                 dest = "/tmp/allstore.zip"
                 cmd = "unzip -o %s -d / && rm -f %s" % (dest, dest)
@@ -583,11 +583,56 @@ class AllStore(Screen):
 
     def install_confirm(self, answer):
         if answer:
-            self["description"].setText("Installing...")
-            self.my_console.ePopen(self.install_cmd + " 2>&1", self.install_finished)
+            self["description"].setText("Installing...\n\nPlease wait, this may take a minute...")
+            
+            # كتابة الأمر إلى ملف سكربت مؤقت
+            if self.install_cmd and "allstore.sh" in self.install_cmd:
+                # استخراج مسار السكربت من الأمر
+                wrapper = "/tmp/allstore_run.sh"
+                with open(wrapper, "w") as f:
+                    f.write("#!/bin/sh\n")
+                    f.write("cd /tmp\n")
+                    f.write("sh /tmp/allstore.sh </dev/null\n")
+                os.system("chmod +x " + wrapper)
+                
+                # التنفيذ باستخدام sh مع session جديد
+                full_cmd = "/bin/sh " + wrapper + " 2>&1"
+            else:
+                full_cmd = self.install_cmd + " 2>&1"
+            
+            self.install_full_cmd = full_cmd
+            t = threading.Thread(target=self.run_install)
+            t.daemon = True
+            t.start()
         else:
             self["description"].setText("Skipped.")
             self.item_changed()
+
+    def run_install(self):
+        try:
+            log_file = "/tmp/allstore_install.log"
+            full_cmd = self.install_full_cmd + " > " + log_file + " 2>&1"
+            retval = os.system(full_cmd)
+            
+            output = ""
+            try:
+                if os.path.exists(log_file):
+                    with open(log_file, "r") as f:
+                        output = f.read()
+                    os.remove(log_file)
+            except Exception:
+                pass
+            
+            # ننظف أي wrapper
+            try:
+                if os.path.exists("/tmp/allstore_run.sh"):
+                    os.remove("/tmp/allstore_run.sh")
+            except Exception:
+                pass
+            
+            self.install_finished(output, retval)
+        except Exception as e:
+            self.install_finished("Exception: " + str(e), 1)
 
     def install_finished(self, result, retval, extra_args=None):
         if retval == 0:
