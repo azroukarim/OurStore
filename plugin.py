@@ -577,15 +577,15 @@ class AllStore(Screen):
             self.session.open(MessageBox, "Download failed!\n\n%s" % err, MessageBox.TYPE_ERROR)
             return
 
-        # For .sh scripts (system images, installers) → no "Install now?" prompt
-        if self.install_cmd and ("allstore.sh" in self.install_cmd or "addon.sh" in self.install_cmd or ".sh" in self.download_dest_path):
-            # Script already executed during "download" step
-            self.session.open(
-                MessageBox,
-                "%s\n\nOperation completed.\n\nIf applicable, use Flash Online to install the image." % self.install_item_name,
-                MessageBox.TYPE_INFO
-            )
-            self.item_changed()
+        # If we downloaded a .sh script → execute it!
+        if ".sh" in self.download_dest_path:
+            self["description"].setText("Executing script...\n\nThis may take 10-30 minutes.\nPlease wait...")
+            # Execute the script in background
+            exec_cmd = "chmod +x %s && cd /tmp && sh %s" % (self.download_dest_path, self.download_dest_path)
+            self.script_exec_cmd = exec_cmd
+            t = threading.Thread(target=self.run_script_exec)
+            t.daemon = True
+            t.start()
             return
 
         # For packages (.ipk, .deb, .zip, .tar.gz) → show install prompt
@@ -595,6 +595,50 @@ class AllStore(Screen):
             "Downloaded: %s\n\nInstall now?" % self.install_item_name,
             MessageBox.TYPE_YESNO
         )
+
+    def run_script_exec(self):
+        try:
+            log_file = "/tmp/allstore_script.log"
+            full_cmd = self.script_exec_cmd + " > " + log_file + " 2>&1"
+            retval = os.system(full_cmd)
+            
+            output = ""
+            try:
+                if os.path.exists(log_file):
+                    with open(log_file, "r") as f:
+                        output = f.read()
+                    os.remove(log_file)
+            except Exception:
+                pass
+            
+            # Cleanup script
+            try:
+                if os.path.exists(self.download_dest_path):
+                    os.remove(self.download_dest_path)
+            except Exception:
+                pass
+            
+            self.script_exec_done(output, retval)
+        except Exception as e:
+            self.script_exec_done("Exception: " + str(e), 1)
+
+    def script_exec_done(self, result, retval):
+        try:
+            # Get last 20 lines of output
+            lines = result.strip().split("\n") if result else []
+            tail = "\n".join(lines[-20:]) if lines else "No output"
+            
+            if retval == 0:
+                msg = "%s\n\nDownload completed successfully!\n\nThe image has been saved to /media/hdd/images or /media/usb/images.\n\nUse Flash Online to install it." % self.install_item_name
+                self.session.open(MessageBox, msg, MessageBox.TYPE_INFO)
+            else:
+                msg = "%s\n\nScript finished with code: %d\n\nLast output:\n%s" % (self.install_item_name, retval, tail)
+                self.session.open(MessageBox, msg, MessageBox.TYPE_WARNING)
+            
+            self["description"].setText("%s\n\nDone. Check /media/hdd/images/" % self.install_item_name)
+            self.item_changed()
+        except Exception as e:
+            self["description"].setText("Error: " + str(e))
 
     def install_confirm(self, answer):
         if answer:
