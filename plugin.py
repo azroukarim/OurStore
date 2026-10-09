@@ -97,33 +97,51 @@ def count_items(items):
 # SKIN
 # =====================================================================
 SKIN = """
-<screen name="AllStore" position="center,center" size="1280,720" title="AllStore" flags="wfNoBorder">
-    <eLabel position="0,0" size="1280,720" backgroundColor="#0B0F19" zPosition="-11" />
-    <eLabel position="0,0" size="1280,70" backgroundColor="#131A2A" zPosition="-10" />
-    <eLabel position="0,70" size="1280,2" backgroundColor="#3b82f6" zPosition="-9" />
-    <eLabel position="20,15" size="300,40" text="ALLSTORE" font="Regular;32" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
-    <eLabel position="20,40" size="100,20" text="v1.0.0" font="Regular;16" foregroundColor="#3b82f6" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+<screen name="AllStore" position="0,0" size="1920,1080" title="AllStore" flags="wfNoBorder">
+    <!-- Background -->
+    <eLabel position="0,0" size="1920,1080" backgroundColor="#0B0F19" zPosition="-100" />
 
-    <eLabel position="20,90" size="350,560" backgroundColor="#131A2A" zPosition="-1" />
-    <eLabel position="20,90" size="350,3" backgroundColor="#3b82f6" zPosition="0" />
-    <eLabel position="35,100" size="330,30" text="CATEGORIES" font="Regular;22" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" />
-    <widget name="categories_list" position="30,140" size="330,500" itemHeight="50" scrollbarMode="showOnDemand" foregroundColor="#d1d5db" backgroundColor="#131A2A" transparent="1" />
+    <!-- Header -->
+    <eLabel position="0,0" size="1920,110" backgroundColor="#131A2A" zPosition="-90" />
+    <eLabel position="0,110" size="1920,3" backgroundColor="#3b82f6" zPosition="-89" />
 
-    <eLabel position="390,90" size="550,560" backgroundColor="#131A2A" zPosition="-1" />
-    <eLabel position="390,90" size="550,3" backgroundColor="#10b981" zPosition="0" />
-    <eLabel position="405,100" size="530,30" text="PACKAGES" font="Regular;22" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" />
-    <widget name="items_list" position="400,140" size="530,500" itemHeight="50" scrollbarMode="showOnDemand" foregroundColor="#d1d5db" backgroundColor="#131A2A" transparent="1" />
+    <!-- Logo / Title -->
+    <ePixmap position="40,30" size="200,50" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/AllStore/images/logo.png" zPosition="2" scale="1" transparent="1" alphatest="blend" />
+    <eLabel position="260,25" size="400,45" text="ALLSTORE" font="Regular;36" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <eLabel position="260,72" size="120,26" text="v1.0.0" font="Regular;20" foregroundColor="#3b82f6" backgroundColor="#131A2A" transparent="1" zPosition="2" />
 
-    <eLabel position="960,90" size="300,560" backgroundColor="#131A2A" zPosition="-1" />
-    <eLabel position="960,90" size="300,3" backgroundColor="#8b5cf6" zPosition="0" />
-    <eLabel position="975,100" size="280,30" text="INFO" font="Regular;22" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" />
-    <widget name="description" position="975,140" size="280,400" font="Regular;18" foregroundColor="#9ca3af" backgroundColor="#131A2A" transparent="1" valign="top" />
+    <!-- Header Right: Info Text -->
+    <eLabel position="1520,30" size="360,50" text="Plugin Store" font="Regular;28" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" zPosition="2" />
 
-    <eLabel position="0,660" size="1280,60" backgroundColor="#131A2A" zPosition="-10" />
-    <widget name="key_red"    position="30,670"  size="280,40" font="Regular;20" foregroundColor="#ffffff" backgroundColor="#e11d48" transparent="0" halign="center" valign="center" zPosition="3" />
-    <widget name="key_green"  position="330,670" size="280,40" font="Regular;20" foregroundColor="#ffffff" backgroundColor="#059669" transparent="0" halign="center" valign="center" zPosition="3" />
-    <widget name="key_yellow" position="630,670" size="280,40" font="Regular;20" foregroundColor="#ffffff" backgroundColor="#d97706" transparent="0" halign="center" valign="center" zPosition="3" />
-    <widget name="key_blue"   position="930,670" size="280,40" font="Regular;20" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
+    <!-- LEFT PANEL: Categories -->
+    <eLabel position="30,140" size="500,850" backgroundColor="#131A2A" zPosition="-50" />
+    <eLabel position="30,140" size="500,4" backgroundColor="#3b82f6" zPosition="-49" />
+    <eLabel position="50,160" size="460,40" text="CATEGORIES" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <eLabel position="50,205" size="460,2" backgroundColor="#1A2235" zPosition="-48" />
+    <widget name="categories_list" position="40,230" size="480,740" itemHeight="80" scrollbarMode="showOnDemand" foregroundColor="#d1d5db" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+
+    <!-- CENTER PANEL: Items -->
+    <eLabel position="550,140" size="880,850" backgroundColor="#131A2A" zPosition="-50" />
+    <eLabel position="550,140" size="880,4" backgroundColor="#10b981" zPosition="-49" />
+    <eLabel position="570,160" size="840,40" text="AVAILABLE PACKAGES" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <eLabel position="570,205" size="840,2" backgroundColor="#1A2235" zPosition="-48" />
+    <widget name="items_list" position="560,230" size="860,740" itemHeight="80" scrollbarMode="showOnDemand" foregroundColor="#d1d5db" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+
+    <!-- RIGHT PANEL: Info -->
+    <eLabel position="1450,140" size="440,850" backgroundColor="#131A2A" zPosition="-50" />
+    <eLabel position="1450,140" size="440,4" backgroundColor="#8b5cf6" zPosition="-49" />
+    <eLabel position="1470,160" size="400,40" text="INFORMATION" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <eLabel position="1470,205" size="400,2" backgroundColor="#1A2235" zPosition="-48" />
+    <widget name="description" position="1470,230" size="400,750" font="Regular;22" foregroundColor="#9ca3af" backgroundColor="#131A2A" transparent="1" valign="top" zPosition="2" />
+
+    <!-- Footer Buttons -->
+    <eLabel position="0,1010" size="1920,70" backgroundColor="#131A2A" zPosition="-90" />
+    <eLabel position="0,1010" size="1920,2" backgroundColor="#1A2235" zPosition="-89" />
+
+    <widget name="key_red"    position="40,1025"  size="440,45" font="Regular;24" foregroundColor="#ffffff" backgroundColor="#e11d48" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_green"  position="500,1025" size="440,45" font="Regular;24" foregroundColor="#ffffff" backgroundColor="#059669" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_yellow" position="960,1025" size="440,45" font="Regular;24" foregroundColor="#ffffff" backgroundColor="#d97706" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_blue"   position="1420,1025" size="460,45" font="Regular;24" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
 </screen>
 """
 
