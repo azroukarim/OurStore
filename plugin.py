@@ -357,9 +357,6 @@ class AllStore(Screen):
         except Exception as e:
             self["description"].setText("Update error: " + str(e))
             self.update_in_progress = False
-        except Exception as e:
-            self["description"].setText("Update error: " + str(e))
-            self.update_in_progress = False
 
     def update_done(self, result, retval, extra_args=None):
         self.update_in_progress = False
@@ -541,14 +538,16 @@ class AllStore(Screen):
 
             self["description"].setText("Downloading: %s\n\nPlease wait..." % name)
 
-            wget_cmd = "wget -q --no-check-certificate -O %s '%s'" % (dest, url)
+            wget_cmd = "wget -q --no-check-certificate --timeout=60 --tries=3 -O %s '%s'" % (dest, url)
             self.my_console.ePopen(wget_cmd + " 2>&1", self.download_finished)
         except Exception as e:
             self["description"].setText("Error: " + str(e))
 
     def download_finished(self, result, retval, extra_args=None):
         if retval != 0:
-            self["description"].setText("Download failed.")
+            err = result.strip() if result else "Unknown error"
+            self["description"].setText("Download failed:\n\n" + err)
+            self.session.open(MessageBox, "Download failed!\n\n%s" % err, MessageBox.TYPE_ERROR)
             return
         self.session.openWithCallback(
             self.install_confirm,
