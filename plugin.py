@@ -546,16 +546,27 @@ class AllStore(Screen):
             self["description"].setText("Error: " + str(e))
 
     def run_wget(self, wget_cmd):
-        import subprocess
         try:
-            proc = subprocess.Popen(wget_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            output, _ = proc.communicate()
-            retval = proc.returncode
-            if isinstance(output, bytes):
-                output = output.decode("utf-8", "ignore")
+            log_file = "/tmp/allstore_wget.log"
+            full_cmd = wget_cmd + " > " + log_file + " 2>&1"
+            retval = os.system(full_cmd)
+            
+            # قراءة اللوغ
+            output = ""
+            try:
+                if os.path.exists(log_file):
+                    with open(log_file, "r") as f:
+                        output = f.read()
+                    os.remove(log_file)
+            except Exception:
+                pass
+            
+            if not output:
+                output = "wget returncode: " + str(retval)
+            
             self.download_finished(output, retval)
         except Exception as e:
-            self.download_finished(str(e), 1)
+            self.download_finished("Exception: " + str(e), 1)
 
     def download_finished(self, result, retval, extra_args=None):
         if retval != 0:
