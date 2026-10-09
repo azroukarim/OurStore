@@ -27,18 +27,14 @@ try:
 except ImportError:
     eTimer = None
 
-try:
-    from Components.ProgressBar import ProgressBar
-except ImportError:
-    ProgressBar = None
-
 
 # =====================================================================
 # CONFIG
 # =====================================================================
 PLUGIN_VERSION = "1.0.0"
-STORE_URL = "https://raw.githubusercontent.com/azroukarim/OurStore/main/feed/index.json"
-UPDATE_SCRIPT_URL = "https://raw.githubusercontent.com/azroukarim/OurStore/main/install.sh"
+GITHUB_BASE = "https://raw.githubusercontent.com/azroukarim/OurStore/main"
+STORE_URL = GITHUB_BASE + "/feed/index.json"
+UPDATE_SCRIPT_URL = GITHUB_BASE + "/install.sh"
 
 try:
     PLUGIN_DIR = os.path.dirname(__file__)
@@ -46,7 +42,6 @@ except NameError:
     PLUGIN_DIR = "/usr/lib/enigma2/python/Plugins/Extensions/AllStore"
 
 CACHE_FILE = os.path.join(PLUGIN_DIR, "store_cache.json")
-ICON_FOLDER = os.path.join(PLUGIN_DIR, "images", "Icons")
 
 
 # =====================================================================
@@ -160,20 +155,20 @@ class AllStore(Screen):
         self["items_list"] = MenuList([])
         self["description"] = Label("Loading...")
 
-        # تكبير حجم الخط للقوائم
+        # Enlarge fonts for lists
         try:
-            from enigma import gFont, eListboxPythonMultiContent
+            from enigma import gFont
             if self["categories_list"].l:
-                self["categories_list"].l.setFont(0, gFont("Regular", 32))
+                self["categories_list"].l.setFont(0, gFont("Regular", 34))
             if self["items_list"].l:
-                self["items_list"].l.setFont(0, gFont("Regular", 32))
+                self["items_list"].l.setFont(0, gFont("Regular", 34))
         except Exception:
             pass
 
         self["key_red"] = Label("Exit")
         self["key_green"] = Label("Install")
         self["key_yellow"] = Label("Refresh")
-        self["key_blue"] = Label("Refresh Store")
+        self["key_blue"] = Label("Update Plugin")
 
         self["actions"] = ActionMap(
             ["OkCancelActions", "DirectionActions", "ColorActions"],
@@ -182,7 +177,7 @@ class AllStore(Screen):
                 "red": self.close,
                 "green": self.download_item,
                 "yellow": self.load_store,
-                "blue": self.load_store,
+                "blue": self.self_update,
                 "ok": self.ok_pressed,
                 "up": self.go_up,
                 "down": self.go_down,
@@ -200,6 +195,7 @@ class AllStore(Screen):
         self.my_console = Console()
         self.install_cmd = ""
         self.install_item_name = ""
+        self.update_in_progress = False
 
         self["categories_list"].onSelectionChanged.append(self.category_changed)
         self["items_list"].onSelectionChanged.append(self.item_changed)
@@ -251,10 +247,73 @@ class AllStore(Screen):
         return False
 
     def load_store(self):
-        self["description"].setText("Refreshing...")
+        self["description"].setText("Refreshing store...")
         t = threading.Thread(target=self.async_fetch)
         t.daemon = True
         t.start()
+
+    # -----------------------------------------------------------------
+    # SELF UPDATE - Blue button
+    # -----------------------------------------------------------------
+    def self_update(self):
+        if self.update_in_progress:
+            return
+        self.session.openWithCallback(
+            self.confirm_update,
+            MessageBox,
+            "Do you want to update AllStore plugin from GitHub?\n\nEnigma2 will restart after update.",
+            MessageBox.TYPE_YESNO
+        )
+
+    def confirm_update(self, answer):
+        if not answer:
+            return
+        self.update_in_progress = True
+        self["description"].setText("Updating plugin...\n\nPlease wait...")
+        t = threading.Thread(target=self.run_update)
+        t.daemon = True
+        t.start()
+
+    def run_update(self):
+        try:
+            cmd = (
+                'cd /tmp && '
+                'wget -q --no-check-certificate "' + GITHUB_BASE + '/plugin.py" -O plugin.py && '
+                'wget -q --no-check-certificate "' + GITHUB_BASE + '/plugin.png" -O plugin.png && '
+                'wget -q --no-check-certificate "' + GITHUB_BASE + '/feed/index.json" -O feed_index.json && '
+                'cp plugin.py ' + PLUGIN_DIR + '/plugin.py && '
+                'cp plugin.png ' + PLUGIN_DIR + '/plugin.png && '
+                'mkdir -p ' + PLUGIN_DIR + '/feed && '
+                'cp feed_index.json ' + PLUGIN_DIR + '/feed/index.json && '
+                'rm -f plugin.py plugin.png feed_index.json ' + PLUGIN_DIR + '/store_cache.json'
+            )
+            self.my_console.ePopen(cmd + " 2>&1", self.update_done)
+        except Exception as e:
+            self["description"].setText("Update error: " + str(e))
+            self.update_in_progress = False
+
+    def update_done(self, result, retval, extra_args=None):
+        self.update_in_progress = False
+        if retval == 0:
+            self.session.openWithCallback(
+                self.restart_callback,
+                MessageBox,
+                "Plugin updated successfully!\n\nRestart Enigma2 now?",
+                MessageBox.TYPE_YESNO
+            )
+        else:
+            err = result.strip() if result else "Unknown error"
+            self["description"].setText("Update failed:\n" + err)
+
+    def restart_callback(self, answer):
+        if answer:
+            try:
+                if TryQuitMainloop:
+                    self.session.open(TryQuitMainloop, 3)
+                else:
+                    os.system("killall -9 enigma2")
+            except Exception:
+                os.system("killall -9 enigma2")
 
     # -----------------------------------------------------------------
     def apply_store_data(self, data):
@@ -413,7 +472,7 @@ class AllStore(Screen):
 
             self["description"].setText("Downloading: %s\n\nPlease wait..." % name)
 
-            wget_cmd = "wget -q -O %s '%s'" % (dest, url)
+            wget_cmd = "wget -q --no-check-certificate -O %s '%s'" % (dest, url)
             self.my_console.ePopen(wget_cmd + " 2>&1", self.download_finished)
         except Exception as e:
             self["description"].setText("Error: " + str(e))
@@ -447,10 +506,6 @@ class AllStore(Screen):
             )
         else:
             self["description"].setText("Install failed:\n" + str(result))
-
-    def restart_callback(self, answer):
-        if answer and TryQuitMainloop:
-            self.session.open(TryQuitMainloop, 3)
 
 
 # =====================================================================
