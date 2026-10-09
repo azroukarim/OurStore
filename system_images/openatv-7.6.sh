@@ -1,21 +1,26 @@
 #!/bin/sh
-# OpenATV 7.6 Image Downloader
+# OpenATV Image Downloader
+# Downloads the latest OpenATV image for this box
+
 VER="7.6"
+BASE="https://images.mynonpublic.com/openatv"
 
 echo "=========================================="
-echo "  Downloading OpenATV $VER"
+echo "  OpenATV $VER - Image Downloader"
 echo "=========================================="
 echo ""
 
 # ---- Detect box ----
 if [ -f /proc/stb/info/boxtype ]; then
     BOXTYPE=$(cat /proc/stb/info/boxtype | tr 'A-Z' 'a-z')
+elif [ -f /proc/stb/info/vumodel ]; then
+    BOXTYPE="vu$(cat /proc/stb/info/vumodel | tr 'A-Z' 'a-z')"
 elif [ -f /proc/stb/info/model ]; then
     BOXTYPE=$(cat /proc/stb/info/model | tr 'A-Z' 'a-z')
-elif [ -f /proc/stb/info/vumodel ]; then
-    BOXTYPE="vu$(cat /proc/stb/info/vumodel)"
 else
-    BOXTYPE="unknown"
+    echo "ERROR: Cannot detect box type"
+    read -p "Press Enter..."
+    exit 1
 fi
 
 echo "Detected box: $BOXTYPE"
@@ -26,8 +31,8 @@ if [ -d /media/hdd ] && [ -w /media/hdd ]; then
 elif [ -d /media/usb ] && [ -w /media/usb ]; then
     TARGET="/media/usb/images"
 else
-    echo "ERROR: No writable storage found at /media/hdd or /media/usb"
-    read -p "Press Enter to return..."
+    echo "ERROR: No writable storage"
+    read -p "Press Enter..."
     exit 1
 fi
 
@@ -35,56 +40,62 @@ mkdir -p "$TARGET"
 echo "Target: $TARGET"
 echo ""
 
-# ---- Fetch list ----
-URL="https://images.mynonpublic.com/openatv/$VER/json/openatv-$VER.json"
-TMP="/tmp/openatv_$VER.json"
-
+# ---- Fetch page ----
 echo "Fetching image list..."
-wget -q --no-check-certificate -O "$TMP" "$URL" 2>/dev/null
+PAGE_URL="$BASE/index.php?v=$VER&open=$BOXTYPE"
+TMP="/tmp/atv_page.html"
+
+wget -q --no-check-certificate -O "$TMP" "$PAGE_URL" 2>/dev/null
 
 if [ ! -s "$TMP" ]; then
-    echo "ERROR: Could not fetch image list"
+    echo "ERROR: Cannot fetch page"
     read -p "Press Enter..."
     exit 1
 fi
 
-echo "OK ($(wc -c < $TMP) bytes)"
+echo "Page fetched ($(wc -c < $TMP) bytes)"
 echo ""
 
-# ---- Find image URL ----
-IMAGE_URL=$(grep -o "\"$BOXTYPE\":{[^}]*}" "$TMP" | grep -o '"url":"[^"]*"' | head -1 | sed 's/"url":"//;s/"//')
+# ---- Extract latest image ----
+FILENAME=$(grep -oE "openatv-[0-9.]+-${BOXTYPE}-[0-9]+_usb\.zip" "$TMP" | sort -r | head -1)
 
-if [ -z "$IMAGE_URL" ]; then
-    echo "ERROR: No image found for '$BOXTYPE' in OpenATV $VER"
+if [ -z "$FILENAME" ]; then
+    echo "ERROR: No image found for $BOXTYPE"
     echo ""
-    echo "Available boxes:"
-    grep -o '"[a-z0-9]*":{"url"' "$TMP" | head -30 | sed 's/:{"url"//;s/"//g' | sed 's/^/  - /'
-    read -p "Press Enter..."
+    echo "Files found in page:"
+    grep -oE "[a-zA-Z0-9_.-]+\.zip" "$TMP" | sort -u | head -10
     rm -f "$TMP"
+    read -p "Press Enter..."
     exit 1
 fi
 
-echo "Found: $IMAGE_URL"
+echo "Latest image: $FILENAME"
 echo ""
 
-# ---- Download ----
-FILENAME=$(basename "$IMAGE_URL")
+# ---- Build URL ----
+URL="$BASE/$VER/$BOXTYPE/$FILENAME"
 DEST="$TARGET/$FILENAME"
 
-echo "Downloading to: $DEST"
-echo "This may take several minutes..."
+echo "Downloading..."
+echo "  From: $URL"
+echo "  To:   $DEST"
+echo ""
+echo "This may take 10-30 minutes. Please wait..."
 echo ""
 
-wget --no-check-certificate --timeout=300 -O "$DEST" "$IMAGE_URL"
+wget --no-check-certificate --timeout=600 -O "$DEST" "$URL"
 
 if [ $? -eq 0 ] && [ -s "$DEST" ]; then
     SIZE=$(ls -lh "$DEST" | awk '{print $5}')
     echo ""
     echo "=========================================="
-    echo "  Download complete!"
+    echo "  DOWNLOAD COMPLETE"
     echo "=========================================="
     echo "  File: $DEST"
     echo "  Size: $SIZE"
+    echo ""
+    echo "  Use Flash Online to install it,"
+    echo "  or reboot into recovery mode."
     echo "=========================================="
 else
     echo "ERROR: Download failed"

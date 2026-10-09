@@ -2,7 +2,7 @@
 # OpenATV Image Downloader
 # Downloads the latest OpenATV image for this box
 
-VER="7.4"
+VER="7.5"
 BASE="https://images.mynonpublic.com/openatv"
 
 echo "=========================================="

@@ -1,5 +1,5 @@
 #!/bin/sh
-# OpenATV Image Downloader - v8.0
+# OpenATV Image Downloader
 # Downloads the latest OpenATV image for this box
 
 VER="8.0"
@@ -40,23 +40,15 @@ mkdir -p "$TARGET"
 echo "Target: $TARGET"
 echo ""
 
-# ---- Fetch page (CORRECT URL with index.php) ----
-echo "Fetching image list from OpenATV..."
+# ---- Fetch page ----
+echo "Fetching image list..."
 PAGE_URL="$BASE/index.php?v=$VER&open=$BOXTYPE"
-echo "URL: $PAGE_URL"
 TMP="/tmp/atv_page.html"
 
 wget -q --no-check-certificate -O "$TMP" "$PAGE_URL" 2>/dev/null
 
 if [ ! -s "$TMP" ]; then
     echo "ERROR: Cannot fetch page"
-    echo "Trying alternate URL..."
-    PAGE_URL="$BASE/$VER/$BOXTYPE/"
-    wget -q --no-check-certificate -O "$TMP" "$PAGE_URL" 2>/dev/null
-fi
-
-if [ ! -s "$TMP" ]; then
-    echo "ERROR: Cannot fetch page from either URL"
     read -p "Press Enter..."
     exit 1
 fi
@@ -64,30 +56,14 @@ fi
 echo "Page fetched ($(wc -c < $TMP) bytes)"
 echo ""
 
-# ---- Extract latest image filename ----
-# Look for various patterns
-FILENAME=$(grep -oE "openatv-${VER}-${BOXTYPE}-[0-9]+_usb\.zip" "$TMP" | sort -r | head -1)
+# ---- Extract latest image ----
+FILENAME=$(grep -oE "openatv-[0-9.]+-${BOXTYPE}-[0-9]+_usb\.zip" "$TMP" | sort -r | head -1)
 
 if [ -z "$FILENAME" ]; then
-    FILENAME=$(grep -oE "openatv-${VER}-${BOXTYPE}-[0-9]+_mmc\.zip" "$TMP" | sort -r | head -1)
-fi
-
-if [ -z "$FILENAME" ]; then
-    FILENAME=$(grep -oE "openatv-[0-9.]+-${BOXTYPE}-[0-9]+_usb\.zip" "$TMP" | sort -r | head -1)
-fi
-
-if [ -z "$FILENAME" ]; then
-    FILENAME=$(grep -oE "openatv-[0-9.]+-${BOXTYPE}-[0-9]+_mmc\.zip" "$TMP" | sort -r | head -1)
-fi
-
-if [ -z "$FILENAME" ]; then
-    echo "ERROR: No image found for $BOXTYPE in OpenATV $VER"
+    echo "ERROR: No image found for $BOXTYPE"
     echo ""
-    echo "Looking for .zip files in page:"
-    grep -oE "[a-zA-Z0-9_.-]+\.zip" "$TMP" | head -10
-    echo ""
-    echo "Page preview (first 50 lines):"
-    head -50 "$TMP"
+    echo "Files found in page:"
+    grep -oE "[a-zA-Z0-9_.-]+\.zip" "$TMP" | sort -u | head -10
     rm -f "$TMP"
     read -p "Press Enter..."
     exit 1
@@ -96,22 +72,15 @@ fi
 echo "Latest image: $FILENAME"
 echo ""
 
-# ---- Build download URL ----
+# ---- Build URL ----
 URL="$BASE/$VER/$BOXTYPE/$FILENAME"
-
-# Try with index.php path first
-if ! wget --spider --no-check-certificate "$URL" 2>/dev/null; then
-    # Try alternate URL structure
-    URL="$BASE/$VER/$BOXTYPE/$FILENAME"
-fi
-
 DEST="$TARGET/$FILENAME"
 
 echo "Downloading..."
 echo "  From: $URL"
 echo "  To:   $DEST"
 echo ""
-echo "This may take 10-30 minutes..."
+echo "This may take 10-30 minutes. Please wait..."
 echo ""
 
 wget --no-check-certificate --timeout=600 -O "$DEST" "$URL"
@@ -125,7 +94,8 @@ if [ $? -eq 0 ] && [ -s "$DEST" ]; then
     echo "  File: $DEST"
     echo "  Size: $SIZE"
     echo ""
-    echo "  Use Flash Online to install it."
+    echo "  Use Flash Online to install it,"
+    echo "  or reboot into recovery mode."
     echo "=========================================="
 else
     echo "ERROR: Download failed"
