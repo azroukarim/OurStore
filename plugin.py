@@ -236,8 +236,46 @@ class AllStore(Screen):
             except Exception:
                 pass
         elif not self.categories:
+            # Fallback: read local feed/index.json
+            try:
+                local_feed = os.path.join(PLUGIN_DIR, "feed", "index.json")
+                if os.path.exists(local_feed):
+                    with open(local_feed, "r") as f:
+                        local_data = json.load(f)
+                    if local_data and "categories" in local_data:
+                        self.apply_store_data(local_data)
+                        self["description"].setText("Loaded from local feed.")
+                        return
+            except Exception:
+                pass
             self["description"].setText("Failed to connect to server.")
 
+    def confirm_system_image(self, answer):
+        if not answer:
+            self["description"].setText("Download cancelled.")
+            return
+        try:
+            idx = self["items_list"].getSelectionIndex()
+            if idx < 0 or idx >= len(self.visible_items):
+                return
+            item = self.visible_items[idx]
+            url = item.get("file", "").strip()
+            name = item.get("name", "package")
+            if not url:
+                self.session.open(MessageBox, "URL not found", MessageBox.TYPE_ERROR)
+                return
+            dest = "/tmp/allstore.sh"
+            cmd = "chmod +x %s && cd /tmp && sh %s 2>&1; rm -f %s" % (dest, dest, dest)
+            self.install_cmd = cmd
+            self.install_item_name = name
+            self.download_dest_path = dest
+            self["description"].setText("Downloading: %s\n\nPlease wait..." % name)
+            wget_cmd = "wget -q --no-check-certificate --timeout=60 --tries=3 -O %s '%s'" % (dest, url)
+            self.wget_thread = threading.Thread(target=self.run_wget, args=(wget_cmd,))
+            self.wget_thread.daemon = True
+            self.wget_thread.start()
+        except Exception as e:
+            self["description"].setText("Error: " + str(e))
     def load_local_cache(self):
         try:
             if os.path.exists(CACHE_FILE):
@@ -499,6 +537,24 @@ class AllStore(Screen):
     def download_item(self):
         try:
 
+            # System image confirmation
+            cat_idx = self["categories_list"].getSelectionIndex()
+            if cat_idx >= 0:
+                cat_name = str(self.categories[cat_idx]).lower()
+                if "system" in cat_name or "image" in cat_name:
+                    idx = self["items_list"].getSelectionIndex()
+                    if idx >= 0 and idx < len(self.visible_items):
+                        item = self.visible_items[idx]
+                        nm = item.get("name", "")
+                        self.session.openWithCallback(
+                            self.confirm_system_image,
+                            MessageBox,
+                            "Download System Image\n\n%s\n\nSaved to: /media/hdd/images/\n\nThis may take 10-30 minutes.\n\nContinue?" % nm,
+                            MessageBox.TYPE_YESNO
+                        )
+                    return
+
+
             idx = self["items_list"].getSelectionIndex()
             if idx < 0 or idx >= len(self.visible_items):
                 return
@@ -556,7 +612,7 @@ class AllStore(Screen):
             full_cmd = wget_cmd + " > " + log_file + " 2>&1"
             retval = os.system(full_cmd)
             
-            # قراءة اللوغ
+            # Ù‚Ø±Ø§Ø¡Ø© Ø§Ù„Ù„ÙˆØº
             output = ""
             try:
                 if os.path.exists(log_file):
@@ -580,7 +636,7 @@ class AllStore(Screen):
             self.session.open(MessageBox, "Download failed!\n\n%s" % err, MessageBox.TYPE_ERROR)
             return
 
-        # If we downloaded a .sh script → execute it!
+        # If we downloaded a .sh script â†’ execute it!
         if ".sh" in self.download_dest_path:
             self["description"].setText("Executing script...\n\nThis may take 10-30 minutes.\nPlease wait...")
             # Execute the script in background
@@ -591,7 +647,7 @@ class AllStore(Screen):
             t.start()
             return
 
-        # For packages (.ipk, .deb, .zip, .tar.gz) → show install prompt
+        # For packages (.ipk, .deb, .zip, .tar.gz) â†’ show install prompt
         self.session.openWithCallback(
             self.install_confirm,
             MessageBox,
@@ -647,9 +703,9 @@ class AllStore(Screen):
         if answer:
             self["description"].setText("Installing...\n\nPlease wait, this may take a minute...")
             
-            # كتابة الأمر إلى ملف سكربت مؤقت
+            # ÙƒØªØ§Ø¨Ø© Ø§Ù„Ø£Ù…Ø± Ø¥Ù„Ù‰ Ù…Ù„Ù Ø³ÙƒØ±Ø¨Øª Ù…Ø¤Ù‚Øª
             if self.install_cmd and "allstore.sh" in self.install_cmd:
-                # استخراج مسار السكربت من الأمر
+                # Ø§Ø³ØªØ®Ø±Ø§Ø¬ Ù…Ø³Ø§Ø± Ø§Ù„Ø³ÙƒØ±Ø¨Øª Ù…Ù† Ø§Ù„Ø£Ù…Ø±
                 wrapper = "/tmp/allstore_run.sh"
                 with open(wrapper, "w") as f:
                     f.write("#!/bin/sh\n")
@@ -657,7 +713,7 @@ class AllStore(Screen):
                     f.write("sh /tmp/allstore.sh </dev/null\n")
                 os.system("chmod +x " + wrapper)
                 
-                # التنفيذ باستخدام sh مع session جديد
+                # Ø§Ù„ØªÙ†ÙÙŠØ° Ø¨Ø§Ø³ØªØ®Ø¯Ø§Ù… sh Ù…Ø¹ session Ø¬Ø¯ÙŠØ¯
                 full_cmd = "/bin/sh " + wrapper + " 2>&1"
             else:
                 full_cmd = self.install_cmd + " 2>&1"
@@ -685,7 +741,7 @@ class AllStore(Screen):
             except Exception:
                 pass
             
-            # ننظف أي wrapper
+            # Ù†Ù†Ø¸Ù Ø£ÙŠ wrapper
             try:
                 if os.path.exists("/tmp/allstore_run.sh"):
                     os.remove("/tmp/allstore_run.sh")
