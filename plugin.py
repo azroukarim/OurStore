@@ -53,7 +53,7 @@ ICON_FOLDER = os.path.join(PLUGIN_DIR, "images", "Icons")
 # HELPERS
 # =====================================================================
 def load_json_network(url):
-    """تحميل JSON من الإنترنت"""
+    """Load JSON from network"""
     try:
         if sys.version_info >= (3, 0):
             import urllib.request as urllib2
@@ -81,7 +81,7 @@ def load_json_network(url):
 
 
 def count_items(items):
-    """عد العناصر بشكل تكراري"""
+    """Count items recursively"""
     if not isinstance(items, list):
         return 0
     total = 0
@@ -140,12 +140,12 @@ class AllStore(Screen):
 
         self["categories_list"] = MenuList([])
         self["items_list"] = MenuList([])
-        self["description"] = Label("جاري التحميل...")
+        self["description"] = Label("Loading...")
 
-        self["key_red"] = Label("خروج")
-        self["key_green"] = Label("تثبيت")
-        self["key_yellow"] = Label("تحديث")
-        self["key_blue"] = Label("تحديث المتجر")
+        self["key_red"] = Label("Exit")
+        self["key_green"] = Label("Install")
+        self["key_yellow"] = Label("Refresh")
+        self["key_blue"] = Label("Refresh Store")
 
         self["actions"] = ActionMap(
             ["OkCancelActions", "DirectionActions", "ColorActions"],
@@ -208,7 +208,7 @@ class AllStore(Screen):
             except Exception:
                 pass
         elif not self.categories:
-            self["description"].setText("فشل الاتصال بالخادم.")
+            self["description"].setText("Failed to connect to server.")
 
     def load_local_cache(self):
         try:
@@ -223,7 +223,7 @@ class AllStore(Screen):
         return False
 
     def load_store(self):
-        self["description"].setText("جاري التحديث...")
+        self["description"].setText("Refreshing...")
         t = threading.Thread(target=self.async_fetch)
         t.daemon = True
         t.start()
@@ -252,7 +252,7 @@ class AllStore(Screen):
             self.current_path = []
             self.category_changed()
         except Exception as e:
-            self["description"].setText("خطأ: " + str(e))
+            self["description"].setText("Error: " + str(e))
 
     # -----------------------------------------------------------------
     def category_changed(self):
@@ -289,13 +289,13 @@ class AllStore(Screen):
             item = self.visible_items[idx]
             if "items" in item:
                 self["description"].setText(
-                    "المجلد: %s\nعدد العناصر: %d\n\nاضغط OK للدخول."
+                    "Folder: %s\nItems: %d\n\nPress OK to open."
                     % (item.get("name", ""), count_items(item["items"]))
                 )
             else:
                 self["description"].setText(
-                    "الاسم: %s\n\nالوصف:\n%s"
-                    % (item.get("name", ""), item.get("description", "لا يوجد وصف"))
+                    "Name: %s\n\nDescription:\n%s"
+                    % (item.get("name", ""), item.get("description", "No description"))
                 )
         except Exception:
             pass
@@ -351,7 +351,7 @@ class AllStore(Screen):
             name = item.get("name", "package")
 
             if not url:
-                self.session.open(MessageBox, "رابط التحميل غير موجود", MessageBox.TYPE_ERROR)
+                self.session.open(MessageBox, "Download URL not found", MessageBox.TYPE_ERROR)
                 return
 
             pure = url.split("?")[0]
@@ -383,30 +383,30 @@ class AllStore(Screen):
             self.install_cmd = cmd
             self.install_item_name = name
 
-            self["description"].setText("جاري تحميل: %s\n\nيرجى الانتظار..." % name)
+            self["description"].setText("Downloading: %s\n\nPlease wait..." % name)
 
             wget_cmd = "wget -q -O %s '%s'" % (dest, url)
             self.my_console.ePopen(wget_cmd + " 2>&1", self.download_finished)
         except Exception as e:
-            self["description"].setText("خطأ: " + str(e))
+            self["description"].setText("Error: " + str(e))
 
     def download_finished(self, result, retval, extra_args=None):
         if retval != 0:
-            self["description"].setText("فشل التحميل.")
+            self["description"].setText("Download failed.")
             return
         self.session.openWithCallback(
             self.install_confirm,
             MessageBox,
-            "تم التحميل: %s\n\nهل تريد التثبيت؟" % self.install_item_name,
+            "Downloaded: %s\n\nInstall now?" % self.install_item_name,
             MessageBox.TYPE_YESNO
         )
 
     def install_confirm(self, answer):
         if answer:
-            self["description"].setText("جاري التثبيت...")
+            self["description"].setText("Installing...")
             self.my_console.ePopen(self.install_cmd + " 2>&1", self.install_finished)
         else:
-            self["description"].setText("تم التخطي.")
+            self["description"].setText("Skipped.")
             self.item_changed()
 
     def install_finished(self, result, retval, extra_args=None):
@@ -414,11 +414,11 @@ class AllStore(Screen):
             self.session.openWithCallback(
                 self.restart_callback,
                 MessageBox,
-                "تم التثبيت بنجاح!\n\nهل تريد إعادة تشغيل الواجهة؟",
+                "Installed successfully!\n\nRestart GUI now?",
                 MessageBox.TYPE_YESNO
             )
         else:
-            self["description"].setText("فشل التثبيت:\n" + str(result))
+            self["description"].setText("Install failed:\n" + str(result))
 
     def restart_callback(self, answer):
         if answer and TryQuitMainloop:
@@ -436,7 +436,7 @@ def Plugins(**kwargs):
     return [
         PluginDescriptor(
             name="AllStore",
-            description="متجر الإضافات والسكينات",
+            description="Plugins and Skins Store",
             where=PluginDescriptor.WHERE_PLUGINMENU,
             icon="plugin.png",
             fnc=main
