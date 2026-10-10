@@ -17,7 +17,7 @@
             },
             {
                 "name": "Quran Kareem v1.0",
-                "description": "القران الكريم",
+                "description": "Quran Kareem",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/refs/heads/main/plugins/QuranKareem.sh",
                 "image": ""
             }
@@ -46,17 +46,50 @@
                     }
                 ]
             },
-            { "name": "Egami", "items": [] },
-            { "name": "OpenATV", "items": [] },
-            { "name": "OpenPLi", "items": [] },
-            { "name": "OpenBH", "items": [] },
-            { "name": "OpenSPA", "items": [] },
-            { "name": "Pure2", "items": [] },
-            { "name": "VTi", "items": [] },
-            { "name": "OpenHDF", "items": [] },
-            { "name": "OpenVision", "items": [] },
-            { "name": "OpenViX", "items": [] },
-            { "name": "OpenDroid", "items": [] }
+            {
+                "name": "Egami",
+                "items": []
+            },
+            {
+                "name": "OpenATV",
+                "items": []
+            },
+            {
+                "name": "OpenPLi",
+                "items": []
+            },
+            {
+                "name": "OpenBH",
+                "items": []
+            },
+            {
+                "name": "OpenSPA",
+                "items": []
+            },
+            {
+                "name": "Pure2",
+                "items": []
+            },
+            {
+                "name": "VTi",
+                "items": []
+            },
+            {
+                "name": "OpenHDF",
+                "items": []
+            },
+            {
+                "name": "OpenVision",
+                "items": []
+            },
+            {
+                "name": "OpenViX",
+                "items": []
+            },
+            {
+                "name": "OpenDroid",
+                "items": []
+            }
         ],
         "media": [
             {
@@ -70,6 +103,12 @@
                 "description": "Stalker portal IPTV player",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/UltraStalker.sh",
                 "image": ""
+            },
+            {
+                "name": "BouquetMakerXtream",
+                "description": "Create Enigma2 bouquets from Xtream Codes playlists",
+                "file": "https://github.com/azroukarim/plugins/raw/refs/heads/main/enigma2-plugin-extensions-bouquetmakerxtream_1.78.20260928_all.ipk",
+                "image": ""
             }
         ],
         "tools": [],
@@ -77,29 +116,94 @@
             {
                 "name": "OpenATV",
                 "items": [
-                    { "name": "OpenATV 8.0 (Latest)", "description": "Download latest OpenATV 8.0", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-8.0.sh", "image": "" },
-                    { "name": "OpenATV 7.6 (EOL)", "description": "Download latest OpenATV 7.6", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.6.sh", "image": "" },
-                    { "name": "OpenATV 7.5.1 (EOL)", "description": "Download latest OpenATV 7.5.1", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.5.1.sh", "image": "" },
-                    { "name": "OpenATV 7.5 (EOL)", "description": "Download latest OpenATV 7.5", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.5.sh", "image": "" },
-                    { "name": "OpenATV 7.4 (EOL)", "description": "Download latest OpenATV 7.4", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.4.sh", "image": "" }
+                    {
+                        "name": "OpenATV 8.0 (Latest)",
+                        "description": "Download latest OpenATV 8.0",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-8.0.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "OpenATV 7.6 (EOL)",
+                        "description": "Download latest OpenATV 7.6",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.6.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "OpenATV 7.5.1 (EOL)",
+                        "description": "Download latest OpenATV 7.5.1",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.5.1.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "OpenATV 7.5 (EOL)",
+                        "description": "Download latest OpenATV 7.5",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.5.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "OpenATV 7.4 (EOL)",
+                        "description": "Download latest OpenATV 7.4",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openatv-7.4.sh",
+                        "image": ""
+                    }
                 ]
             },
             {
                 "name": "OpenPLi",
                 "items": [
-                    { "name": "OpenPLi 9.2", "description": "Stable release - Latest version", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openpli-9.2.sh", "image": "" },
-                    { "name": "OpenPLi 9.1", "description": "Stable release", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openpli-9.1.sh", "image": "" },
-                    { "name": "OpenPLi 8.3", "description": "Stable release", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openpli-8.3.sh", "image": "" },
-                    { "name": "OpenPLi Scarthgap", "description": "Development build - Latest nightly", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openpli-scarthgap.sh", "image": "" }
+                    {
+                        "name": "OpenPLi 9.2",
+                        "description": "Stable release - Latest version",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openpli-9.2.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "OpenPLi 9.1",
+                        "description": "Stable release",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openpli-9.1.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "OpenPLi 8.3",
+                        "description": "Stable release",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openpli-8.3.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "OpenPLi Scarthgap",
+                        "description": "Development build - Latest nightly",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openpli-scarthgap.sh",
+                        "image": ""
+                    }
                 ]
             },
             {
                 "name": "OpenViX",
                 "items": [
-                    { "name": "OpenViX 6.9 (Latest)", "description": "Latest stable release", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openvix-6.9.sh", "image": "" },
-                    { "name": "OpenViX 6.8", "description": "Previous stable release", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openvix-6.8.sh", "image": "" },
-                    { "name": "OpenViX 6.7", "description": "Older stable release", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openvix-6.7.sh", "image": "" },
-                    { "name": "OpenViX 6.6", "description": "Legacy release", "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openvix-6.6.sh", "image": "" }
+                    {
+                        "name": "OpenViX 6.9 (Latest)",
+                        "description": "Latest stable release",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openvix-6.9.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "OpenViX 6.8",
+                        "description": "Previous stable release",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openvix-6.8.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "OpenViX 6.7",
+                        "description": "Older stable release",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openvix-6.7.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "OpenViX 6.6",
+                        "description": "Legacy release",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/system_images/openvix-6.6.sh",
+                        "image": ""
+                    }
                 ]
             }
         ],
