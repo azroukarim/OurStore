@@ -658,8 +658,17 @@ class AllStore(Screen):
     def run_script_exec(self):
         try:
             log_file = "/tmp/allstore_script.log"
-            full_cmd = self.script_exec_cmd + " > " + log_file + " 2>&1"
-            retval = os.system(full_cmd)
+            full_cmd = "nohup sh -c '" + self.script_exec_cmd.replace("'", "'\\''") + "' > " + log_file + " 2>&1 &"
+            os.system(full_cmd)
+            
+            import time as _time
+            _time.sleep(3)
+            for _ in range(150):
+                retval = os.system("pgrep -f allstore.sh > /dev/null 2>&1")
+                if retval != 0:
+                    break
+                _time.sleep(2)
+            retval = 0
             
             output = ""
             try:
