@@ -20,6 +20,12 @@
                 "description": "Quran Kareem",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/refs/heads/main/plugins/QuranKareem.sh",
                 "image": ""
+            },
+            {
+                "name": "SubsSupport Pro",
+                "description": "Advanced subtitles support for Enigma2",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/SubsSupportPro.sh",
+                "image": ""
             }
         ],
         "skins": [
