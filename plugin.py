@@ -668,6 +668,15 @@ class AllStore(Screen):
                 if retval != 0:
                     break
                 _time.sleep(2)
+            
+            output = ""
+            try:
+                if os.path.exists(log_file):
+                    with open(log_file, "r") as f:
+                        output = f.read()
+            except Exception:
+                pass
+            
             retval = 0
             
             output = ""
