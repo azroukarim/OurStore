@@ -107,7 +107,7 @@
             {
                 "name": "BouquetMakerXtream",
                 "description": "Create Enigma2 bouquets from Xtream Codes playlists",
-                "file": "https://github.com/azroukarim/plugins/raw/refs/heads/main/enigma2-plugin-extensions-bouquetmakerxtream_1.78.20260928_all.ipk",
+                "file": "https://raw.githubusercontent.com/azroukarim/plugins/refs/heads/main/enigma2-plugin-extensions-bouquetmakerxtream_1.78.20260928",
                 "image": ""
             }
         ],
