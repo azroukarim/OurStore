@@ -270,7 +270,7 @@ class AllStore(Screen):
             self.install_item_name = name
             self.download_dest_path = dest
             self["description"].setText("Downloading: %s\n\nPlease wait..." % name)
-            wget_cmd = "wget -q --no-check-certificate --timeout=60 --tries=3 -O %s '%s'" % (dest, url)
+            wget_cmd = "wget -L --no-check-certificate --timeout=60 --tries=3 --user-agent='Mozilla/5.0' -O %s '%s'" % (dest, url)
             self.wget_thread = threading.Thread(target=self.run_wget, args=(wget_cmd,))
             self.wget_thread.daemon = True
             self.wget_thread.start()
