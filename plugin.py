@@ -658,36 +658,44 @@ class AllStore(Screen):
     def run_script_exec(self):
         try:
             log_file = "/tmp/allstore_script.log"
-            full_cmd = "nohup sh -c '" + self.script_exec_cmd.replace("'", "'\\''") + "' > " + log_file + " 2>&1 &"
-            os.system(full_cmd)
             
-            import time as _time
-            _time.sleep(3)
-            for _ in range(150):
-                retval = os.system("pgrep -f allstore.sh > /dev/null 2>&1")
-                if retval != 0:
-                    break
-                _time.sleep(2)
+            # Build the command as a simple shell script
+            shell_script = "/tmp/allstore_run.sh"
+            try:
+                with open(shell_script, "w") as f:
+                    f.write("#!/bin/sh\n")
+                    f.write("cd /tmp\n")
+                    f.write(self.script_exec_cmd + "\n")
+                os.system("chmod +x " + shell_script)
+            except Exception as e:
+                self.script_exec_done("Cannot create script: " + str(e), 1)
+                return
+            
+            # Run it with output redirected (foreground, but in thread)
+            full_cmd = "sh " + shell_script + " > " + log_file + " 2>&1"
+            retval = os.system(full_cmd)
             
             output = ""
             try:
                 if os.path.exists(log_file):
                     with open(log_file, "r") as f:
                         output = f.read()
-                    os.remove(log_file)
             except Exception:
                 pass
             
-            # Cleanup script
+            # Cleanup
+            try:
+                if os.path.exists(shell_script):
+                    os.remove(shell_script)
+            except Exception:
+                pass
             try:
                 if os.path.exists(self.download_dest_path):
                     os.remove(self.download_dest_path)
             except Exception:
                 pass
             
-            retval = 0
-            
-            # Deliver result on the main UI thread
+            # Deliver result on UI thread
             def _deliver():
                 try:
                     self.script_exec_done(output, retval)
