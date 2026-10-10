@@ -52,19 +52,25 @@
             { "name": "OpenDroid",  "items": [] }
         ],
         "media": [
-            {
-                "name": "XPortal",
-                "description": "Advanced IPTV portal player for Enigma2",
-                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/XPortal.sh",
-                "image": ""
-            },
-            {
-                "name": "UltraStalker",
-                "description": "Stalker portal IPTV player for Enigma2",
-                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/UltraStalker.sh",
-                "image": ""
-            }
-        ],
+    {
+             "name": "XPortal",
+     "description": "Advanced IPTV portal player",
+        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/XPortal.sh",
+        "image": ""
+    },
+    {
+        "name": "UltraStalker",
+        "description": "Stalker portal IPTV player",
+        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/UltraStalker.sh",
+        "image": ""
+    },
+    {
+        "name": "XStreamity",
+        "description": "Advanced IPTV player for Enigma2 - movies, series and live TV",
+        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/xstreamity.sh",
+        "image": ""
+    }
+],
         "tools": [],
         "system_images": [
     {
