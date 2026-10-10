@@ -1,0 +1,1 @@
+wget -qO - https://raw.githubusercontent.com/popking159/QuranKareem/refs/heads/main/myinstaller.sh | /bin/sh
