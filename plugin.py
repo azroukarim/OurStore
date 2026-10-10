@@ -674,16 +674,6 @@ class AllStore(Screen):
                 if os.path.exists(log_file):
                     with open(log_file, "r") as f:
                         output = f.read()
-            except Exception:
-                pass
-            
-            retval = 0
-            
-            output = ""
-            try:
-                if os.path.exists(log_file):
-                    with open(log_file, "r") as f:
-                        output = f.read()
                     os.remove(log_file)
             except Exception:
                 pass
@@ -695,9 +685,31 @@ class AllStore(Screen):
             except Exception:
                 pass
             
-            self.script_exec_done(output, retval)
+            retval = 0
+            
+            # Deliver result on the main UI thread
+            def _deliver():
+                try:
+                    self.script_exec_done(output, retval)
+                except Exception:
+                    pass
+            
+            try:
+                from twisted.internet import reactor
+                reactor.callFromThread(_deliver)
+            except Exception:
+                _deliver()
         except Exception as e:
-            self.script_exec_done("Exception: " + str(e), 1)
+            def _deliver_err():
+                try:
+                    self.script_exec_done("Exception: " + str(e), 1)
+                except Exception:
+                    pass
+            try:
+                from twisted.internet import reactor
+                reactor.callFromThread(_deliver_err)
+            except Exception:
+                _deliver_err()
 
     def script_exec_done(self, result, retval):
         try:
