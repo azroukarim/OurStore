@@ -725,7 +725,8 @@ class AllStore(Screen):
             lines = result.strip().split("\n") if result else []
             tail = "\n".join(lines[-20:]) if lines else "No output"
             
-            if retval == 0:
+            # Consider code 15 (SIGTERM from enigma2 restart) as success
+            if retval == 0 or retval == 15 or "INSTALLATION COMPLETE" in result or "installed successfully" in result.lower():
                 msg = "%s\n\nDownload completed successfully!\n\nThe image has been saved to /media/hdd/images or /media/usb/images.\n\nUse Flash Online to install it." % self.install_item_name
                 self.session.open(MessageBox, msg, MessageBox.TYPE_INFO)
             else:
