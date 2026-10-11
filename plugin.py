@@ -727,7 +727,18 @@ class AllStore(Screen):
             
             # Consider code 15 (SIGTERM from enigma2 restart) as success
             if retval == 0 or retval == 15 or "INSTALLATION COMPLETE" in result or "installed successfully" in result.lower():
-                msg = "%s\n\nDownload completed successfully!\n\nThe image has been saved to /media/hdd/images or /media/usb/images.\n\nUse Flash Online to install it." % self.install_item_name
+                # Check if it's a system image or a plugin
+                is_system_image = False
+                try:
+                    if "system_images/" in str(self.download_url) or "system_images" in str(self.download_dest_path):
+                        is_system_image = True
+                except Exception:
+                    pass
+                
+                if is_system_image:
+                    msg = "%s\n\nDownload completed successfully!\n\nThe image has been saved to /media/hdd/images or /media/usb/images.\n\nUse Flash Online to install it." % self.install_item_name
+                else:
+                    msg = "%s\n\nInstalled successfully!\n\nRestart Enigma2 to apply changes." % self.install_item_name
                 self.session.open(MessageBox, msg, MessageBox.TYPE_INFO)
             else:
                 msg = "%s\n\nScript finished with code: %d\n\nLast output:\n%s" % (self.install_item_name, retval, tail)
