@@ -35,7 +35,7 @@ install_oscam_master() {
 }
 
 case "$1" in
-    install)
+    install|"")
         install_oscam_master
         ;;
     start)

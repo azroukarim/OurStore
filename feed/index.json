@@ -227,6 +227,12 @@
                 "description": "OSCam EMU PCSC v11968-803 - by Levi45",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/softcams/oscam.sh",
                 "image": ""
+            },
+            {
+                "name": "OSCam Master",
+                "description": "OSCam Master build - Safe installer (no Enigma2 restart)",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/softcams/oscam_master.sh",
+                "image": ""
             }
         ]
     }
