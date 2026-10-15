@@ -215,7 +215,7 @@
         ],
         "picons": [],
         "channels": [],
-        "softcams": [
+        "emus": [
             {
                 "name": "Ncam EMU V15.8",
                 "description": "Ncam EMU softcam - Installer by Biko_73",
