@@ -230,7 +230,7 @@
             },
             {
                 "name": "OSCam Master",
-                "description": "OSCam Master build - Safe installer (no Enigma2 restart)",
+                "description": "OSCam Master for StreamRelay - OpenATV only",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/softcams/oscam_master.sh",
                 "image": ""
             }
