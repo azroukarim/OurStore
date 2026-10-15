@@ -9,7 +9,7 @@
 - دعم التحديث الذاتي
 
   
-https://img.shields.io/badge/any_text-you_like-blue
+
 ## التثبيت
 
 wget -O - https://raw.githubusercontent.com/azroukarim/OurStore/main/install.sh | sh
