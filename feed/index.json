@@ -115,6 +115,12 @@
                 "description": "Create Enigma2 bouquets from Xtream Codes playlists",
                 "file": "https://raw.githubusercontent.com/azroukarim/plugins/main/enigma2-plugin-extensions-bouquetmakerxtream_1.78.20260928_all.ipk",
                 "image": ""
+            },
+            {
+                "name": "XStreamity",
+                "description": "XStreamity IPTV player by Biko_73",
+                "file": "https://raw.githubusercontent.com/biko-73/xstreamity/main/installer.sh",
+                "image": ""
             }
         ],
         "tools": [],
