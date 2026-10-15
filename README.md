@@ -9,5 +9,5 @@
 - دعم التحديث الذاتي
 
 ## التثبيت
-
+""""
 wget -O - https://raw.githubusercontent.com/azroukarim/OurStore/main/install.sh | sh
