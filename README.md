@@ -7,6 +7,8 @@
 - تثبيت الحزم
 - شريط تقدم التحميل
 - دعم التحديث الذاتي
+
+  
 https://img.shields.io/badge/instalscript_like-blue
 ## التثبيت
 
