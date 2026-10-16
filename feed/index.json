@@ -135,6 +135,220 @@
                 "description": "Auto installer for Timeshift Delay files on Enigma2",
                 "file": "http://dreambox4u.com/mosadpro/scripts/timeshift-delay.sh",
                 "image": ""
+            },
+            {
+                "name": "Audio",
+                "items": [
+                    {
+                        "name": "Fox&Anis",
+                        "description": "Audio Tool",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/audio/Fox%26Anis.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "Fox-Anis-ahmad yahia-Quran",
+                        "description": "Audio Tool",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/audio/Fox-Anis-ahmad%20yahia-Quran.sh",
+                        "image": ""
+                    }
+                ]
+            },
+            {
+                "name": "Portals",
+                "items": [
+                    {
+                        "name": "cord_cutter_portal",
+                        "description": "Portals Tool",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/portals/cord_cutter_portal.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "fastopen_portal",
+                        "description": "Portals Tool",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/portals/fastopen_portal.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "nocable_portal",
+                        "description": "Portals Tool",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/portals/nocable_portal.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "remorize_soltan",
+                        "description": "Portals Tool",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/portals/remorize_soltan.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "tvmate_portal_1",
+                        "description": "Portals Tool",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/portals/tvmate_portal_1.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "tvmate_portal_2",
+                        "description": "Portals Tool",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/portals/tvmate_portal_2.sh",
+                        "image": ""
+                    }
+                ]
+            },
+            {
+                "name": "Ncam v15.8 Installer",
+                "description": "سكربت تثبيت وتحديث أحدث إصدار من محاكي الشفرات Ncam",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/Ncam%20v15.8.sh",
+                "image": ""
+            },
+            {
+                "name": "OSCam 11964-VU",
+                "description": "Tool Package",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/OSCam%2011964-VU",
+                "image": ""
+            },
+            {
+                "name": "backup_cams",
+                "description": "Tool Package",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/backup_cams.sh",
+                "image": ""
+            },
+            {
+                "name": "Backup Channels Script",
+                "description": "سكربت حفظ وباك اب لقائمة القنوات والمفضلات لديك",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/backup_channels.sh",
+                "image": ""
+            },
+            {
+                "name": "Clean Crash Logs",
+                "description": "سكربت حذف ملفات الكراش واللوغ المؤقتة لتوفير الذاكرة",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/clean_crash.sh",
+                "image": ""
+            },
+            {
+                "name": "clean_iptv_cache",
+                "description": "Tool Package",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/clean_iptv_cache.sh",
+                "image": ""
+            },
+            {
+                "name": "Clean RAM Memory",
+                "description": "سكربت تفريغ ذاكرة الرام المؤقتة وتسريع استجابة الرسيفر",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/clean_ram.sh",
+                "image": ""
+            },
+            {
+                "name": "enigma2-plugin-softcams-ncam-mips_V10",
+                "description": "Tool Package",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/enigma2-plugin-softcams-ncam-mips_V10.0-r0_all.ipk",
+                "image": ""
+            },
+            {
+                "name": "Oscam Emu Levi45 v11965",
+                "description": "محاكي أوسكام إيمو محدث بآخر الشفرات وكسر التشفير",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/enigma2-plugin-softcams-oscam-emu-levi45_11965-803_all.ipk",
+                "image": ""
+            },
+            {
+                "name": "Oscam Emu r802 v11878",
+                "description": "محاكي أوسكام إيمو مستقر وسريع في كسر التشفير",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/enigma2-plugin-softcams-oscam_11878-emu-r802_all.ipk",
+                "image": ""
+            },
+            {
+                "name": "Oscam Emu r803 v11886",
+                "description": "محاكي أوسكام إيمو محدث لفتح القنوات الفضائية",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/enigma2-plugin-softcams-oscam_11886-emu-r803_all.ipk",
+                "image": ""
+            },
+            {
+                "name": "Oscam ICam v11725",
+                "description": "محاكي أوسكام آيكام لتشغيل باقات وقنوات ICam",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/enigma2-plugin-softcams-oscamicam_11725-V9-Kitte888-V23Rev_all.ipk",
+                "image": ""
+            },
+            {
+                "name": "Oscam All Images r798 (ARM+MIPS)",
+                "description": "محاكي أوسكام الشامل لجميع الصور ومعالجات ARM و MIPS",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/enigma2-softcams-oscam-all-images_11.715-emu-r798-arm%2Bmips_all.ipk",
+                "image": ""
+            },
+            {
+                "name": "Oscam All Images r801 (ARM+MIPS)",
+                "description": "أحدث إصدار من أوسكام الشامل المتوافق مع كافة الصور",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/enigma2-softcams-oscam-all-images_11791-emu-801-arm%2Bmips_all.ipk",
+                "image": ""
+            },
+            {
+                "name": "fix_cccam_freeze",
+                "description": "Tool Package",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/fix_cccam_freeze.sh",
+                "image": ""
+            },
+            {
+                "name": "Fix Network Connection",
+                "description": "سكربت حل مشاكل الاتصال بالإنترنت وإعادة ضبط الشبكة",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/fix_network.sh",
+                "image": ""
+            },
+            {
+                "name": "format_ext3",
+                "description": "Tool Package",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/format_ext3.sh",
+                "image": ""
+            },
+            {
+                "name": "format_ext4",
+                "description": "Tool Package",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/format_ext4.sh",
+                "image": ""
+            },
+            {
+                "name": "purge_packages",
+                "description": "Tool Package",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/purge_packages.sh",
+                "image": ""
+            },
+            {
+                "name": "repair_disk",
+                "description": "Tool Package",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/repair_disk.sh",
+                "image": ""
+            },
+            {
+                "name": "reset_pass",
+                "description": "Tool Package",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/reset_pass.sh",
+                "image": ""
+            },
+            {
+                "name": "reset_settings",
+                "description": "Tool Package",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/reset_settings.sh",
+                "image": ""
+            },
+            {
+                "name": "Restart Softcams",
+                "description": "سكربت عمل ريستارت لمحاكيات الشفرات Oscam و Ncam عند التوقف",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/restart_cam.sh",
+                "image": ""
+            },
+            {
+                "name": "Satellites XML Update",
+                "description": "تحديث جميع ترددات وأقمار الستلايت لأحدث الترددات الحالية",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/satellites-update.zip",
+                "image": ""
+            },
+            {
+                "name": "softcams-oscam-emu-ALL Images mips – arm – arm64_11964_all",
+                "description": "Tool Package",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/softcams-oscam-emu-ALL%20Images%20mips%20%E2%80%93%20arm%20%E2%80%93%20arm64_11964_all.deb",
+                "image": ""
+            },
+            {
+                "name": "Update Image Feeds",
+                "description": "سكربت تحديث مستودعات وفيد الصورة وإصلاح الحزم المفقودة",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/tools/update_packages.sh",
+                "image": ""
             }
         ],
         "system_images": [
@@ -232,8 +446,58 @@
                 ]
             }
         ],
-        "picons": [],
-        "channels": [],
+        "picons": [
+            {
+                "name": "Picons Nilesat (7.0W / 8.0W)",
+                "description": "شعارات ولوجوهات قنوات نايل سات بجودة عالية وشفافة",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/picons/Picon%207.ow.zip",
+                "image": ""
+            }
+        ],
+        "channels": [
+            {
+                "name": "channels_backup by tarekalashry-ag",
+                "description": "Channels Settings",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/channels_backup%20by%20tarekalashry-ag.zip",
+                "image": ""
+            },
+            {
+                "name": "Channels Setting (MNASR)",
+                "description": "ملف قنوات محدث مرتب بعناية لجميع الأقمار والمفضلات العربية",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/channels_backup_MNASR_20260527.tar.gz",
+                "image": ""
+            },
+            {
+                "name": "OpenATV Channels Backup",
+                "description": "نسخة احتياطية لقائمة القنوات والمفضلات الرياضية والعامة",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/channels_backup_openATV_20260602_000828.tar.gz",
+                "image": ""
+            },
+            {
+                "name": "OpenATV Channels Backup",
+                "description": "نسخة احتياطية لقائمة القنوات والمفضلات الرياضية والعامة",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/channels_backup_openATV_20260813_170623.tar.gz",
+                "image": ""
+            },
+            {
+                "name": "Channels Hotbird 13E (Morph883)",
+                "description": "ملف قنوات ومفضلات مرتب وشامل من إعداد Morph883",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/e2-morph883-13e-160826_160826-r1_noarch.ipk",
+                "image": ""
+            },
+            {
+                "name": "Channels Hotbird 13E (Morph883)",
+                "description": "ملف قنوات ومفضلات مرتب وشامل من إعداد Morph883",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/e2-morph883-13e-19.2e-160826_160826-r1_noarch.ipk",
+                "image": ""
+            },
+            {
+                "name": "Channels  (Morph883)",
+                "description": "ملف قنوات ومفضلات مرتب وشامل من إعداد Morph883",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/e2-morph883-motor-160826_160826-r1_noarch.ipk",
+                "image": ""
+            }
+        ],
         "emus": [
             {
                 "name": "Ncam EMU V15.8",
