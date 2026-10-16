@@ -129,6 +129,12 @@
                 "description": "Virtual keyboard for Enigma2",
                 "file": "https://raw.githubusercontent.com/fairbird/NewVirtualKeyBoard/main/installer.sh",
                 "image": ""
+            },
+            {
+                "name": "timeshift-delay",
+                "description": "Auto installer for Timeshift Delay files on Enigma2",
+                "file": "http://dreambox4u.com/mosadpro/scripts/timeshift-delay.sh",
+                "image": ""
             }
         ],
         "system_images": [
