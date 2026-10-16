@@ -31,7 +31,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.10"
+PLUGIN_VERSION = "1.0.11"
 GITHUB_BASE = "https://raw.githubusercontent.com/azroukarim/OurStore/main"
 STORE_URL = GITHUB_BASE + "/feed/index.json"
 UPDATE_SCRIPT_URL = GITHUB_BASE + "/install.sh"
@@ -236,7 +236,7 @@ SKIN = """
     <widget name="key_green"  position="340,1020" size="300,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#059669" transparent="0" halign="center" valign="center" zPosition="3" />
     <widget name="key_yellow" position="650,1020" size="300,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#d97706" transparent="0" halign="center" valign="center" zPosition="3" />
     <widget name="key_blue"   position="960,1020" size="480,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
-    <eLabel position="1450,1020" size="440,50" text="MENU: batch options" font="Regular;26" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" valign="center" zPosition="3" />
+    <eLabel position="1450,1020" size="440,50" text="OK: select    MENU: info / update" font="Regular;26" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" valign="center" zPosition="3" />
 </screen>
 """
 
@@ -267,10 +267,10 @@ CONSOLE_SKIN = """
 
 
 # =====================================================================
-# BATCH MENU SKIN (works on remotes without an INFO key - uses MENU)
+# MENU SKIN (MENU key popup: Information / Check for updates)
 # =====================================================================
 BATCH_MENU_SKIN = """
-<screen name="AllStoreBatchMenu" position="center,center" size="820,600" title="Batch Install" flags="wfNoBorder">
+<screen name="AllStoreMenu" position="center,center" size="820,600" title="Menu" flags="wfNoBorder">
     <eLabel position="0,0" size="820,600" backgroundColor="#0B0F19" zPosition="-100" />
     <eLabel position="0,0" size="820,90" backgroundColor="#131A2A" zPosition="-90" />
     <eLabel position="0,90" size="820,3" backgroundColor="#8b5cf6" zPosition="-89" />
@@ -308,18 +308,17 @@ class AllStore(Screen):
         self["key_red"] = Label("Exit")
         self["key_green"] = Label("Install")
         self["key_yellow"] = Label("Refresh")
-        self["key_blue"] = Label("Update Plugin")
+        self["key_blue"] = Label("Batch Install")
 
         self["actions"] = ActionMap(
-            ["OkCancelActions", "DirectionActions", "ColorActions", "InfoActions", "MenuActions"],
+            ["OkCancelActions", "DirectionActions", "ColorActions", "MenuActions"],
             {
                 "cancel": self.close,
                 "red": self.close,
                 "green": self.download_item,
                 "yellow": self.load_store,
                 "blue": self.blue_pressed,
-                "info": self.toggle_select,
-                "menu": self.select_menu,
+                "menu": self.main_menu,
                 "ok": self.ok_pressed,
                 "up": self.go_up,
                 "down": self.go_down,
@@ -409,7 +408,7 @@ class AllStore(Screen):
         t.start()
 
     # -----------------------------------------------------------------
-    # SELF UPDATE - Blue button
+    # SELF UPDATE - MENU -> "Check for updates"
     # -----------------------------------------------------------------
     def self_update(self):
         if self.update_in_progress:
@@ -644,10 +643,10 @@ class AllStore(Screen):
                        % (item.get("name", ""), item.get("description", "No description")))
                 if self.is_selected(item):
                     txt += ("\n\n[SELECTED] for batch install"
-                            "\nMENU: batch options")
+                            "\nOK: deselect")
                 elif self.is_selectable(item):
-                    txt += ("\n\nMENU: add to batch / select all"
-                            "\nINFO: quick add")
+                    txt += ("\n\nOK: select for batch install"
+                            "\nBLUE: install all selected")
                 self["description"].setText(txt)
         except Exception:
             pass
@@ -666,7 +665,8 @@ class AllStore(Screen):
                 self.visible_items = item["items"]
                 self.update_items()
             else:
-                self.download_item()
+                # OK on a plugin item marks it for the batch install
+                self.toggle_select()
 
     def go_up(self):
         try:
@@ -742,88 +742,60 @@ class AllStore(Screen):
         except Exception:
             pass
 
-    def collect_selectable(self, items):
-        """All selectable leaf items under a list, including nested folders."""
-        result = []
-        for it in items:
-            if isinstance(it, dict) and "items" in it:
-                result.extend(self.collect_selectable(it["items"]))
-            elif self.is_selectable(it):
-                result.append(it)
-        return result
-
-    def select_all_toggle(self):
-        """MENU: select every installable item in the current view, or clear them."""
+    # --- MENU popup: Information + Check for updates -------------------
+    def main_menu(self):
+        """MENU: small menu with Information and panel update."""
         try:
-            leaves = self.collect_selectable(self.visible_items)
-            if not leaves:
-                self.set_description("No installable items in this view.")
-                return
-            all_selected = True
-            for it in leaves:
-                if not self.is_selected(it):
-                    all_selected = False
-                    break
-            if all_selected:
-                urls = set([it.get("file", "") for it in leaves])
-                self.selected = [s for s in self.selected if s.get("file") not in urls]
-            else:
-                for it in leaves:
-                    if not self.is_selected(it):
-                        self.selected.append(it)
-            self.update_items()
-        except Exception:
-            pass
-
-    def select_menu(self):
-        """MENU: open a batch options menu (works without an INFO key)."""
-        try:
-            idx = self["items_list"].getSelectionIndex()
-            cur = None
-            if 0 <= idx < len(self.visible_items):
-                cur = self.visible_items[idx]
-
-            n = len(self.selected)
-            options = []
-            if cur is not None and self.is_selectable(cur):
-                if self.is_selected(cur):
-                    options.append(("Remove this item from batch", "toggle"))
-                else:
-                    options.append(("Add this item to batch", "toggle"))
-            options.append(("Select all in this view", "all"))
-            if n > 0:
-                options.append(("Clear selection (%d)" % n, "clear"))
-                options.append(("Install selected (%d)" % n, "install"))
-
+            options = [
+                ("Information", "info"),
+                ("Check for updates", "update"),
+            ]
             self.session.openWithCallback(
-                self.select_menu_done,
-                AllStoreBatchMenu,
-                "Batch Install",
+                self.main_menu_done,
+                AllStoreMenu,
+                "Menu",
                 options
             )
         except Exception:
             pass
 
-    def select_menu_done(self, choice):
+    def main_menu_done(self, choice):
         if not choice:
             return
-        if choice == "toggle":
-            self.toggle_select()
-        elif choice == "all":
-            self.select_all_toggle()
-        elif choice == "clear":
-            self.selected = []
-            self.update_items()
-        elif choice == "install":
-            self.start_batch_install()
+        if choice == "info":
+            self.show_info_popup()
+        elif choice == "update":
+            self.self_update()
+
+    def show_info_popup(self):
+        """Show full details of the highlighted item."""
+        try:
+            idx = self["items_list"].getSelectionIndex()
+            if idx < 0 or idx >= len(self.visible_items):
+                return
+            item = self.visible_items[idx]
+            name = item.get("name", "?")
+            if "items" in item:
+                msg = "Folder: %s\n\nItems: %d" % (name, count_items(item["items"]))
+            else:
+                msg = "Name: %s\n\nDescription:\n%s" % (
+                    name, item.get("description", "No description"))
+                url = (item.get("file") or "").strip()
+                if url:
+                    msg += "\n\nSource:\n" + url
+                if self.is_selected(item):
+                    msg += "\n\nStatus: selected for batch install"
+            self.session.open(MessageBox, msg, MessageBox.TYPE_INFO)
+        except Exception:
+            pass
 
     def update_blue_label(self):
         try:
             n = len(self.selected)
             if n > 0:
-                self["key_blue"].setText("Install Selected (%d)" % n)
+                self["key_blue"].setText("Batch Install (%d)" % n)
             else:
-                self["key_blue"].setText("Update Plugin")
+                self["key_blue"].setText("Batch Install")
         except Exception:
             pass
 
@@ -831,7 +803,9 @@ class AllStore(Screen):
         if self.selected:
             self.start_batch_install()
         else:
-            self.self_update()
+            self.set_description("No items selected.\n\n"
+                                 "Use OK on the plugins you want, then press\n"
+                                 "the blue button to install them all.")
 
     def start_batch_install(self):
         items = list(self.selected)
@@ -1232,16 +1206,16 @@ class AllStoreConsole(Screen):
 
 
 # =====================================================================
-# BATCH OPTIONS MENU (MENU key) - universal, no INFO key needed
+# MENU POPUP (MENU key) - Information / Check for updates
 # =====================================================================
-class AllStoreBatchMenu(Screen):
+class AllStoreMenu(Screen):
     skin = BATCH_MENU_SKIN
 
     def __init__(self, session, title, options):
         Screen.__init__(self, session)
-        self.setTitle("Batch Install")
+        self.setTitle("Menu")
         self.options = options or []
-        self["menuheader"] = Label(title or "Batch Install")
+        self["menuheader"] = Label(title or "Menu")
         self["list"] = MenuList([label for (label, _value) in self.options])
         self["actions"] = ActionMap(
             ["OkCancelActions"],
