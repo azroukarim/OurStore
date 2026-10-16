@@ -31,7 +31,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.6"
+PLUGIN_VERSION = "1.0.7"
 GITHUB_BASE = "https://raw.githubusercontent.com/azroukarim/OurStore/main"
 STORE_URL = GITHUB_BASE + "/feed/index.json"
 UPDATE_SCRIPT_URL = GITHUB_BASE + "/install.sh"
@@ -122,6 +122,71 @@ def count_items(items):
     return total
 
 
+def batch_install_body(url, dest):
+    """Return the shell command that installs the file already saved at dest."""
+    pure = url.split("?")[0]
+    leaf = pure.split("/")[-1]
+    if leaf.endswith(".tar.gz"):
+        ext = ".tar.gz"
+    elif "." in leaf:
+        ext = "." + leaf.split(".")[-1].lower()
+    else:
+        ext = ""
+    if ext == ".ipk":
+        return "opkg install --force-overwrite %s" % dest
+    if ext == ".deb":
+        return "dpkg -i %s" % dest
+    if ext == ".sh":
+        return "chmod +x %s && sh %s" % (dest, dest)
+    if ext == ".zip":
+        return "unzip -o %s -d /" % dest
+    if ext in (".tar.gz", ".tgz"):
+        return "tar -xzf %s -C /" % dest
+    return "opkg install --force-overwrite %s" % dest
+
+
+def build_batch_script(items):
+    """Build one shell script that installs all selected items in order.
+
+    It is run fully detached (setsid) so an Enigma2 restart triggered by one
+    installer cannot kill the rest of the batch. Only one restart is needed
+    at the very end.
+    """
+    dest = "/tmp/allstore_batch_file"
+    out = ["#!/bin/sh", "# AllStore batch installer", ""]
+    total = len(items)
+    for i, item in enumerate(items):
+        url = (item.get("file") or "").strip()
+        if not url:
+            continue
+        name = item.get("name", "item")
+        # keep the header shell-safe and ASCII
+        safe = "".join([ch for ch in name
+                        if 32 <= ord(ch) < 127 and ch not in "'\"`$\\;"])
+        if not safe:
+            safe = "item"
+        body = batch_install_body(url, dest)
+        out.append('echo ""')
+        out.append('echo "======== [%d/%d] %s ========"' % (i + 1, total, safe))
+        out.append('rm -f %s' % dest)
+        out.append('if wget -q --no-check-certificate --timeout=120 --tries=3 -O %s "%s"; then'
+                   % (dest, url))
+        out.append('    if %s; then' % body)
+        out.append('        echo ">>> OK: %s"' % safe)
+        out.append('    else')
+        out.append('        echo ">>> FAILED: %s"' % safe)
+        out.append('    fi')
+        out.append('else')
+        out.append('    echo ">>> DOWNLOAD FAILED: %s"' % safe)
+        out.append('fi')
+        out.append('rm -f %s' % dest)
+        out.append('')
+    out.append('echo ""')
+    out.append('echo "======== ALL DONE ========"')
+    out.append('exit 0')
+    return "\n".join(out) + "\n"
+
+
 # =====================================================================
 # SKIN
 # =====================================================================
@@ -185,7 +250,7 @@ CONSOLE_SKIN = """
     <!-- Header -->
     <eLabel position="0,0" size="1920,90" backgroundColor="#131A2A" zPosition="-90" />
     <eLabel position="0,90" size="1920,3" backgroundColor="#10b981" zPosition="-89" />
-    <eLabel position="40,25" size="1300,45" text="INSTALLATION CONSOLE" font="Regular;34" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <widget name="header" position="40,25" size="1300,45" font="Regular;34" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
     <widget name="status" position="1360,28" size="520,40" font="Regular;28" foregroundColor="#10b981" backgroundColor="#131A2A" transparent="1" halign="right" zPosition="2" />
 
     <!-- Log -->
@@ -231,13 +296,14 @@ class AllStore(Screen):
         self["key_blue"] = Label("Update Plugin")
 
         self["actions"] = ActionMap(
-            ["OkCancelActions", "DirectionActions", "ColorActions"],
+            ["OkCancelActions", "DirectionActions", "ColorActions", "InfoActions"],
             {
                 "cancel": self.close,
                 "red": self.close,
                 "green": self.download_item,
                 "yellow": self.load_store,
-                "blue": self.self_update,
+                "blue": self.blue_pressed,
+                "info": self.toggle_select,
                 "ok": self.ok_pressed,
                 "up": self.go_up,
                 "down": self.go_down,
@@ -259,6 +325,7 @@ class AllStore(Screen):
         self.is_image_download = False
         self.download_dest_path = ""
         self.update_in_progress = False
+        self.selected = []
 
         self["categories_list"].onSelectionChanged.append(self.category_changed)
         self["items_list"].onSelectionChanged.append(self.item_changed)
@@ -494,8 +561,12 @@ class AllStore(Screen):
                     count = count_items(item["items"])
                     display.append("[+] %s (%d)" % (item.get("name", "?"), count))
                 else:
-                    display.append(item.get("name", "?"))
+                    name = item.get("name", "?")
+                    if self.is_selected(item):
+                        name = "[x] " + name
+                    display.append(name)
             self["items_list"].setList(display)
+            self.update_blue_label()
             self.item_changed()
         except Exception:
             pass
@@ -512,10 +583,13 @@ class AllStore(Screen):
                     % (item.get("name", ""), count_items(item["items"]))
                 )
             else:
-                self["description"].setText(
-                    "Name: %s\n\nDescription:\n%s"
-                    % (item.get("name", ""), item.get("description", "No description"))
-                )
+                txt = ("Name: %s\n\nDescription:\n%s"
+                       % (item.get("name", ""), item.get("description", "No description")))
+                if self.is_selected(item):
+                    txt += "\n\n[SELECTED] for batch install\n\nPress INFO to remove."
+                elif self.is_selectable(item):
+                    txt += "\n\nPress INFO to add to batch install."
+                self["description"].setText(txt)
         except Exception:
             pass
 
@@ -566,6 +640,119 @@ class AllStore(Screen):
     def go_right(self):
         if self.visible_items:
             self.active_focus = "items"
+
+    # -----------------------------------------------------------------
+    # MULTI-SELECT + BATCH INSTALL
+    # -----------------------------------------------------------------
+    def is_selected(self, item):
+        url = item.get("file", "")
+        for s in self.selected:
+            if s.get("file") == url:
+                return True
+        return False
+
+    def is_selectable(self, item):
+        if not isinstance(item, dict) or "items" in item:
+            return False
+        url = (item.get("file") or "").strip()
+        if not url:
+            return False
+        # system images take very long and are not meant for batch install
+        if "/system_images/" in url:
+            return False
+        return True
+
+    def toggle_select(self):
+        try:
+            if self.active_focus != "items":
+                return
+            idx = self["items_list"].getSelectionIndex()
+            if idx < 0 or idx >= len(self.visible_items):
+                return
+            item = self.visible_items[idx]
+            if not self.is_selectable(item):
+                self.set_description("Folders and system images cannot be\n"
+                                     "added to a batch install.")
+                return
+            if self.is_selected(item):
+                url = item.get("file", "")
+                self.selected = [s for s in self.selected if s.get("file") != url]
+            else:
+                self.selected.append(item)
+            self.update_items()
+        except Exception:
+            pass
+
+    def update_blue_label(self):
+        try:
+            n = len(self.selected)
+            if n > 0:
+                self["key_blue"].setText("Install Selected (%d)" % n)
+            else:
+                self["key_blue"].setText("Update Plugin")
+        except Exception:
+            pass
+
+    def blue_pressed(self):
+        if self.selected:
+            self.start_batch_install()
+        else:
+            self.self_update()
+
+    def start_batch_install(self):
+        items = list(self.selected)
+        if not items:
+            return
+        names = [it.get("name", "?") for it in items]
+        preview = "\n".join("  - %s" % nm for nm in names[:10])
+        if len(names) > 10:
+            preview += "\n  ... and %d more" % (len(names) - 10)
+        prompt = ("Install %d selected item(s)?\n\n%s\n\n"
+                  "They are installed one after another and Enigma2 "
+                  "restarts ONCE at the end." % (len(items), preview))
+        self.session.openWithCallback(
+            self.start_batch_confirm,
+            MessageBox,
+            prompt,
+            MessageBox.TYPE_YESNO
+        )
+
+    def start_batch_confirm(self, answer):
+        if not answer:
+            self.set_description("Batch install cancelled.")
+            self.item_changed()
+            return
+        items = list(self.selected)
+        script = build_batch_script(items)
+        script_path = "/tmp/allstore_batch.sh"
+        log_file = "/tmp/allstore_console.log"
+        done_file = "/tmp/allstore_done"
+        try:
+            data = script if isinstance(script, bytes) else script.encode("utf-8")
+            f = open(script_path, "wb")
+            f.write(data)
+            f.close()
+        except Exception as e:
+            self.session.open(MessageBox, "Cannot write batch script:\n%s" % str(e),
+                              MessageBox.TYPE_ERROR)
+            return
+        cmd = ("rm -f %s %s; chmod +x %s; "
+               "setsid sh -c 'sh %s > %s 2>&1 < /dev/null; echo done > %s' "
+               "> /dev/null 2>&1 < /dev/null &"
+               % (log_file, done_file, script_path, script_path, log_file, done_file))
+        self.session.openWithCallback(
+            self.batch_finished,
+            AllStoreConsole,
+            "Batch Install (%d items)" % len(items),
+            cmd,
+            log_file,
+            done_file,
+            False
+        )
+
+    def batch_finished(self, *args):
+        self.selected = []
+        self.update_items()
 
     # -----------------------------------------------------------------
     def download_item(self):
@@ -784,6 +971,7 @@ class AllStoreConsole(Screen):
         self.finished = False
         self.last_raw = ""
 
+        self["header"] = Label("INSTALLATION CONSOLE - %s" % (title or "Install"))
         self["status"] = Label("Running...")
         self["log"] = Label("")
         self["key_red"] = Label("Close")
