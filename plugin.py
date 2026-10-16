@@ -31,7 +31,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.7"
+PLUGIN_VERSION = "1.0.8"
 GITHUB_BASE = "https://raw.githubusercontent.com/azroukarim/OurStore/main"
 STORE_URL = GITHUB_BASE + "/feed/index.json"
 UPDATE_SCRIPT_URL = GITHUB_BASE + "/install.sh"
@@ -232,10 +232,11 @@ SKIN = """
     <eLabel position="0,1010" size="1920,70" backgroundColor="#131A2A" zPosition="-90" />
     <eLabel position="0,1010" size="1920,2" backgroundColor="#1A2235" zPosition="-89" />
 
-    <widget name="key_red"    position="40,1020"  size="440,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#e11d48" transparent="0" halign="center" valign="center" zPosition="3" />
-    <widget name="key_green"  position="500,1020" size="440,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#059669" transparent="0" halign="center" valign="center" zPosition="3" />
-    <widget name="key_yellow" position="960,1020" size="440,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#d97706" transparent="0" halign="center" valign="center" zPosition="3" />
-    <widget name="key_blue"   position="1420,1020" size="460,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_red"    position="30,1020"  size="300,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#e11d48" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_green"  position="340,1020" size="300,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#059669" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_yellow" position="650,1020" size="300,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#d97706" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_blue"   position="960,1020" size="480,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
+    <eLabel position="1450,1020" size="440,50" text="INFO: select    MENU: all / none" font="Regular;26" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" valign="center" zPosition="3" />
 </screen>
 """
 
@@ -296,7 +297,7 @@ class AllStore(Screen):
         self["key_blue"] = Label("Update Plugin")
 
         self["actions"] = ActionMap(
-            ["OkCancelActions", "DirectionActions", "ColorActions", "InfoActions"],
+            ["OkCancelActions", "DirectionActions", "ColorActions", "InfoActions", "MenuActions"],
             {
                 "cancel": self.close,
                 "red": self.close,
@@ -304,6 +305,7 @@ class AllStore(Screen):
                 "yellow": self.load_store,
                 "blue": self.blue_pressed,
                 "info": self.toggle_select,
+                "menu": self.select_all_toggle,
                 "ok": self.ok_pressed,
                 "up": self.go_up,
                 "down": self.go_down,
@@ -586,9 +588,10 @@ class AllStore(Screen):
                 txt = ("Name: %s\n\nDescription:\n%s"
                        % (item.get("name", ""), item.get("description", "No description")))
                 if self.is_selected(item):
-                    txt += "\n\n[SELECTED] for batch install\n\nPress INFO to remove."
+                    txt += "\n\n[SELECTED] for batch install\n\nINFO: remove\nMENU: all / none"
                 elif self.is_selectable(item):
-                    txt += "\n\nPress INFO to add to batch install."
+                    txt += ("\n\nINFO: add to batch install\n"
+                            "MENU: select all in this view")
                 self["description"].setText(txt)
         except Exception:
             pass
@@ -679,6 +682,39 @@ class AllStore(Screen):
                 self.selected = [s for s in self.selected if s.get("file") != url]
             else:
                 self.selected.append(item)
+            self.update_items()
+        except Exception:
+            pass
+
+    def collect_selectable(self, items):
+        """All selectable leaf items under a list, including nested folders."""
+        result = []
+        for it in items:
+            if isinstance(it, dict) and "items" in it:
+                result.extend(self.collect_selectable(it["items"]))
+            elif self.is_selectable(it):
+                result.append(it)
+        return result
+
+    def select_all_toggle(self):
+        """MENU: select every installable item in the current view, or clear them."""
+        try:
+            leaves = self.collect_selectable(self.visible_items)
+            if not leaves:
+                self.set_description("No installable items in this view.")
+                return
+            all_selected = True
+            for it in leaves:
+                if not self.is_selected(it):
+                    all_selected = False
+                    break
+            if all_selected:
+                urls = set([it.get("file", "") for it in leaves])
+                self.selected = [s for s in self.selected if s.get("file") not in urls]
+            else:
+                for it in leaves:
+                    if not self.is_selected(it):
+                        self.selected.append(it)
             self.update_items()
         except Exception:
             pass
