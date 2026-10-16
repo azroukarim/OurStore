@@ -146,7 +146,7 @@ AllStore يدعم **التحديث الذاتي**. عند توفّر إصدار 
 
 ## 👤 المؤلف
 
-**Azrou Karim**
+**Karim Azrou**
 
 [![GitHub](https://img.shields.io/badge/GitHub-azroukarim-181717?logo=github&style=flat-square)](https://github.com/azroukarim)
 
