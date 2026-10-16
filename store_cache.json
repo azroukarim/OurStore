@@ -123,7 +123,14 @@
                 "image": ""
             }
         ],
-        "tools": [],
+        "tools": [
+            {
+                "name": "NewVirtualKeyBoard",
+                "description": "Virtual keyboard for Enigma2",
+                "file": "https://raw.githubusercontent.com/fairbird/NewVirtualKeyBoard/main/installer.sh",
+                "image": ""
+            }
+        ],
         "system_images": [
             {
                 "name": "OpenATV",
