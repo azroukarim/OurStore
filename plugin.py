@@ -31,7 +31,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.11"
+PLUGIN_VERSION = "1.0.12"
 GITHUB_BASE = "https://raw.githubusercontent.com/azroukarim/OurStore/main"
 STORE_URL = GITHUB_BASE + "/feed/index.json"
 UPDATE_SCRIPT_URL = GITHUB_BASE + "/install.sh"
@@ -145,15 +145,78 @@ def batch_install_body(url, dest):
     return "opkg install --force-overwrite %s" % dest
 
 
+# Shell preamble that neutralises every Enigma2 restart attempt while a batch
+# install is running. It drops small stub commands (init, reboot, shutdown,
+# killall, systemctl, service...) into a temp dir and puts that dir first in
+# PATH, so an installer that calls "init 4; init 3" (or "killall enigma2")
+# becomes a harmless no-op. The user is asked to restart ONCE at the very end.
+BATCH_RESTART_BLOCKER = r'''
+# --- AllStore: block per-item Enigma2 restarts until the batch is done ---
+BLOCKDIR="/tmp/allstore_block"
+rm -rf "$BLOCKDIR"; mkdir -p "$BLOCKDIR"
+RKILLALL=$(command -v killall 2>/dev/null)
+[ -z "$RKILLALL" ] && RKILLALL="busybox killall"
+RSYSTEMCTL=$(command -v systemctl 2>/dev/null)
+RSERVICE=$(command -v service 2>/dev/null)
+
+for c in init reboot shutdown halt poweroff telinit; do
+cat > "$BLOCKDIR/$c" <<'EOS'
+#!/bin/sh
+echo "AllStore: '$0' suppressed (batch in progress)"
+exit 0
+EOS
+done
+
+cat > "$BLOCKDIR/killall" <<EOS
+#!/bin/sh
+for a in "\$@"; do
+  case "\$a" in
+    *enigma2*) echo "AllStore: killall \$a suppressed (batch)"; exit 0;;
+  esac
+done
+exec $RKILLALL "\$@"
+EOS
+
+if [ -n "$RSYSTEMCTL" ]; then
+cat > "$BLOCKDIR/systemctl" <<EOS
+#!/bin/sh
+case "\$*" in
+  *enigma2*) echo "AllStore: systemctl \$* suppressed (batch)"; exit 0;;
+esac
+exec $RSYSTEMCTL "\$@"
+EOS
+fi
+
+if [ -n "$RSERVICE" ]; then
+cat > "$BLOCKDIR/service" <<EOS
+#!/bin/sh
+case "\$*" in
+  *enigma2*) echo "AllStore: service \$* suppressed (batch)"; exit 0;;
+esac
+exec $RSERVICE "\$@"
+EOS
+fi
+
+chmod +x "$BLOCKDIR"/* 2>/dev/null
+export PATH="$BLOCKDIR:$PATH"
+export ALLSTORE_BATCH=1
+echo "AllStore: Enigma2 restarts are disabled until the batch finishes."
+echo ""
+'''
+
+
 def build_batch_script(items):
     """Build one shell script that installs all selected items in order.
 
     It is run fully detached (setsid) so an Enigma2 restart triggered by one
-    installer cannot kill the rest of the batch. Only one restart is needed
-    at the very end.
+    installer cannot kill the rest of the batch. Per-item restarts are also
+    actively suppressed (see BATCH_RESTART_BLOCKER) so only ONE restart is
+    needed at the very end, after every item has been installed.
     """
     dest = "/tmp/allstore_batch_file"
     out = ["#!/bin/sh", "# AllStore batch installer", ""]
+    out.extend(BATCH_RESTART_BLOCKER.strip("\n").split("\n"))
+    out.append("")
     total = len(items)
     for i, item in enumerate(items):
         url = (item.get("file") or "").strip()
@@ -183,6 +246,7 @@ def build_batch_script(items):
         out.append('')
     out.append('echo ""')
     out.append('echo "======== ALL DONE ========"')
+    out.append('rm -rf "$BLOCKDIR" 2>/dev/null')
     out.append('exit 0')
     return "\n".join(out) + "\n"
 
@@ -816,8 +880,9 @@ class AllStore(Screen):
         if len(names) > 10:
             preview += "\n  ... and %d more" % (len(names) - 10)
         prompt = ("Install %d selected item(s)?\n\n%s\n\n"
-                  "They are installed one after another and Enigma2 "
-                  "restarts ONCE at the end." % (len(items), preview))
+                  "Any restart requested by an individual installer is "
+                  "postponed. Enigma2 restarts ONCE at the end, after every "
+                  "item has been installed." % (len(items), preview))
         self.session.openWithCallback(
             self.start_batch_confirm,
             MessageBox,

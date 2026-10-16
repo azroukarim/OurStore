@@ -27,9 +27,13 @@ if [ -f "$MY_FILE" ]; then
     if [ $? -eq 0 ]; then
         echo ""
         echo "   >>>>   SUCCESSFULLY INSTALLED   <<<<"
-        echo "   >>>>       RESTARTING           <<<<"
-        sleep 2
-        init 4; sleep 3; init 3
+        if [ "$ALLSTORE_BATCH" = "1" ]; then
+            echo "   >>>>  Batch mode: restart skipped (one restart at the end)  <<<<"
+        else
+            echo "   >>>>       RESTARTING           <<<<"
+            sleep 2
+            init 4; sleep 3; init 3
+        fi
     else
         echo "   >>>>   INSTALLATION FAILED !   <<<<"
     fi
