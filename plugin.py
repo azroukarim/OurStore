@@ -31,7 +31,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.13"
+PLUGIN_VERSION = "1.0.14"
 GITHUB_BASE = "https://raw.githubusercontent.com/azroukarim/OurStore/main"
 STORE_URL = GITHUB_BASE + "/feed/index.json"
 UPDATE_SCRIPT_URL = GITHUB_BASE + "/install.sh"
@@ -438,7 +438,9 @@ class AllStore(Screen):
             pass
 
     def async_fetch(self):
-        data = load_json_network(STORE_URL)
+        # Cache-buster so the GitHub CDN cannot serve a stale feed
+        # (otherwise newly added/removed store items don't appear).
+        data = load_json_network(STORE_URL + "?t=" + str(int(time.time())))
         if data and "categories" in data:
             try:
                 with open(CACHE_FILE, "w") as f:
