@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.16"
+PLUGIN_VERSION = "1.0.17"
 PLUGIN_AUTHOR = "Azrou Karim"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -444,23 +444,22 @@ BATCH_MENU_SKIN = """
 # Shows plugin version, author and the Facebook QR code.
 # =====================================================================
 INFO_SKIN = """
-<screen name="AllStoreInfo" position="center,center" size="1000,580" title="Information" flags="wfNoBorder">
-    <eLabel position="0,0" size="1000,580" backgroundColor="#0B0F19" zPosition="-100" />
-    <eLabel position="0,0" size="1000,80" backgroundColor="#131A2A" zPosition="-90" />
-    <eLabel position="0,80" size="1000,3" backgroundColor="#8b5cf6" zPosition="-89" />
-    <widget name="header" position="30,20" size="940,50" font="Regular;34" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+<screen name="AllStoreInfo" position="center,center" size="1180,660" title="Information" flags="wfNoBorder">
+    <eLabel position="0,0" size="1180,660" backgroundColor="#0B0F19" zPosition="-100" />
+    <eLabel position="0,0" size="1180,80" backgroundColor="#131A2A" zPosition="-90" />
+    <eLabel position="0,80" size="1180,3" backgroundColor="#8b5cf6" zPosition="-89" />
+    <widget name="header" position="30,20" size="1120,50" font="Regular;34" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
 
-    <widget name="appname" position="40,130" size="600,60" font="Regular;42" foregroundColor="#8b5cf6" backgroundColor="#0B0F19" transparent="1" zPosition="2" />
-    <widget name="version" position="40,205" size="600,46" font="Regular;32" foregroundColor="#e5e7eb" backgroundColor="#0B0F19" transparent="1" zPosition="2" />
-    <widget name="author" position="40,260" size="600,46" font="Regular;32" foregroundColor="#e5e7eb" backgroundColor="#0B0F19" transparent="1" zPosition="2" />
-    <widget name="note" position="40,325" size="590,110" font="Regular;24" foregroundColor="#9ca3af" backgroundColor="#0B0F19" transparent="1" zPosition="2" />
+    <widget name="appname" position="40,140" size="620,60" font="Regular;44" foregroundColor="#8b5cf6" backgroundColor="#0B0F19" transparent="1" zPosition="2" />
+    <widget name="version" position="40,220" size="620,46" font="Regular;32" foregroundColor="#e5e7eb" backgroundColor="#0B0F19" transparent="1" zPosition="2" />
+    <widget name="author" position="40,275" size="620,46" font="Regular;32" foregroundColor="#e5e7eb" backgroundColor="#0B0F19" transparent="1" zPosition="2" />
+    <widget name="note" position="40,345" size="610,200" font="Regular;25" foregroundColor="#9ca3af" backgroundColor="#0B0F19" transparent="1" zPosition="2" />
 
-    <eLabel position="664,124" size="292,292" backgroundColor="#ffffff" zPosition="0" />
-    <widget name="qrcode" position="670,130" size="280,280" zPosition="2" />
-    <widget name="qrlabel" position="664,425" size="292,44" font="Regular;26" foregroundColor="#9ca3af" backgroundColor="#0B0F19" transparent="1" halign="center" zPosition="2" />
+    <eLabel position="680,110" size="470,470" backgroundColor="#ffffff" zPosition="0" />
+    <widget name="qrcode" position="690,120" size="450,450" zPosition="2" />
 
-    <eLabel position="0,500" size="1000,80" backgroundColor="#131A2A" zPosition="-90" />
-    <widget name="key_red" position="40,520" size="260,44" font="Regular;30" foregroundColor="#ef4444" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <eLabel position="0,580" size="1180,80" backgroundColor="#131A2A" zPosition="-90" />
+    <widget name="key_red" position="40,600" size="300,44" font="Regular;30" foregroundColor="#ef4444" backgroundColor="#131A2A" transparent="1" zPosition="2" />
 </screen>
 """
 
@@ -1458,9 +1457,8 @@ class AllStoreInfo(Screen):
         self["version"] = Label("Version: v" + PLUGIN_VERSION)
         self["author"] = Label("Author: " + PLUGIN_AUTHOR)
         self["note"] = Label("Universal plugins & skins store for Enigma2 boxes.\n"
-                             "Scan the QR code to open the Facebook page.")
+                             "Scan the QR code to open our Facebook page.")
         self["qrcode"] = Pixmap()
-        self["qrlabel"] = Label("Facebook page")
         self["key_red"] = Label("Close")
 
         self["actions"] = ActionMap(
@@ -1475,18 +1473,52 @@ class AllStoreInfo(Screen):
 
         self.onLayoutFinish.append(self.show_qr)
 
+    def _qr_log(self, msg):
+        try:
+            f = open("/tmp/allstore_qr.log", "a")
+            f.write(msg + "\n")
+            f.close()
+        except Exception:
+            pass
+
     def show_qr(self):
-        """Render images/qrcode.png inside the qrcode Pixmap widget."""
-        if ePicLoad is None:
-            return
-        path = self._qr_source()
-        if not path or not os.path.exists(path):
-            return
+        """Render the QR image inside the qrcode Pixmap widget."""
+        try:
+            path = self._qr_source()
+            exists = bool(path and os.path.exists(path))
+            self._qr_log("show_qr source=%s exists=%s" % (path, exists))
+            if not exists:
+                return
+            if self._show_qr_loadpixmap(path):
+                self._qr_log("loaded via loadPixmap")
+                return
+            self._qr_log("loadPixmap failed -> ePicLoad")
+            self._show_qr_picload(path)
+        except Exception as e:
+            self._qr_log("show_qr ERROR: " + str(e))
+
+    def _show_qr_loadpixmap(self, path):
+        """Most portable loader: Tools.LoadPixmap.loadPixmap (native size)."""
+        try:
+            from Tools.LoadPixmap import loadPixmap
+        except Exception:
+            return False
+        try:
+            ptr = loadPixmap(path)
+            if ptr is not None:
+                self["qrcode"].instance.setPixmap(ptr)
+                return True
+        except Exception:
+            pass
+        return False
+
+    def _show_qr_picload(self, path):
+        """Fallback: decode through ePicLoad into the widget's size."""
         try:
             w = self["qrcode"].instance.size().width()
             h = self["qrcode"].instance.size().height()
         except Exception:
-            w, h = 280, 280
+            w, h = 450, 450
         try:
             self.picload = ePicLoad()
             try:
@@ -1494,15 +1526,27 @@ class AllStoreInfo(Screen):
             except Exception:
                 pass
             try:
-                # width, height, aspect_w, aspect_h, stretch, background, bgcolor
-                self.picload.setPara((w, h, w, h, False, 0, "#00FFFFFF"))
+                # width, height, aspect_w, aspect_h, accel, background, bgcolor
+                self.picload.setPara((w, h, w, h, False, 1, "#00000000"))
             except Exception:
-                self.picload.setPara((w, h))
+                try:
+                    self.picload.setPara((w, h, w, h, False, 0, "#00000000"))
+                except Exception:
+                    self._qr_last_resort(path)
+                    return
             self.picload.startDecode(path)
             # if decoding was synchronous, apply straight away
             self._qr_picture()
         except Exception:
             self.picload = None
+            self._qr_last_resort(path)
+
+    def _qr_last_resort(self, path):
+        # some builds expose setPixmapFromFile directly on ePixmap
+        try:
+            self["qrcode"].instance.setPixmapFromFile(path)
+        except Exception:
+            pass
 
     def _qr_picture(self, picInfo=None):
         """Attach the decoded pixmap to the qrcode widget (once ready)."""
