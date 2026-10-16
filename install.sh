@@ -1,10 +1,11 @@
 #!/bin/sh
 # ============================================================
-# AllStore - Installation Script
+# AllStore - Installation / Update Script
 # ============================================================
 
 PLUGIN_DIR="/usr/lib/enigma2/python/Plugins/Extensions/AllStore"
 BASE_URL="https://raw.githubusercontent.com/azroukarim/OurStore/main"
+TS=$(date +%s)
 
 echo "========================================="
 echo "    Installing AllStore..."
@@ -24,32 +25,37 @@ mkdir -p "$PLUGIN_DIR/picons"
 mkdir -p "$PLUGIN_DIR/novaler"
 mkdir -p "$PLUGIN_DIR/system_images"
 
+# dl <dest> <relative-url>  (cache-buster + ignore old certificates)
+dl() {
+    wget -q --no-check-certificate -O "$1" "$BASE_URL/$2?t=$TS"
+}
+
 echo "Downloading core files..."
-wget -q -O "$PLUGIN_DIR/plugin.py"       "$BASE_URL/plugin.py"
-wget -q -O "$PLUGIN_DIR/plugin.png"      "$BASE_URL/plugin.png"
-wget -q -O "$PLUGIN_DIR/__init__.py"     "$BASE_URL/__init__.py"
-wget -q -O "$PLUGIN_DIR/version.json"    "$BASE_URL/version.json"
-wget -q -O "$PLUGIN_DIR/feed/index.json" "$BASE_URL/feed/index.json"
+dl "$PLUGIN_DIR/plugin.py"       "plugin.py"
+dl "$PLUGIN_DIR/plugin.png"      "plugin.png"
+dl "$PLUGIN_DIR/__init__.py"     "__init__.py"
+dl "$PLUGIN_DIR/version.json"    "version.json"
+dl "$PLUGIN_DIR/feed/index.json" "feed/index.json"
 
 echo "Downloading main images..."
-wget -q -O "$PLUGIN_DIR/images/logo.png"       "$BASE_URL/images/logo.png"
-wget -q -O "$PLUGIN_DIR/images/background.png" "$BASE_URL/images/background.png"
-wget -q -O "$PLUGIN_DIR/images/avatar.png"     "$BASE_URL/images/avatar.png"
-wget -q -O "$PLUGIN_DIR/images/qrcode.png"     "$BASE_URL/images/qrcode.png"
-wget -q -O "$PLUGIN_DIR/images/key_red.png"    "$BASE_URL/images/key_red.png"
-wget -q -O "$PLUGIN_DIR/images/key_green.png"  "$BASE_URL/images/key_green.png"
-wget -q -O "$PLUGIN_DIR/images/key_yellow.png" "$BASE_URL/images/key_yellow.png"
-wget -q -O "$PLUGIN_DIR/images/key_blue.png"   "$BASE_URL/images/key_blue.png"
-wget -q -O "$PLUGIN_DIR/images/progress.png"   "$BASE_URL/images/progress.png"
+dl "$PLUGIN_DIR/images/logo.png"       "images/logo.png"
+dl "$PLUGIN_DIR/images/background.png" "images/background.png"
+dl "$PLUGIN_DIR/images/avatar.png"     "images/avatar.png"
+dl "$PLUGIN_DIR/images/qrcode.png"     "images/qrcode.png"
+dl "$PLUGIN_DIR/images/key_red.png"    "images/key_red.png"
+dl "$PLUGIN_DIR/images/key_green.png"  "images/key_green.png"
+dl "$PLUGIN_DIR/images/key_yellow.png" "images/key_yellow.png"
+dl "$PLUGIN_DIR/images/key_blue.png"   "images/key_blue.png"
+dl "$PLUGIN_DIR/images/progress.png"   "images/progress.png"
 
 echo "Downloading section icons..."
-wget -q -O "$PLUGIN_DIR/images/Icons/plugins.png"       "$BASE_URL/images/Icons/plugins.png"
-wget -q -O "$PLUGIN_DIR/images/Icons/skins.png"         "$BASE_URL/images/Icons/skins.png"
-wget -q -O "$PLUGIN_DIR/images/Icons/tools.png"         "$BASE_URL/images/Icons/tools.png"
-wget -q -O "$PLUGIN_DIR/images/Icons/system_images.png" "$BASE_URL/images/Icons/system_images.png"
-wget -q -O "$PLUGIN_DIR/images/Icons/picons.png"        "$BASE_URL/images/Icons/picons.png"
-wget -q -O "$PLUGIN_DIR/images/Icons/channels.png"      "$BASE_URL/images/Icons/channels.png"
-wget -q -O "$PLUGIN_DIR/images/Icons/novaler.png"       "$BASE_URL/images/Icons/novaler.png"
+dl "$PLUGIN_DIR/images/Icons/plugins.png"       "images/Icons/plugins.png"
+dl "$PLUGIN_DIR/images/Icons/skins.png"         "images/Icons/skins.png"
+dl "$PLUGIN_DIR/images/Icons/tools.png"         "images/Icons/tools.png"
+dl "$PLUGIN_DIR/images/Icons/system_images.png" "images/Icons/system_images.png"
+dl "$PLUGIN_DIR/images/Icons/picons.png"        "images/Icons/picons.png"
+dl "$PLUGIN_DIR/images/Icons/channels.png"      "images/Icons/channels.png"
+dl "$PLUGIN_DIR/images/Icons/novaler.png"       "images/Icons/novaler.png"
 
 find "$PLUGIN_DIR" -name "*.pyc" -delete 2>/dev/null
 find "$PLUGIN_DIR" -name "__pycache__" -exec rm -rf {} \; 2>/dev/null
@@ -57,6 +63,9 @@ find "$PLUGIN_DIR" -name "__pycache__" -exec rm -rf {} \; 2>/dev/null
 chmod -R 755 "$PLUGIN_DIR"
 
 sync
+
+echo "Installed version:"
+cat "$PLUGIN_DIR/version.json"
 
 echo "Restarting Enigma2..."
 sleep 2

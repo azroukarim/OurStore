@@ -31,7 +31,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.9"
+PLUGIN_VERSION = "1.0.10"
 GITHUB_BASE = "https://raw.githubusercontent.com/azroukarim/OurStore/main"
 STORE_URL = GITHUB_BASE + "/feed/index.json"
 UPDATE_SCRIPT_URL = GITHUB_BASE + "/install.sh"
@@ -484,21 +484,57 @@ class AllStore(Screen):
 
     def run_update(self):
         try:
-            cmd = (
-                'cd /tmp && '
-                'wget -q --no-check-certificate "' + GITHUB_BASE + '/plugin.py" -O plugin.py && '
-                'wget -q --no-check-certificate "' + GITHUB_BASE + '/plugin.png" -O plugin.png && '
-                'wget -q --no-check-certificate "' + GITHUB_BASE + '/version.json" -O version.json && '
-                'wget -q --no-check-certificate "' + GITHUB_BASE + '/feed/index.json" -O feed_index.json && '
-                'cp plugin.py ' + PLUGIN_DIR + '/plugin.py && '
-                'cp plugin.png ' + PLUGIN_DIR + '/plugin.png && '
-                'cp version.json ' + PLUGIN_DIR + '/version.json && '
-                'mkdir -p ' + PLUGIN_DIR + '/feed && '
-                'cp feed_index.json ' + PLUGIN_DIR + '/feed/index.json && '
-                'rm -f plugin.py plugin.png version.json feed_index.json ' + PLUGIN_DIR + '/store_cache.json ' + PLUGIN_DIR + '/plugin.pyc && '
-                'rm -rf ' + PLUGIN_DIR + '/__pycache__'
-            )
-            self.my_console.ePopen(cmd + " 2>&1", self.update_done)
+            # Use a cache-busting timestamp so the GitHub CDN cannot serve a
+            # stale plugin.py/version.json right after a new release.
+            base = GITHUB_BASE
+            script = (
+                "#!/bin/sh\n"
+                "cd /tmp || exit 1\n"
+                "TS=$(date +%s)\n"
+                "rm -f allstore_dl.py allstore_dl.png allstore_dl.json allstore_dl_feed.json\n"
+                'echo "Downloading plugin.py..."\n'
+                'wget -q --no-check-certificate "%s/plugin.py?t=$TS" -O allstore_dl.py || exit 2\n'
+                'echo "Downloading plugin.png..."\n'
+                'wget -q --no-check-certificate "%s/plugin.png?t=$TS" -O allstore_dl.png || exit 3\n'
+                'echo "Downloading version.json..."\n'
+                'wget -q --no-check-certificate "%s/version.json?t=$TS" -O allstore_dl.json || exit 4\n'
+                'echo "Downloading feed/index.json..."\n'
+                'wget -q --no-check-certificate "%s/feed/index.json?t=$TS" -O allstore_dl_feed.json || exit 5\n'
+                'echo "Installing to %s ..."\n'
+                'mkdir -p "%s/feed" || exit 6\n'
+                'cp allstore_dl.py "%s/plugin.py" || exit 7\n'
+                'cp allstore_dl.png "%s/plugin.png" || exit 8\n'
+                'cp allstore_dl.json "%s/version.json" || exit 9\n'
+                'cp allstore_dl_feed.json "%s/feed/index.json" || exit 10\n'
+                'rm -f "%s/plugin.pyc" "%s/store_cache.json"\n'
+                'rm -rf "%s/__pycache__"\n'
+                'rm -f allstore_dl.py allstore_dl.png allstore_dl.json allstore_dl_feed.json\n'
+                'echo "DONE. Installed version.json:"\n'
+                'cat "%s/version.json"\n'
+            ) % (base, base, base, base, PLUGIN_DIR,
+                 PLUGIN_DIR, PLUGIN_DIR, PLUGIN_DIR, PLUGIN_DIR, PLUGIN_DIR,
+                 PLUGIN_DIR, PLUGIN_DIR, PLUGIN_DIR, PLUGIN_DIR)
+            script_path = "/tmp/allstore_update.sh"
+            log_file = "/tmp/allstore_update.log"
+            data = script if isinstance(script, bytes) else script.encode("utf-8")
+            f = open(script_path, "wb")
+            f.write(data)
+            f.close()
+            retval = os.system("chmod +x %s && sh %s > %s 2>&1" % (script_path, script_path, log_file))
+            output = ""
+            try:
+                f = open(log_file, "r")
+                output = f.read()
+                f.close()
+            except Exception:
+                pass
+            code = 0
+            try:
+                if retval:
+                    code = retval >> 8 if (retval >> 8) else retval
+            except Exception:
+                code = retval
+            self.update_done(output, code)
         except Exception as e:
             self.update_in_progress = False
             gui_call(self.set_description, "Update error: " + str(e))
@@ -506,16 +542,21 @@ class AllStore(Screen):
     def update_done(self, result, retval, extra_args=None):
         def _ui():
             self.update_in_progress = False
+            out = result.strip() if result else "(no output)"
             if retval == 0:
                 self.session.openWithCallback(
                     self.restart_callback,
                     MessageBox,
-                    "Plugin updated successfully!\n\nRestart Enigma2 now?",
+                    "Plugin updated successfully!\n\n%s\n\nRestart Enigma2 now?" % out,
                     MessageBox.TYPE_YESNO
                 )
             else:
-                err = result.strip() if result else "Unknown error"
-                self.set_description("Update failed:\n" + err)
+                self.session.open(
+                    MessageBox,
+                    "Update FAILED (step %s):\n\n%s" % (retval, out[-1500:]),
+                    MessageBox.TYPE_ERROR
+                )
+                self.set_description("Update failed at step %s.\nSee the message for details." % retval)
         gui_call(_ui)
 
     def restart_callback(self, answer):
