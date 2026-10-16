@@ -300,7 +300,11 @@ class AllStore(Screen):
             except Exception:
                 pass
             gui_call(self.apply_store_data, data)
-        elif not self.categories:
+        elif self.categories:
+            gui_call(self.set_description,
+                     "Refresh failed - showing cached data.\n"
+                     "Press YELLOW to retry.")
+        else:
             gui_call(self.set_description, "Failed to connect to server.")
 
     def load_local_cache(self):
