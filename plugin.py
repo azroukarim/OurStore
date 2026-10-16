@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.17"
+PLUGIN_VERSION = "1.0.18"
 PLUGIN_AUTHOR = "Azrou Karim"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -1492,24 +1492,45 @@ class AllStoreInfo(Screen):
             if self._show_qr_loadpixmap(path):
                 self._qr_log("loaded via loadPixmap")
                 return
-            self._qr_log("loadPixmap failed -> ePicLoad")
+            self._qr_log("builtin loaders failed -> ePicLoad")
             self._show_qr_picload(path)
         except Exception as e:
             self._qr_log("show_qr ERROR: " + str(e))
 
     def _show_qr_loadpixmap(self, path):
-        """Most portable loader: Tools.LoadPixmap.loadPixmap (native size)."""
+        """Load the QR pixmap using the most widely available APIs."""
+        ptr = None
+        method = ""
+        # 1) Tools.LoadPixmap.LoadPixmap (OpenATV / OpenPLi / OpenViX)
         try:
-            from Tools.LoadPixmap import loadPixmap
+            from Tools.LoadPixmap import LoadPixmap
+            ptr = LoadPixmap(path)
+            method = "LoadPixmap"
         except Exception:
-            return False
-        try:
-            ptr = loadPixmap(path)
-            if ptr is not None:
+            ptr = None
+        # 2) legacy lowercase name on some images
+        if ptr is None:
+            try:
+                from Tools.LoadPixmap import loadPixmap
+                ptr = loadPixmap(path)
+                method = "loadPixmap"
+            except Exception:
+                ptr = None
+        # 3) direct enigma loader
+        if ptr is None:
+            try:
+                from enigma import loadPNG
+                ptr = loadPNG(path, 0, 1)
+                method = "loadPNG"
+            except Exception:
+                ptr = None
+        if ptr is not None:
+            try:
                 self["qrcode"].instance.setPixmap(ptr)
+                self._qr_log("loaded via " + method)
                 return True
-        except Exception:
-            pass
+            except Exception as e:
+                self._qr_log("setPixmap error: " + str(e))
         return False
 
     def _show_qr_picload(self, path):
