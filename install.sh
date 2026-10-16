@@ -1,17 +1,20 @@
 #!/bin/sh
 # ============================================================
-# AllStore - Installation / Update Script
+# Word Of Enigma2 - Installation / Update Script
 # ============================================================
 
-PLUGIN_DIR="/usr/lib/enigma2/python/Plugins/Extensions/AllStore"
+PLUGIN_DIR="/usr/lib/enigma2/python/Plugins/Extensions/WordOfEnigma2"
+# Old installation path (previous name "AllStore") - removed during migration
+LEGACY_DIR="/usr/lib/enigma2/python/Plugins/Extensions/AllStore"
 BASE_URL="https://raw.githubusercontent.com/azroukarim/OurStore/main"
 TS=$(date +%s)
 
 echo "========================================="
-echo "    Installing AllStore..."
+echo "    Installing Word Of Enigma2..."
 echo "========================================="
 
 rm -rf "$PLUGIN_DIR"
+rm -rf "$LEGACY_DIR"
 
 mkdir -p "$PLUGIN_DIR"
 mkdir -p "$PLUGIN_DIR/feed"

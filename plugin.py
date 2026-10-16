@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # =========================================================================
-# AllStore - Universal Enigma2 Plugin
+# WordOfEnigma2 - Universal Enigma2 Plugin
 # Compatible with: OpenATV, OpenPLi, Egami, BlackHole, OBH, VTi, DreamOS
 # Python 2.7 & Python 3.x
 # =========================================================================
@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.19"
+PLUGIN_VERSION = "1.0.20"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -131,7 +131,7 @@ GITHUB_BASE = "https://raw.githubusercontent.com/azroukarim/OurStore/main"
 STORE_URL = GITHUB_BASE + "/feed/index.json"
 UPDATE_SCRIPT_URL = GITHUB_BASE + "/install.sh"
 
-PLUGIN_DIR = "/usr/lib/enigma2/python/Plugins/Extensions/AllStore"
+PLUGIN_DIR = "/usr/lib/enigma2/python/Plugins/Extensions/WordOfEnigma2"
 try:
     if not os.path.isdir(PLUGIN_DIR):
         PLUGIN_DIR = os.path.dirname(__file__)
@@ -246,8 +246,8 @@ def batch_install_body(url, dest):
 # PATH, so an installer that calls "init 4; init 3" (or "killall enigma2")
 # becomes a harmless no-op. The user is asked to restart ONCE at the very end.
 BATCH_RESTART_BLOCKER = r'''
-# --- AllStore: block per-item Enigma2 restarts until the batch is done ---
-BLOCKDIR="/tmp/allstore_block"
+# --- WordOfEnigma2: block per-item Enigma2 restarts until the batch is done ---
+BLOCKDIR="/tmp/wordofenigma2_block"
 rm -rf "$BLOCKDIR"; mkdir -p "$BLOCKDIR"
 RKILLALL=$(command -v killall 2>/dev/null)
 [ -z "$RKILLALL" ] && RKILLALL="busybox killall"
@@ -257,7 +257,7 @@ RSERVICE=$(command -v service 2>/dev/null)
 for c in init reboot shutdown halt poweroff telinit; do
 cat > "$BLOCKDIR/$c" <<'EOS'
 #!/bin/sh
-echo "AllStore: '$0' suppressed (batch in progress)"
+echo "WordOfEnigma2: '$0' suppressed (batch in progress)"
 exit 0
 EOS
 done
@@ -266,7 +266,7 @@ cat > "$BLOCKDIR/killall" <<EOS
 #!/bin/sh
 for a in "\$@"; do
   case "\$a" in
-    *enigma2*) echo "AllStore: killall \$a suppressed (batch)"; exit 0;;
+    *enigma2*) echo "WordOfEnigma2: killall \$a suppressed (batch)"; exit 0;;
   esac
 done
 exec $RKILLALL "\$@"
@@ -276,7 +276,7 @@ if [ -n "$RSYSTEMCTL" ]; then
 cat > "$BLOCKDIR/systemctl" <<EOS
 #!/bin/sh
 case "\$*" in
-  *enigma2*) echo "AllStore: systemctl \$* suppressed (batch)"; exit 0;;
+  *enigma2*) echo "WordOfEnigma2: systemctl \$* suppressed (batch)"; exit 0;;
 esac
 exec $RSYSTEMCTL "\$@"
 EOS
@@ -286,7 +286,7 @@ if [ -n "$RSERVICE" ]; then
 cat > "$BLOCKDIR/service" <<EOS
 #!/bin/sh
 case "\$*" in
-  *enigma2*) echo "AllStore: service \$* suppressed (batch)"; exit 0;;
+  *enigma2*) echo "WordOfEnigma2: service \$* suppressed (batch)"; exit 0;;
 esac
 exec $RSERVICE "\$@"
 EOS
@@ -294,8 +294,8 @@ fi
 
 chmod +x "$BLOCKDIR"/* 2>/dev/null
 export PATH="$BLOCKDIR:$PATH"
-export ALLSTORE_BATCH=1
-echo "AllStore: Enigma2 restarts are disabled until the batch finishes."
+export WORD_OF_ENIGMA2_BATCH=1
+echo "WordOfEnigma2: Enigma2 restarts are disabled until the batch finishes."
 echo ""
 '''
 
@@ -308,8 +308,8 @@ def build_batch_script(items):
     actively suppressed (see BATCH_RESTART_BLOCKER) so only ONE restart is
     needed at the very end, after every item has been installed.
     """
-    dest = "/tmp/allstore_batch_file"
-    out = ["#!/bin/sh", "# AllStore batch installer", ""]
+    dest = "/tmp/wordofenigma2_batch_file"
+    out = ["#!/bin/sh", "# WordOfEnigma2 batch installer", ""]
     out.extend(BATCH_RESTART_BLOCKER.strip("\n").split("\n"))
     out.append("")
     total = len(items)
@@ -350,7 +350,7 @@ def build_batch_script(items):
 # SKIN
 # =====================================================================
 SKIN = """
-<screen name="AllStore" position="0,0" size="1920,1080" title="AllStore" flags="wfNoBorder">
+<screen name="WordOfEnigma2" position="0,0" size="1920,1080" title="Word Of Enigma2" flags="wfNoBorder">
     <!-- Background -->
     <eLabel position="0,0" size="1920,1080" backgroundColor="#0B0F19" zPosition="-100" />
 
@@ -359,8 +359,8 @@ SKIN = """
     <eLabel position="0,110" size="1920,3" backgroundColor="#3b82f6" zPosition="-89" />
 
     <!-- Logo / Title -->
-    <ePixmap position="40,30" size="200,50" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/AllStore/images/logo.png" zPosition="2" scale="1" transparent="1" alphatest="blend" />
-    <eLabel position="260,25" size="500,45" text="ALLSTORE" font="Regular;40" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <ePixmap position="40,30" size="200,50" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/WordOfEnigma2/images/logo.png" zPosition="2" scale="1" transparent="1" alphatest="blend" />
+    <eLabel position="260,25" size="500,45" text="WORD OF ENIGMA2" font="Regular;40" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
     <widget name="version" position="260,75" size="150,26" font="Regular;22" foregroundColor="#3b82f6" backgroundColor="#131A2A" transparent="1" zPosition="2" />
 
     <!-- Header Right -->
@@ -404,7 +404,7 @@ SKIN = """
 # CONSOLE SKIN
 # =====================================================================
 CONSOLE_SKIN = """
-<screen name="AllStoreConsole" position="0,0" size="1920,1080" title="Installation Console" flags="wfNoBorder">
+<screen name="WordOfEnigma2Console" position="0,0" size="1920,1080" title="Installation Console" flags="wfNoBorder">
     <eLabel position="0,0" size="1920,1080" backgroundColor="#05070D" zPosition="-100" />
 
     <!-- Header -->
@@ -429,7 +429,7 @@ CONSOLE_SKIN = """
 # MENU SKIN (MENU key popup: Information / Check for updates)
 # =====================================================================
 BATCH_MENU_SKIN = """
-<screen name="AllStoreMenu" position="center,center" size="820,600" title="Menu" flags="wfNoBorder">
+<screen name="WordOfEnigma2Menu" position="center,center" size="820,600" title="Menu" flags="wfNoBorder">
     <eLabel position="0,0" size="820,600" backgroundColor="#0B0F19" zPosition="-100" />
     <eLabel position="0,0" size="820,90" backgroundColor="#131A2A" zPosition="-90" />
     <eLabel position="0,90" size="820,3" backgroundColor="#8b5cf6" zPosition="-89" />
@@ -444,7 +444,7 @@ BATCH_MENU_SKIN = """
 # Shows plugin version, author and the Facebook QR code.
 # =====================================================================
 INFO_SKIN = """
-<screen name="AllStoreInfo" position="center,center" size="1180,660" title="Information" flags="wfNoBorder">
+<screen name="WordOfEnigma2Info" position="center,center" size="1180,660" title="Information" flags="wfNoBorder">
     <eLabel position="0,0" size="1180,660" backgroundColor="#0B0F19" zPosition="-100" />
     <eLabel position="0,0" size="1180,80" backgroundColor="#131A2A" zPosition="-90" />
     <eLabel position="0,80" size="1180,3" backgroundColor="#8b5cf6" zPosition="-89" />
@@ -467,12 +467,12 @@ INFO_SKIN = """
 # =====================================================================
 # MAIN SCREEN
 # =====================================================================
-class AllStore(Screen):
+class WordOfEnigma2(Screen):
     skin = SKIN
 
     def __init__(self, session):
         Screen.__init__(self, session)
-        self.setTitle("AllStore")
+        self.setTitle("Word Of Enigma2")
 
         self["categories_list"] = MenuList([])
         self["items_list"] = MenuList([])
@@ -607,7 +607,7 @@ class AllStore(Screen):
     def check_version(self):
         try:
             local_ver = "0.0.0"
-            local_file = "/usr/lib/enigma2/python/Plugins/Extensions/AllStore/version.json"
+            local_file = "/usr/lib/enigma2/python/Plugins/Extensions/WordOfEnigma2/version.json"
             if not os.path.exists(local_file):
                 local_file = os.path.join(PLUGIN_DIR, "version.json")
             if os.path.exists(local_file):
@@ -681,37 +681,39 @@ class AllStore(Screen):
                 "TS=$(date +%%s)\n"
                 'mkdir -p "$DEST/feed" "$DEST/images/Icons"\n'
                 'echo "Downloading core files..."\n'
-                'wget -q --no-check-certificate "$BASE/plugin.py?t=$TS" -O allstore_dl.py || exit 2\n'
-                'wget -q --no-check-certificate "$BASE/plugin.png?t=$TS" -O allstore_dl.png || exit 3\n'
-                'wget -q --no-check-certificate "$BASE/version.json?t=$TS" -O allstore_dl.json || exit 4\n'
-                'wget -q --no-check-certificate "$BASE/feed/index.json?t=$TS" -O allstore_dl_feed.json || exit 5\n'
+                'wget -q --no-check-certificate "$BASE/plugin.py?t=$TS" -O wordofenigma2_dl.py || exit 2\n'
+                'wget -q --no-check-certificate "$BASE/plugin.png?t=$TS" -O wordofenigma2_dl.png || exit 3\n'
+                'wget -q --no-check-certificate "$BASE/version.json?t=$TS" -O wordofenigma2_dl.json || exit 4\n'
+                'wget -q --no-check-certificate "$BASE/feed/index.json?t=$TS" -O wordofenigma2_dl_feed.json || exit 5\n'
                 'echo "Downloading images..."\n'
                 'for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do\n'
-                '    wget -q --no-check-certificate "$BASE/images/$img.png?t=$TS" -O "allstore_img_$img.png" || exit 20\n'
+                '    wget -q --no-check-certificate "$BASE/images/$img.png?t=$TS" -O "wordofenigma2_img_$img.png" || exit 20\n'
                 'done\n'
                 'for ic in plugins skins tools system_images picons channels novaler; do\n'
-                '    wget -q --no-check-certificate "$BASE/images/Icons/$ic.png?t=$TS" -O "allstore_ic_$ic.png" || true\n'
+                '    wget -q --no-check-certificate "$BASE/images/Icons/$ic.png?t=$TS" -O "wordofenigma2_ic_$ic.png" || true\n'
                 'done\n'
                 'echo "Installing to $DEST ..."\n'
-                'cp allstore_dl.py "$DEST/plugin.py" || exit 7\n'
-                'cp allstore_dl.png "$DEST/plugin.png" || exit 8\n'
-                'cp allstore_dl.json "$DEST/version.json" || exit 9\n'
-                'cp allstore_dl_feed.json "$DEST/feed/index.json" || exit 10\n'
+                'cp wordofenigma2_dl.py "$DEST/plugin.py" || exit 7\n'
+                'cp wordofenigma2_dl.png "$DEST/plugin.png" || exit 8\n'
+                'cp wordofenigma2_dl.json "$DEST/version.json" || exit 9\n'
+                'cp wordofenigma2_dl_feed.json "$DEST/feed/index.json" || exit 10\n'
                 'for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do\n'
-                '    cp "allstore_img_$img.png" "$DEST/images/$img.png" || true\n'
+                '    cp "wordofenigma2_img_$img.png" "$DEST/images/$img.png" || true\n'
                 'done\n'
                 'for ic in plugins skins tools system_images picons channels novaler; do\n'
-                '    [ -f "allstore_ic_$ic.png" ] && cp "allstore_ic_$ic.png" "$DEST/images/Icons/$ic.png"\n'
+                '    [ -f "wordofenigma2_ic_$ic.png" ] && cp "wordofenigma2_ic_$ic.png" "$DEST/images/Icons/$ic.png"\n'
                 'done\n'
                 'rm -f "$DEST/plugin.pyc" "$DEST/store_cache.json"\n'
                 'rm -rf "$DEST/__pycache__"\n'
-                'rm -f allstore_dl.py allstore_dl.png allstore_dl.json allstore_dl_feed.json\n'
-                'rm -f allstore_img_*.png allstore_ic_*.png\n'
+                'LEGACY="/usr/lib/enigma2/python/Plugins/Extensions/AllStore"\n'
+                'if [ "$DEST" != "$LEGACY" ] && [ -d "$LEGACY" ]; then rm -rf "$LEGACY"; echo "Removed legacy AllStore folder"; fi\n'
+                'rm -f wordofenigma2_dl.py wordofenigma2_dl.png wordofenigma2_dl.json wordofenigma2_dl_feed.json\n'
+                'rm -f wordofenigma2_img_*.png wordofenigma2_ic_*.png\n'
                 'echo "DONE. Installed version.json:"\n'
                 'cat "$DEST/version.json"\n'
             ) % (base, PLUGIN_DIR)
-            script_path = "/tmp/allstore_update.sh"
-            log_file = "/tmp/allstore_update.log"
+            script_path = "/tmp/wordofenigma2_update.sh"
+            log_file = "/tmp/wordofenigma2_update.log"
             data = script if isinstance(script, bytes) else script.encode("utf-8")
             f = open(script_path, "wb")
             f.write(data)
@@ -768,7 +770,7 @@ class AllStore(Screen):
     # -----------------------------------------------------------------
     def apply_store_data(self, data):
         try:
-            name = data.get("store_name", "AllStore")
+            name = data.get("store_name", "Word Of Enigma2")
             ver = data.get("version", PLUGIN_VERSION)
             self.setTitle("%s v%s" % (name, ver))
 
@@ -950,7 +952,7 @@ class AllStore(Screen):
             ]
             self.session.openWithCallback(
                 self.main_menu_done,
-                AllStoreMenu,
+                WordOfEnigma2Menu,
                 "Menu",
                 options
             )
@@ -962,7 +964,7 @@ class AllStore(Screen):
             return
         if choice == "info":
             try:
-                self.session.open(AllStoreInfo)
+                self.session.open(WordOfEnigma2Info)
             except Exception:
                 pass
         elif choice == "item":
@@ -1036,9 +1038,9 @@ class AllStore(Screen):
             return
         items = list(self.selected)
         script = build_batch_script(items)
-        script_path = "/tmp/allstore_batch.sh"
-        log_file = "/tmp/allstore_console.log"
-        done_file = "/tmp/allstore_done"
+        script_path = "/tmp/wordofenigma2_batch.sh"
+        log_file = "/tmp/wordofenigma2_console.log"
+        done_file = "/tmp/wordofenigma2_done"
         try:
             data = script if isinstance(script, bytes) else script.encode("utf-8")
             f = open(script_path, "wb")
@@ -1054,7 +1056,7 @@ class AllStore(Screen):
                % (log_file, done_file, script_path, script_path, log_file, done_file))
         self.session.openWithCallback(
             self.batch_finished,
-            AllStoreConsole,
+            WordOfEnigma2Console,
             "Batch Install (%d items)" % len(items),
             cmd,
             log_file,
@@ -1104,22 +1106,22 @@ class AllStore(Screen):
                 ext = "." + pure.split(".")[-1].lower()
 
             if ext == ".ipk":
-                dest = "/tmp/allstore.ipk"
+                dest = "/tmp/wordofenigma2.ipk"
                 cmd = "opkg install --force-overwrite %s && rm -f %s" % (dest, dest)
             elif ext == ".deb":
-                dest = "/tmp/allstore.deb"
+                dest = "/tmp/wordofenigma2.deb"
                 cmd = "dpkg -i %s && rm -f %s" % (dest, dest)
             elif ext == ".sh":
-                dest = "/tmp/allstore.sh"
+                dest = "/tmp/wordofenigma2.sh"
                 cmd = "chmod +x %s && cd /tmp && sh %s 2>&1; rm -f %s" % (dest, dest, dest)
             elif ext == ".zip":
-                dest = "/tmp/allstore.zip"
+                dest = "/tmp/wordofenigma2.zip"
                 cmd = "unzip -o %s -d / && rm -f %s" % (dest, dest)
             elif ext in (".tar.gz", ".tgz"):
-                dest = "/tmp/allstore.tar.gz"
+                dest = "/tmp/wordofenigma2.tar.gz"
                 cmd = "tar -xzf %s -C / && rm -f %s" % (dest, dest)
             else:
-                dest = "/tmp/allstore.ipk"
+                dest = "/tmp/wordofenigma2.ipk"
                 cmd = "opkg install --force-overwrite %s && rm -f %s" % (dest, dest)
 
             self.install_cmd = cmd
@@ -1137,7 +1139,7 @@ class AllStore(Screen):
 
     def run_wget(self, wget_cmd):
         try:
-            log_file = "/tmp/allstore_wget.log"
+            log_file = "/tmp/wordofenigma2_wget.log"
             full_cmd = wget_cmd + " > " + log_file + " 2>&1"
             retval = os.system(full_cmd)
             
@@ -1198,15 +1200,15 @@ class AllStore(Screen):
         # Run the script fully detached (setsid) so an Enigma2 restart inside
         # it (init 4; init 3) is not killed halfway, then show its live output
         # in the console until the box restarts.
-        log_file = "/tmp/allstore_console.log"
-        done_file = "/tmp/allstore_done"
+        log_file = "/tmp/wordofenigma2_console.log"
+        done_file = "/tmp/wordofenigma2_done"
         dest = self.download_dest_path
         cmd = ("rm -f %s %s; chmod +x %s; "
                "setsid sh -c 'sh %s > %s 2>&1 < /dev/null; echo done > %s' "
                "> /dev/null 2>&1 < /dev/null &"
                % (log_file, done_file, dest, dest, log_file, done_file))
         self.session.open(
-            AllStoreConsole,
+            WordOfEnigma2Console,
             self.install_item_name,
             cmd,
             log_file,
@@ -1227,7 +1229,7 @@ class AllStore(Screen):
 
     def run_install(self):
         try:
-            log_file = "/tmp/allstore_install.log"
+            log_file = "/tmp/wordofenigma2_install.log"
             full_cmd = self.install_full_cmd + " > " + log_file + " 2>&1"
             retval = os.system(full_cmd)
             
@@ -1261,7 +1263,7 @@ class AllStore(Screen):
 # =====================================================================
 # INSTALLATION CONSOLE
 # =====================================================================
-class AllStoreConsole(Screen):
+class WordOfEnigma2Console(Screen):
     """Live console for an install/download script.
 
     The script runs fully detached (setsid) so an Enigma2 restart inside it
@@ -1412,7 +1414,7 @@ class AllStoreConsole(Screen):
 # =====================================================================
 # MENU POPUP (MENU key) - Information / Check for updates
 # =====================================================================
-class AllStoreMenu(Screen):
+class WordOfEnigma2Menu(Screen):
     skin = BATCH_MENU_SKIN
 
     def __init__(self, session, title, options):
@@ -1444,7 +1446,7 @@ class AllStoreMenu(Screen):
 # =====================================================================
 # INFORMATION SCREEN (MENU -> Information)
 # =====================================================================
-class AllStoreInfo(Screen):
+class WordOfEnigma2Info(Screen):
     skin = INFO_SKIN
 
     def __init__(self, session):
@@ -1453,7 +1455,7 @@ class AllStoreInfo(Screen):
         self.picload = None
 
         self["header"] = Label("Information")
-        self["appname"] = Label("AllStore")
+        self["appname"] = Label("Word Of Enigma2")
         self["version"] = Label("Version: v" + PLUGIN_VERSION)
         self["author"] = Label("Author: " + PLUGIN_AUTHOR)
         self["note"] = Label("Universal plugins & skins store for Enigma2 boxes.\n"
@@ -1475,7 +1477,7 @@ class AllStoreInfo(Screen):
 
     def _qr_log(self, msg):
         try:
-            f = open("/tmp/allstore_qr.log", "a")
+            f = open("/tmp/wordofenigma2_qr.log", "a")
             f.write(msg + "\n")
             f.close()
         except Exception:
@@ -1607,7 +1609,7 @@ class AllStoreInfo(Screen):
                     return path
             except Exception:
                 continue
-        tmp = "/tmp/allstore_qrcode.png"
+        tmp = "/tmp/wordofenigma2_qrcode.png"
         try:
             import base64
             if not os.path.exists(tmp) or os.path.getsize(tmp) < 500:
@@ -1625,13 +1627,13 @@ class AllStoreInfo(Screen):
 # ENTRY POINT
 # =====================================================================
 def main(session, **kwargs):
-    session.open(AllStore)
+    session.open(WordOfEnigma2)
 
 
 def Plugins(**kwargs):
     return [
         PluginDescriptor(
-            name="AllStore",
+            name="Word Of Enigma2",
             description="Plugins and Skins Store",
             where=PluginDescriptor.WHERE_PLUGINMENU,
             icon="plugin.png",

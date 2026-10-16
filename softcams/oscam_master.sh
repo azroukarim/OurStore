@@ -1,6 +1,6 @@
 #!/bin/sh
 ###############################################################
-#  oscam_master.sh - AllStore Panel
+#  oscam_master.sh - Word Of Enigma2 Panel
 #  Install & Control OSCam Master from Mynonpublic Feed
 ###############################################################
 

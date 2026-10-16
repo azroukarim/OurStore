@@ -27,7 +27,7 @@ if [ -f "$MY_FILE" ]; then
     if [ $? -eq 0 ]; then
         echo ""
         echo "   >>>>   SUCCESSFULLY INSTALLED   <<<<"
-        if [ "$ALLSTORE_BATCH" = "1" ]; then
+        if [ "$WORD_OF_ENIGMA2_BATCH" = "1" ]; then
             echo "   >>>>  Batch mode: restart skipped (one restart at the end)  <<<<"
         else
             echo "   >>>>       RESTARTING           <<<<"

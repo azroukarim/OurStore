@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/azroukarim/OurStore/main/plugin.png" width="150" alt="AllStore Logo" />
+<img src="https://raw.githubusercontent.com/azroukarim/OurStore/main/plugin.png" width="150" alt="Word Of Enigma2 Logo" />
 
-# 🛒 AllStore
+# 🛒 Word Of Enigma2
 
 **متجر شامل لإضافات Enigma2 والسكينات والأدوات**
 
@@ -17,7 +17,7 @@
 
 ## 📖 نظرة عامة
 
-**AllStore** هو متجر إلكتروني متكامل مصمم لأجهزة **Enigma2**، يوفّر لك واجهة أنيقة وسريعة لتصفح وتثبيت:
+**Word Of Enigma2** هو متجر إلكتروني متكامل مصمم لأجهزة **Enigma2**، يوفّر لك واجهة أنيقة وسريعة لتصفح وتثبيت:
 
 - 🧩 الإضافات (Plugins)
 - 🎨 السكينات (Skins)
@@ -73,7 +73,7 @@ chmod +x install.sh
 ## 📂 هيكل المشروع
 
 ```
-AllStore/
+WordOfEnigma2/
 ├── plugin.py           # الملف الرئيسي
 ├── plugin.png          # أيقونة الإضافة
 ├── __init__.py         # تهيئة الحزمة
@@ -118,7 +118,7 @@ AllStore/
 
 ## 🔄 التحديث
 
-AllStore يدعم **التحديث الذاتي**. عند توفّر إصدار جديد:
+Word Of Enigma2 يدعم **التحديث الذاتي**. عند توفّر إصدار جديد:
 
 1. ستظهر رسالة تنبيه داخل الإضافة
 2. اختر "تحديث" من القائمة
