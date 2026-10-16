@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.20"
+PLUGIN_VERSION = "1.0.21"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -358,13 +358,20 @@ SKIN = """
     <eLabel position="0,0" size="1920,110" backgroundColor="#131A2A" zPosition="-90" />
     <eLabel position="0,110" size="1920,3" backgroundColor="#3b82f6" zPosition="-89" />
 
-    <!-- Logo / Title -->
-    <ePixmap position="40,30" size="200,50" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/WordOfEnigma2/images/logo.png" zPosition="2" scale="1" transparent="1" alphatest="blend" />
-    <eLabel position="260,25" size="500,45" text="WORD OF ENIGMA2" font="Regular;40" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
-    <widget name="version" position="260,75" size="150,26" font="Regular;22" foregroundColor="#3b82f6" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <!-- Header: plugin name (far left) + system info -->
+    <eLabel position="40,22" size="470,46" text="WORD OF ENIGMA2" font="Regular;36" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <widget name="version" position="42,72" size="300,30" font="Regular;22" foregroundColor="#3b82f6" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+
+    <!-- Header: device (name / temperature) -->
+    <widget name="devname" position="540,20" size="420,38" font="Regular;26" foregroundColor="#e5e7eb" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <widget name="devtemp" position="540,62" size="420,34" font="Regular;22" foregroundColor="#10b981" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+
+    <!-- Header: image / python version -->
+    <widget name="imagename" position="980,20" size="420,38" font="Regular;26" foregroundColor="#e5e7eb" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <widget name="pyver" position="980,62" size="420,34" font="Regular;22" foregroundColor="#3b82f6" backgroundColor="#131A2A" transparent="1" zPosition="2" />
 
     <!-- Header Right -->
-    <eLabel position="1520,35" size="360,50" text="Plugin Store" font="Regular;30" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" zPosition="2" />
+    <eLabel position="1640,35" size="240,50" text="Plugin Store" font="Regular;26" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" zPosition="2" />
 
     <!-- LEFT PANEL: Categories -->
     <eLabel position="30,140" size="500,850" backgroundColor="#131A2A" zPosition="-50" />
@@ -465,6 +472,95 @@ INFO_SKIN = """
 
 
 # =====================================================================
+# SYSTEM INFO HELPERS (header)
+# =====================================================================
+def _read_first_line(path):
+    try:
+        f = open(path, "r")
+        try:
+            return f.read().strip()
+        finally:
+            f.close()
+    except Exception:
+        return ""
+
+
+def get_device_name():
+    name = ""
+    try:
+        from boxbranding import getMachineBrand, getMachineName
+        brand = getMachineBrand() or ""
+        model = getMachineName() or ""
+        name = (brand + " " + model).strip()
+    except Exception:
+        name = ""
+    if not name:
+        for p in ("/proc/stb/info/boxtype", "/proc/stb/info/model", "/etc/hostname"):
+            v = _read_first_line(p)
+            if v:
+                name = v
+                break
+    return name or "Unknown"
+
+
+def get_image_name():
+    distro = ""
+    ver = ""
+    try:
+        from boxbranding import getImageDistro, getImageVersion
+        distro = getImageDistro() or ""
+        ver = getImageVersion() or ""
+    except Exception:
+        pass
+    if not distro:
+        for p in ("/etc/image-version", "/etc/issue"):
+            v = _read_first_line(p)
+            if v:
+                distro = v.split("\n")[0]
+                break
+    name = (distro + ((" " + ver) if ver else "")).strip()
+    return name or "Unknown"
+
+
+def get_python_version():
+    try:
+        from boxbranding import getPythonVersion
+        v = getPythonVersion()
+        if v:
+            return str(v)
+    except Exception:
+        pass
+    try:
+        return "%d.%d.%d" % (sys.version_info[0], sys.version_info[1], sys.version_info[2])
+    except Exception:
+        return "-"
+
+
+def get_temperature():
+    import re
+    for p in ("/proc/stb/fp/temp_sensor_ma",
+              "/proc/stb/fp/temp_sensor",
+              "/sys/class/thermal/thermal_zone0/temp",
+              "/proc/hisi/msp/pm_cpu",
+              "/proc/vuplus/temp"):
+        v = _read_first_line(p)
+        if not v:
+            continue
+        m = re.search(r"(-?\d+(?:\.\d+)?)", v)
+        if not m:
+            continue
+        try:
+            t = float(m.group(1))
+        except Exception:
+            continue
+        if t > 1000:
+            t = t / 1000.0
+        if 0 < t < 150:
+            return "%d\u00b0C" % int(round(t))
+    return "--"
+
+
+# =====================================================================
 # MAIN SCREEN
 # =====================================================================
 class WordOfEnigma2(Screen):
@@ -478,6 +574,10 @@ class WordOfEnigma2(Screen):
         self["items_list"] = MenuList([])
         self["description"] = Label("Loading...")
         self["version"] = Label("v" + PLUGIN_VERSION)
+        self["devname"] = Label("")
+        self["devtemp"] = Label("")
+        self["imagename"] = Label("")
+        self["pyver"] = Label("")
 
         # Enlarge fonts for lists
         try:
@@ -540,6 +640,43 @@ class WordOfEnigma2(Screen):
             except Exception:
                 pass
         self.onLayoutFinish.append(self.schedule_fetch)
+        self.onLayoutFinish.append(self.init_system_info)
+
+    # -----------------------------------------------------------------
+    def update_system_info(self):
+        try:
+            self["devname"].setText("Box: " + get_device_name())
+        except Exception:
+            pass
+        self.refresh_temperature()
+        try:
+            self["imagename"].setText("Image: " + get_image_name())
+        except Exception:
+            pass
+        try:
+            self["pyver"].setText("Python: " + get_python_version())
+        except Exception:
+            pass
+
+    def refresh_temperature(self):
+        try:
+            self["devtemp"].setText("Temp: " + get_temperature())
+        except Exception:
+            pass
+
+    def init_system_info(self):
+        self.update_system_info()
+        if eTimer is None:
+            return
+        try:
+            self.info_timer = eTimer()
+            try:
+                self.info_timer.callback.append(self.refresh_temperature)
+            except AttributeError:
+                self.info_timer.timeout.connect(self.refresh_temperature)
+            self.info_timer.start(5000)
+        except Exception:
+            pass
 
     # -----------------------------------------------------------------
     def schedule_fetch(self):
