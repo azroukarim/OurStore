@@ -232,14 +232,7 @@
                 ]
             }
         ],
-        "picons": [
-            {
-                "name": "Picons Nilesat (7.0W / 8.0W)",
-                "description": "شعارات ولوجوهات قنوات نايل سات بجودة عالية وشفافة",
-                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/picons/Picon%207.ow.zip",
-                "image": ""
-            }
-        ],
+        "picons": [],
         "channels": [],
         "emus": [
             {
