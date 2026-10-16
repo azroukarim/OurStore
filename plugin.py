@@ -37,8 +37,96 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.15"
+PLUGIN_VERSION = "1.0.16"
 PLUGIN_AUTHOR = "Azrou Karim"
+QR_FALLBACK_B64 = (
+    "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
+    "ZYIDCXCJpth7/vvz588PAMC7/vMBABBQRgFAQhkFAAllFAAklFEAkFBGAUBCGQUACWUUACSUUQCQUEYBQEIZBQAJZRQAJJRR"
+    "AJBQRgFAQhkFAAllFAAklFEAkFBGAUBCGQUACWUUACSUUQCQUEYBQEIZBQAJZRQAJJRRAJBQRgFAQhkFAAllFAAklFEAkFBG"
+    "AUBCGQUACWUUACSUUQCQUEYBQEIZBQAJZRQAJJRRAJBQRgFAQhkFAMl/P5r8+PHjY4KfP39+ACfiGnzDj5LZTFm837136n4/"
+    "0u/2sG6b+nTtvFn5evaN+90epigpXxX/qJ+4fh9vTfuPJt/qYd029ePaebPy9ewb940epiiZdr6MDl2/F2Wvf6uHddvUp2vn"
+    "zcrXs2/ct3uYomHy4TI6ev1eDjgEPBnXoC5ZRo8pQFRSDMU1eAteeAIASayMHnYHd+VwPv2r4sU/Na7bpj5dO29Wvp594y48"
+    "8Bo04W50qz8297de11i3Tf24dt6sfD37xoVb7L3R854nsncxC9fgXbpSTGs7zxF/NQL+xjX4qRlldP8vmdeIbQvZnIF5j29c"
+    "5VylZuVrq+MaXBjwbDT4j+Wu3G5xBuY9vnFTaSJlVr62Oq7BtfYyGj+Jzf/NgZIMzHt846bSRMqsfG11XIP/VF1GS04ffzvC"
+    "Y3ENXtFbRqtOHJUUD8Q1eBHvjQKApLSMFv7myU6pMAMj8o2rnKvUrHxt38Y1eB13o2Ocl4HxjZtKEymz8rWF26TX77G+eJRL"
+    "K3VZ+sZVzlVqVr62sDqnjH73/Q82JXCvx16DJ5TR916ge7VqW0hfyiWbgflK6ng700Sda3TFSdfgG8Y/GxVfQt6cBlnzpVyy"
+    "GZivpI63M03UuUZXnHQNvmd2GfXFS/bzpVyyGZivpI63M03UuUZXnHQNvm1wGfXdCAC4gmvwZWoZvf2kU0mBb+Ea/IX3RgFA"
+    "MrKMmn5rZX8Z+lIukQzMP6WOtzNN1LlGC0deg2/jbrSIL+XSmYFJHW9nmqhzjXAFKaYuvpRL52WZOt7ONBGlcyjuRgFAwt3o"
+    "bqnsjaIzL9R5NpS2vp5hxd3oVqnsjaIzL9R5NpS2vp7hRhndJ5W9UXTmhTrPhtLW1zM2oIwCgIQyCgASyigASCij+6SyN4rO"
+    "vFDn2VDa+nrGBpTRrVLZG0VnXqjzbChtfT3DjfdGd0tlbxSdeaHOs6G09fUMK+5GAUDC3ehunckcxcRkji+X1fkprLgb3aoz"
+    "maOYmMzx5bI6fxxk6C+AkWXUdK7dS9iZzFFMTOb4clmdn5pww/s77kYBQDK1jN7+y5DfrsC3cA3+Mvhu1PcfHgdwBdfgy+x/"
+    "1N9y6lNvbv/xP/4cmEWZmMxR5jzxU7dZ16DJ+Gej4gJsXr/OZI7Cd0S+s6HMeeKPbrOuQYcfqWNY/yXxjVl990+Ttw9xwG7A"
+    "o3AN3uWc1++pYkDWY69BUky7pTI/qYRM6ohSPafG9c0Z/8R7o1c53v3+1o++nlOzUtp29pwa1zfnKrXHVVpGj9wHqcxPKiGT"
+    "OqJUz6lxTXM+tRY7cDcKAJLeMlr1y5DfzHggrsGLqu9GS04cNRSPxTV4Rfs/6uOn78YJpDI/vk+VWSltO3tOjeub88tJ16DJ"
+    "gGejwZN4+9CpzE8qIZM6olTPqXF9c3456Rp0KE0xfWrnVMunB+i4Bu8y6fV7nlECWVyDnyLFtFtnIoi2T24LEe+N3uPixu1M"
+    "BNH2yW2hi5XRB/7C7EwE0faxbQ+7BoOHw90oAEiSZfSYX4Y8isJQXIO3CN+NHrCK1FCMxjWoy/+jfvQqKu9If6sH2tLW0faN"
+    "/3ObhslXPBsduopvTLszEUTbJ7d9u0mDkmn/qDp9U17U4B/yOBXX4Bu6yigAjEOKabeJaZP1nJUjUnqeOCtlXF9biHhvdKuJ"
+    "aZP1nH3ZG9+PqVkp4/raQkcZ3UdJqqSs5+zL3vg+Tc1KGdfXFregjAKAhDIKABLKKABIKKP76GmT/dZz9mVvfJ+mZqWM62uL"
+    "W1BGt9LTJvut5+zL3vh+TM1KGdfXFjpevwcACXejACDJp5hS6YuJ2RvfuUqNu9Y57tOSVxN37Gbhu9FU+qIz5eJLyKylxl3r"
+    "HLdzfTvnnNqx+yXLaCp9oYy7bpv6VJEad61z3M717ZxzasdG8GwUACSUUQCQUEYBQFL3zaAb/ujWmXLxJWTWUuOudY7bub6d"
+    "c07t2Iiubwbddi6UcddtUz8qUuOudY7bub6dc07t2P1IMQGAhGejACBpTzF1frqWauvreeIR+cZVpGbVeaWsda7gp6pTTJ0/"
+    "rqXa+nqeeES+cRWpWXVeKWudK/iV3hRT56drqba+nicekW9cRWpWnVfKWucKLvBsFAAklFEAkFBGAUDSm2Lq/HQt1dbX88Qj"
+    "8o2rSM2q80pZ61zBheoUU+ePa6m2vp4nHpFvXEVqVp1XylrnCn6FFBMASHg2CgCSk1NMqXEnfurTub6+tr6eO1ews+fNjk0x"
+    "pcad+KNP5/r62vp67lzBzp73OzPFlBp34qc+nevra+vruXMFO3uO4NkoAEgoowAgoYwCgOTMFFNq3Imf+nSur6+tr+fOFezs"
+    "OeLYFFNq3Ik/+nSur6+tr+fOFezseT9STAAg4dkoAEjyKaa1iQkKpWdfW9+nis5xJ/ac2nVKz6nVv1313ejEBIXSs6+t70dF"
+    "57gTe07tOqXn1Oo79JbRiQmKzuyN71NF57gTe07tOqXn1Oqb8GwUACSUUQCQUEYBQNJbRicmKJSefW19nyo6x53Yc2rXKT2n"
+    "Vt+k+m50YoKiM3vj+1HROe7EnlO7Tuk5tfoOpJgAQMKzUQCQtKeYFKlUT+ena52zWjtvFXw610hpW3Wej70bTaV6On9c65zV"
+    "2nmr4NO5RkrbtvN8Zhn1JSgmfrrWOau181bBp3ONlLaF55lnowAgoYwCgIQyCgCSM8toKtXT+ela56zWzlsFn841UtoWnudj"
+    "70Z9CYqJP651zmrtvFXw6VwjpW3beSbFBAASno0CgCSfYvJlFZSelXEVqbOB63xn0rdjO+fsG3ez8N2oL6ug9KyMq0idDVzn"
+    "O5O+Hds5Z9+4+yXL6MRkjk/qbOC6VOancz93jhvBs1EAkFBGAUBCGQUASbKM+rIKSs/KuIrU2cB1vjPp27Gdc/aNGxG+G52Y"
+    "zPFJnQ1cl8r8dO7nznH3I8UEABKejQKApP27mCYmRpRxUzpn9Tf364FXjt23c3y7bm3iEZFiumpiYkQZN6VzVp1SWaOJ18Jz"
+    "rqPeMjoxMaKMm9I5q06+nePbdWsTj4gUEwCc5uTvqccZdt5oTHlGjCrcjQKApLeMTkyMKOOmdM6qk2/n+Hbd2sQjIsX0PRMT"
+    "I8q4KZ2z6uTbOb5dtzbxiEgxAd/z1bPR37eu4/kplwYu4tkoAEhmfxeT71OF0nPnEeE63xp1Xins9o/R38WUSlCsKT13HhGu"
+    "861R55XCbv//BIKFfP3MK/WpQum584gapC4S5d7q734690Zq1x2223k2CgASyigASCijACCZ+l1Mvk8VSs+dR4TrfGvUeaWw"
+    "238Z/F1Mvh8VSs+dR4TrfGvUeaWw219IMaHdlL/U47F4NgoAkpP/e6NPS4wckwkp59tXPuddC1WOvRt9WmLkpExIM9++8jnv"
+    "WmhzZhn99KRfXIl126d9it/59pXPeddCIZ6NAoCE72LCyXjOiw24GwUAyZll9GmJEd+n+J1vX/mcdy0UOvZu9GmJEd+P+J1v"
+    "X/mcdy20IcWEdu4/0XIJQMSzUQCQtP+l3pdz8GUkfD37TJxzp9SenHgt+K7uzarvRn05B19GYlb64mXinDul9uTEa8F3de/X"
+    "+2z0x/IbV9afKj0rfD37XJ/zzrsD5bJJne3Unpx4Lfiu7giejQKAhDIKABLKKABIqt8b/fsRye+zXX+q9Kzw9exzcc6OZ6OO"
+    "Px0ET3hqT068FnxX937Vd6O+nIMvIzErffEycc6dUnty4rXgu7r3I8WEq7gbBT7Fs1EAkPBdTLt77kyM3DvW9bYO7rcOfcmc"
+    "zn2ljJua1WZ8F9PWnjsTI7jOl8zp3FfKuM/ZdXwX076eU7Pyjfs0ynn2rVFqfdl1v/BsFAAkfBcTVFeef+28DVm/fgjcjrtR"
+    "AJDwXUz7ek7Nyjfu0yjn2bdGqfVl1/3CdzFt7bkzMYLrfMmczn2ljPucXUeKCVdNec7IlsZmPBsFAEn+L/VX/s7b1rNPKhMy"
+    "8VylnLcKqeSVMqsq4bvRzqxRSioT8py0ie68VUglr5RZtUmW0c6sUUoqE/KotInovFVIJa+UWRXi2SgASCijACChjAKAJPze"
+    "qO8bV3w9+6znXHWu2h5UbVvc83assuu4fl/Cd6OdWaOUVCbkOWkT3XmrkEpeKbNqQ4oJ73js3SjwN56NAoBkdorJl69IJTcU"
+    "O2e1fkD2ZJ2pns6c0jEGp5h8+YpUckPROaun6Uz1dOaUTjI1xeTLV6SSG4rOWT1NZ6qnM6d0GJ6NAoCE72KCKvWclOd0KMHd"
+    "KABIkmXU9/0znT37dM7qaXyrkNrP7KuLBqeYfPmKVHJDMSv1carOVE9nTukkpJjg4nhOynZFIZ6NAoCk/S/1E5NIndkqsih3"
+    "6VzBzl2nGLSfq+9GJyaROrNVZFHu0rmCnbtOMWs/9z4b/erUXJnwuq3Sc2pcpWff8V53ZaNfef80u107V7Bz1yn69/MfeDYK"
+    "ABLKKABIKKMAIKl+b/TvhyDXZ7tuq/ScGlfp2Xe8F931hC6+XTtXsHPXKcr38x+q70YnJpF845JFadC5gp27TjFrP5Niwg7H"
+    "3I0Cf+PZKABITv4uJsW65/M+3Wn6HWXqPKdWnx37T8d+F5NCSVBM/BHXpc5zavXZsVec+V1MinXP532K61LnObX67NiLeDYK"
+    "ABK+iwm7dT4NB97G3SgASM78LibFuufzPsV1qfOcWn127EXHfheTYt3zeT/iutR5Tq0+O/YKUkwAIOHZKABIZn8Xk/KpMq7S"
+    "1ve3Zv4CPl3nKnReZVUGfxdTKrmhtPVlM1LHi7t0rkLnVdamt4x2JjeUtqmUi68t7tK5Cp1XWSGejQKAhDIKABLKKABIesto"
+    "Z3JDaevLZqSOF3fpXIXOq6zQ4O9iSiU3lLaplIuvLe7SuQqdV1kbUkwAIOHZKABITk4x+aSyVYqn5bJS456Xu1Padh7v7Y5N"
+    "MfmkslWKp+WyUuOm9kZn287jdTgzxeSjzKpzzkrbzlxWatzU3uhs23m8JjwbBQAJZRQAJJRRAJCcmWLySWWrFE/LZaXGTe2N"
+    "zradx2tybIrJR5lV55yVtp25rNS4qb3R2bbzeB1IMQGAhGejACDJp5gmJlWUnpVPlXGVtqlZKT2n9lUn357kPH/E70YnJlWU"
+    "njtzHZ2zUnpO7atOvj3JeX5JltGJSRWl585cR+eslJ5Telr6AwAAB2BJREFU+6qTb09ynn/h2SgASCijACChjAKAJFlGJyZV"
+    "lJ47cx2ds1J6Tu2rTr49yXn+JXw3OjGpovTcmevonJXSc2pfdfLtSc7zCykmAJDwbBQAJO3fxZRCcuMunbksX1ul585dlzob"
+    "g3A3+gmSG3fpzGX52io9d+661NmYhTL6J5Ibd+nMZfnaKj137rrU2RiHMgoAEsooAEgoowAgoYz+ieTGXTpzWb62Ss+duy51"
+    "NsahjH6C5MZdOnNZvrZKz527LnU2ZiHFBAAS7kYBQDI7xeRLfXS27TxeRee4rP5dfHOuMvhu1Jf66GzbebyKznFZ/Y+b+Obc"
+    "ZmoZ9aU+Ott2Hq+ic1xW/+OmVfDNuRDPRgFAQhkFAAllFAAkU8uoL/XR2bbzeBWd47L6Hzetgm/OhQbfjfpSH51tO49X0Tku"
+    "q/9xE9+c25BiAgAJz0YBQJJPMaWyGalPFameU2ejcwVTq7923tnoPM+fCt+NprIZqR8VqZ5TZ6NzBVOrv3be2eg8z19JltFU"
+    "NiP1qSLVc+psdK5gavXXzjsbned5gWejACChjAKAhDIKAJJkGU1lM1KfKlI9p85G5wqmVn/tvLPReZ4XwnejqWxG6kdFqufU"
+    "2ehcwdTqr513NjrP81dIMQGAhGejACCZ/V1ME03MwKTGTc1qzTcrpWd2ThB3o1tNzMCkxk3Nas03K6Vnds5HFGV0n4kZmNS4"
+    "hUmVD+esfJkfn6eNu0AZBQAJZRQAJJRRAJBQRveZmIFJjZua1ZpvVkrP7JyPh6eYnmZiBiY1bltS5cU3K1/mx+dp436FFBMA"
+    "SLpevy95N/Cf+N0D4JeWMjqlgL68ZvteMZ2Y+khljVJz9h1vqufOtgpSTH+aVUN/eWPaE1MfqaxRas6+40313NlWkRr3K/ky"
+    "OrSGvih77o0e3uNLyExM9fg+9c1K6bmzrSI17kLXN4NOdMAhAFDUfTPoRFRS4Ml4bxQAJLEyetgd3JXDmZj6SGWNUnP2HW+q"
+    "5862ClJMTzcx9ZHKGqXm7DveVM+dbRWpcb8SSzGd9zwxvpYAIiZ9iUjq5V4AWJhRRvff6L1GbCumnWmi1KwUnefKN66Pb28M"
+    "2lcDno0Gz1HVv9M700SpWSk6z5VvXB/f3pi1r9rLaLyQlVTSzjRRalaKznPlG9fHtzfG7avqMlpSwvjbEYCF3jJaVbyopAC+"
+    "wnujACApLaOFd3/ZKXWmiVKzUnSeK9+4Pr69MW5fcTc6RmeaKDUrRee58o3r49sbs/ZVaYqp5Hr7w8Q5A3CblGJa++4bD1Q9"
+    "ALc4oYy+98rYq9X+Yjoxa6TMufN4feP62io9n/dplfHPRsXXbje/tTsxa6TMufN4feP62io9n/djm9ll1BcCcZiYNVLm3Hm8"
+    "vnF9bZWez/u00OAy6vtlDgDXTS2jtxc+KimA9/DeKABIRpZR052j+4Z0YtZImXPn8frG9bVVej7v00LcjW41MWukzLnzeH3j"
+    "+toqPZ/3Y5uRKSbfbaMybvlKAzDhbhQAJOeEQc/QmczpHDc1q6e17ey5CnejRTqTOZ3jpmb1tLadPbehjLboTOZ0jpua1dPa"
+    "dvZciDIKABLKKABIKKMAIKGMtuhM5nSOm5rV09p29lyIMlqkM5kzMXvjm9XT2nb23IYU023jjt4HAN7G3SgASEgxneO8LErq"
+    "iHyz8p2rtc4V9LXdjLvRQ5yXRUkdkW9WqdxO5wr62u43soyafjXNfbh5XhYldUS+WaVyO50r6Gsbwd0oAEimltHb7xz5OzuA"
+    "9wy+G/W9KggA183+R70vuDLLeVmU1BH5ZuU7V2udK+hrGzH+2ah4co+5Dz0vi5I6It+sfOdqrXMFfW33G5lieqPDDUMcU5EB"
+    "fMs5r99TxQBEkGKapDMTMjHjdN6ZTB1R6mxU4b3Rq+Jv/3ZmQiZmnM47k6kjSp2NNqVltPys7deZCZmYcTrvTKaOKHU2CnE3"
+    "CgCS3jJa9cuHu2MAX6m+Gy0pXtRQAAvt/6hv+8NOSmcmZGLG6bwzmTqi1NkoNODZaLCQVd2HdmZCJmaczjuTqSNKnY02pSmm"
+    "T+2cavn0APSY9Po9zygBFCLFtNt5GZhOqbPha5tawdTeGLRjeW/0HhcX8rwMTKfzEkGpFUztjVk7NlZGH/gk8bwMTKfzEkGp"
+    "FUztjXE7lrtRAJAky+gxN6T8jR54svDd6AEFiBoKPFz+H/Wjy5DyrvIbPbzXs/LpROclglIrmNob43ZsxbPRoRftG9M+LwPT"
+    "6bxEUGoFU3tj1o79EZ/B76b8gfiAQgPgLl2v31OeAIzDC08AIKGMAoCEMgoAEsooAEgoowAgoYwCgIQyCgASyigASCijACCh"
+    "jAKAhDIKABLKKABIKKMAIKGMAoCEMgoAEsooAEgoowAgoYwCgIQyCgASyigASCijACChjAKAhDIKABLKKABIKKMAIKGMAoCE"
+    "MgoAEsooAEgoowAgoYwCgIQyCgASyigASCijACChjAKAhDIKABLKKABIKKMAIKGMAoCEMgoAkv8BAAD//y/Ie1IAAAAGSURB"
+    "VAMAlraF1sbeTFsAAAAASUVORK5CYII="
+)
+
 GITHUB_BASE = "https://raw.githubusercontent.com/azroukarim/OurStore/main"
 STORE_URL = GITHUB_BASE + "/feed/index.json"
 UPDATE_SCRIPT_URL = GITHUB_BASE + "/install.sh"
@@ -589,30 +677,40 @@ class AllStore(Screen):
             script = (
                 "#!/bin/sh\n"
                 "cd /tmp || exit 1\n"
+                'BASE="%s"\n'
+                'DEST="%s"\n'
                 "TS=$(date +%%s)\n"
-                "rm -f allstore_dl.py allstore_dl.png allstore_dl.json allstore_dl_feed.json\n"
-                'echo "Downloading plugin.py..."\n'
-                'wget -q --no-check-certificate "%s/plugin.py?t=$TS" -O allstore_dl.py || exit 2\n'
-                'echo "Downloading plugin.png..."\n'
-                'wget -q --no-check-certificate "%s/plugin.png?t=$TS" -O allstore_dl.png || exit 3\n'
-                'echo "Downloading version.json..."\n'
-                'wget -q --no-check-certificate "%s/version.json?t=$TS" -O allstore_dl.json || exit 4\n'
-                'echo "Downloading feed/index.json..."\n'
-                'wget -q --no-check-certificate "%s/feed/index.json?t=$TS" -O allstore_dl_feed.json || exit 5\n'
-                'echo "Installing to %s ..."\n'
-                'mkdir -p "%s/feed" || exit 6\n'
-                'cp allstore_dl.py "%s/plugin.py" || exit 7\n'
-                'cp allstore_dl.png "%s/plugin.png" || exit 8\n'
-                'cp allstore_dl.json "%s/version.json" || exit 9\n'
-                'cp allstore_dl_feed.json "%s/feed/index.json" || exit 10\n'
-                'rm -f "%s/plugin.pyc" "%s/store_cache.json"\n'
-                'rm -rf "%s/__pycache__"\n'
+                'mkdir -p "$DEST/feed" "$DEST/images/Icons"\n'
+                'echo "Downloading core files..."\n'
+                'wget -q --no-check-certificate "$BASE/plugin.py?t=$TS" -O allstore_dl.py || exit 2\n'
+                'wget -q --no-check-certificate "$BASE/plugin.png?t=$TS" -O allstore_dl.png || exit 3\n'
+                'wget -q --no-check-certificate "$BASE/version.json?t=$TS" -O allstore_dl.json || exit 4\n'
+                'wget -q --no-check-certificate "$BASE/feed/index.json?t=$TS" -O allstore_dl_feed.json || exit 5\n'
+                'echo "Downloading images..."\n'
+                'for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do\n'
+                '    wget -q --no-check-certificate "$BASE/images/$img.png?t=$TS" -O "allstore_img_$img.png" || exit 20\n'
+                'done\n'
+                'for ic in plugins skins tools system_images picons channels novaler; do\n'
+                '    wget -q --no-check-certificate "$BASE/images/Icons/$ic.png?t=$TS" -O "allstore_ic_$ic.png" || true\n'
+                'done\n'
+                'echo "Installing to $DEST ..."\n'
+                'cp allstore_dl.py "$DEST/plugin.py" || exit 7\n'
+                'cp allstore_dl.png "$DEST/plugin.png" || exit 8\n'
+                'cp allstore_dl.json "$DEST/version.json" || exit 9\n'
+                'cp allstore_dl_feed.json "$DEST/feed/index.json" || exit 10\n'
+                'for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do\n'
+                '    cp "allstore_img_$img.png" "$DEST/images/$img.png" || true\n'
+                'done\n'
+                'for ic in plugins skins tools system_images picons channels novaler; do\n'
+                '    [ -f "allstore_ic_$ic.png" ] && cp "allstore_ic_$ic.png" "$DEST/images/Icons/$ic.png"\n'
+                'done\n'
+                'rm -f "$DEST/plugin.pyc" "$DEST/store_cache.json"\n'
+                'rm -rf "$DEST/__pycache__"\n'
                 'rm -f allstore_dl.py allstore_dl.png allstore_dl.json allstore_dl_feed.json\n'
+                'rm -f allstore_img_*.png allstore_ic_*.png\n'
                 'echo "DONE. Installed version.json:"\n'
-                'cat "%s/version.json"\n'
-            ) % (base, base, base, base, PLUGIN_DIR,
-                 PLUGIN_DIR, PLUGIN_DIR, PLUGIN_DIR, PLUGIN_DIR, PLUGIN_DIR,
-                 PLUGIN_DIR, PLUGIN_DIR, PLUGIN_DIR, PLUGIN_DIR)
+                'cat "$DEST/version.json"\n'
+            ) % (base, PLUGIN_DIR)
             script_path = "/tmp/allstore_update.sh"
             log_file = "/tmp/allstore_update.log"
             data = script if isinstance(script, bytes) else script.encode("utf-8")
@@ -1381,15 +1479,8 @@ class AllStoreInfo(Screen):
         """Render images/qrcode.png inside the qrcode Pixmap widget."""
         if ePicLoad is None:
             return
-        path = os.path.join(PLUGIN_DIR, "images", "qrcode.png")
-        if not os.path.exists(path):
-            try:
-                path = os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)),
-                    "images", "qrcode.png")
-            except Exception:
-                return
-        if not os.path.exists(path):
+        path = self._qr_source()
+        if not path or not os.path.exists(path):
             return
         try:
             w = self["qrcode"].instance.size().width()
@@ -1399,16 +1490,70 @@ class AllStoreInfo(Screen):
         try:
             self.picload = ePicLoad()
             try:
+                self.picload.PictureData.get().append(self._qr_picture)
+            except Exception:
+                pass
+            try:
                 # width, height, aspect_w, aspect_h, stretch, background, bgcolor
                 self.picload.setPara((w, h, w, h, False, 0, "#00FFFFFF"))
             except Exception:
                 self.picload.setPara((w, h))
-            if self.picload.startDecode(path) == 0:
-                pixmap = self.picload.getPixmap()
-                if pixmap:
-                    self["qrcode"].instance.setPixmap(pixmap)
+            self.picload.startDecode(path)
+            # if decoding was synchronous, apply straight away
+            self._qr_picture()
         except Exception:
             self.picload = None
+
+    def _qr_picture(self, picInfo=None):
+        """Attach the decoded pixmap to the qrcode widget (once ready)."""
+        if self.picload is None:
+            return
+        ptr = None
+        for meth in ("getPixmap", "getData"):
+            try:
+                ptr = getattr(self.picload, meth)()
+            except Exception:
+                ptr = None
+            if ptr is not None:
+                break
+        if ptr is not None:
+            try:
+                self["qrcode"].instance.setPixmap(ptr)
+            except Exception:
+                pass
+
+    def _qr_source(self):
+        """Path to a usable QR image.
+
+        Prefer the shipped images/qrcode.png. If it is missing, or is the
+        1x1 placeholder (older installs never refreshed images), fall back
+        to the copy embedded in this module so the QR always renders.
+        """
+        candidates = [os.path.join(PLUGIN_DIR, "images", "qrcode.png")]
+        try:
+            candidates.append(os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "images", "qrcode.png"))
+        except Exception:
+            pass
+        for path in candidates:
+            try:
+                if os.path.exists(path) and os.path.getsize(path) > 500:
+                    return path
+            except Exception:
+                continue
+        tmp = "/tmp/allstore_qrcode.png"
+        try:
+            import base64
+            if not os.path.exists(tmp) or os.path.getsize(tmp) < 500:
+                f = open(tmp, "wb")
+                f.write(base64.b64decode(QR_FALLBACK_B64))
+                f.close()
+            if os.path.exists(tmp):
+                return tmp
+        except Exception:
+            pass
+        return None
 
 
 # =====================================================================
