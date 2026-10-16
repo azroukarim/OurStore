@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.21"
+PLUGIN_VERSION = "1.0.22"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -347,62 +347,99 @@ def build_batch_script(items):
 
 
 # =====================================================================
-# SKIN
+# SKIN - HEADER (shared by the grid and item screens)
 # =====================================================================
-SKIN = """
-<screen name="WordOfEnigma2" position="0,0" size="1920,1080" title="Word Of Enigma2" flags="wfNoBorder">
-    <!-- Background -->
-    <eLabel position="0,0" size="1920,1080" backgroundColor="#0B0F19" zPosition="-100" />
-
-    <!-- Header -->
-    <eLabel position="0,0" size="1920,110" backgroundColor="#131A2A" zPosition="-90" />
-    <eLabel position="0,110" size="1920,3" backgroundColor="#3b82f6" zPosition="-89" />
-
-    <!-- Header: plugin name (far left) + system info -->
-    <eLabel position="40,22" size="470,46" text="WORD OF ENIGMA2" font="Regular;36" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+_HEADER_SKIN = """    <eLabel position="40,22" size="470,46" text="WORD OF ENIGMA2" font="Regular;36" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
     <widget name="version" position="42,72" size="300,30" font="Regular;22" foregroundColor="#3b82f6" backgroundColor="#131A2A" transparent="1" zPosition="2" />
-
-    <!-- Header: device (name / temperature) -->
     <widget name="devname" position="540,20" size="420,38" font="Regular;26" foregroundColor="#e5e7eb" backgroundColor="#131A2A" transparent="1" zPosition="2" />
     <widget name="devtemp" position="540,62" size="420,34" font="Regular;22" foregroundColor="#10b981" backgroundColor="#131A2A" transparent="1" zPosition="2" />
-
-    <!-- Header: image / python version -->
     <widget name="imagename" position="980,20" size="420,38" font="Regular;26" foregroundColor="#e5e7eb" backgroundColor="#131A2A" transparent="1" zPosition="2" />
     <widget name="pyver" position="980,62" size="420,34" font="Regular;22" foregroundColor="#3b82f6" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <eLabel position="1640,35" size="240,50" text="Plugin Store" font="Regular;26" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" zPosition="2" />"""
 
-    <!-- Header Right -->
-    <eLabel position="1640,35" size="240,50" text="Plugin Store" font="Regular;26" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" zPosition="2" />
 
-    <!-- LEFT PANEL: Categories -->
-    <eLabel position="30,140" size="500,850" backgroundColor="#131A2A" zPosition="-50" />
-    <eLabel position="30,140" size="500,4" backgroundColor="#3b82f6" zPosition="-49" />
-    <eLabel position="50,160" size="460,40" text="CATEGORIES" font="Regular;32" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
-    <eLabel position="50,205" size="460,2" backgroundColor="#1A2235" zPosition="-48" />
-    <widget name="categories_list" position="40,225" size="480,750" itemHeight="100" font="Regular;34" scrollbarMode="showOnDemand" foregroundColor="#d1d5db" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+# =====================================================================
+# SKIN - MAIN SCREEN (category grid 4 x 3)
+# =====================================================================
+GRID_COLS = 4
+GRID_ROWS = 3
+GRID_SIZE = GRID_COLS * GRID_ROWS
+CELL_W = 450
+CELL_H = 266
+CELL_GAP_X = 20
+CELL_GAP_Y = 20
+GRID_X0 = 40
+GRID_Y0 = 150
 
-    <!-- CENTER PANEL: Items -->
-    <eLabel position="550,140" size="880,850" backgroundColor="#131A2A" zPosition="-50" />
-    <eLabel position="550,140" size="880,4" backgroundColor="#10b981" zPosition="-49" />
-    <eLabel position="570,160" size="840,40" text="AVAILABLE PACKAGES" font="Regular;32" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
-    <eLabel position="570,205" size="840,2" backgroundColor="#1A2235" zPosition="-48" />
-    <widget name="items_list" position="560,225" size="860,750" itemHeight="100" font="Regular;34" scrollbarMode="showOnDemand" foregroundColor="#d1d5db" backgroundColor="#131A2A" transparent="1" zPosition="2" />
 
-    <!-- RIGHT PANEL: Info -->
-    <eLabel position="1450,140" size="440,850" backgroundColor="#131A2A" zPosition="-50" />
-    <eLabel position="1450,140" size="440,4" backgroundColor="#8b5cf6" zPosition="-49" />
-    <eLabel position="1470,160" size="400,40" text="INFORMATION" font="Regular;32" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
-    <eLabel position="1470,205" size="400,2" backgroundColor="#1A2235" zPosition="-48" />
-    <widget name="description" position="1470,225" size="420,750" font="Regular;30" foregroundColor="#9ca3af" backgroundColor="#131A2A" transparent="1" valign="top" zPosition="2" />
+def _grid_cells_skin():
+    cells = []
+    for i in range(GRID_SIZE):
+        r, c = divmod(i, GRID_COLS)
+        x = GRID_X0 + c * (CELL_W + CELL_GAP_X)
+        y = GRID_Y0 + r * (CELL_H + CELL_GAP_Y)
+        cells.append(
+            '    <widget name="cell%d" position="%d,%d" size="%d,%d" font="Regular;30" '
+            'foregroundColor="#d1d5db" backgroundColor="#131A2A" transparent="0" '
+            'halign="center" valign="center" zPosition="2" />'
+            % (i, x, y, CELL_W, CELL_H))
+    return "\n".join(cells)
 
-    <!-- Footer Buttons -->
+
+SKIN = """
+<screen name="WordOfEnigma2" position="0,0" size="1920,1080" title="Word Of Enigma2" flags="wfNoBorder">
+    <eLabel position="0,0" size="1920,1080" backgroundColor="#0B0F19" zPosition="-100" />
+    <eLabel position="0,0" size="1920,110" backgroundColor="#131A2A" zPosition="-90" />
+    <eLabel position="0,110" size="1920,3" backgroundColor="#3b82f6" zPosition="-89" />
+""" + _HEADER_SKIN + """
+
+    <!-- Category grid (4 x 3) -->
+""" + _grid_cells_skin() + """
+
+    <!-- Footer -->
     <eLabel position="0,1010" size="1920,70" backgroundColor="#131A2A" zPosition="-90" />
     <eLabel position="0,1010" size="1920,2" backgroundColor="#1A2235" zPosition="-89" />
+    <widget name="description" position="40,1020" size="1020,50" font="Regular;24" foregroundColor="#9ca3af" backgroundColor="#131A2A" transparent="1" valign="center" zPosition="2" />
+    <widget name="key_red"    position="1090,1020" size="190,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#e11d48" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_green"  position="1290,1020" size="190,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#059669" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_yellow" position="1490,1020" size="190,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#d97706" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_blue"   position="1690,1020" size="190,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
+</screen>
+"""
 
-    <widget name="key_red"    position="30,1020"  size="300,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#e11d48" transparent="0" halign="center" valign="center" zPosition="3" />
-    <widget name="key_green"  position="340,1020" size="300,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#059669" transparent="0" halign="center" valign="center" zPosition="3" />
-    <widget name="key_yellow" position="650,1020" size="300,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#d97706" transparent="0" halign="center" valign="center" zPosition="3" />
-    <widget name="key_blue"   position="960,1020" size="480,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
-    <eLabel position="1450,1020" size="440,50" text="OK: select    MENU: info / details / update" font="Regular;26" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" valign="center" zPosition="3" />
+
+# =====================================================================
+# SKIN - ITEMS SCREEN (content of a selected category)
+# =====================================================================
+ITEMS_SKIN = """
+<screen name="WordOfEnigma2Items" position="0,0" size="1920,1080" title="Word Of Enigma2" flags="wfNoBorder">
+    <eLabel position="0,0" size="1920,1080" backgroundColor="#0B0F19" zPosition="-100" />
+    <eLabel position="0,0" size="1920,110" backgroundColor="#131A2A" zPosition="-90" />
+    <eLabel position="0,110" size="1920,3" backgroundColor="#3b82f6" zPosition="-89" />
+""" + _HEADER_SKIN + """
+
+    <!-- LEFT: items -->
+    <eLabel position="30,140" size="1200,850" backgroundColor="#131A2A" zPosition="-50" />
+    <eLabel position="30,140" size="1200,4" backgroundColor="#10b981" zPosition="-49" />
+    <widget name="header" position="50,158" size="1160,44" font="Regular;32" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <eLabel position="50,205" size="1160,2" backgroundColor="#1A2235" zPosition="-48" />
+    <widget name="items_list" position="40,225" size="1180,750" itemHeight="100" font="Regular;34" scrollbarMode="showOnDemand" foregroundColor="#d1d5db" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+
+    <!-- RIGHT: info -->
+    <eLabel position="1250,140" size="640,850" backgroundColor="#131A2A" zPosition="-50" />
+    <eLabel position="1250,140" size="640,4" backgroundColor="#8b5cf6" zPosition="-49" />
+    <eLabel position="1270,160" size="600,40" text="INFORMATION" font="Regular;32" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <eLabel position="1270,205" size="600,2" backgroundColor="#1A2235" zPosition="-48" />
+    <widget name="description" position="1270,225" size="600,750" font="Regular;30" foregroundColor="#9ca3af" backgroundColor="#131A2A" transparent="1" valign="top" zPosition="2" />
+
+    <!-- Footer -->
+    <eLabel position="0,1010" size="1920,70" backgroundColor="#131A2A" zPosition="-90" />
+    <eLabel position="0,1010" size="1920,2" backgroundColor="#1A2235" zPosition="-89" />
+    <widget name="key_red"    position="30,1020"  size="300,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#e11d48" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_green"  position="340,1020" size="300,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#059669" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_yellow" position="650,1020" size="300,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#d97706" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_blue"   position="960,1020" size="480,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
+    <eLabel position="1450,1020" size="440,50" text="OK: select   MENU: details" font="Regular;24" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" valign="center" zPosition="3" />
 </screen>
 """
 
@@ -561,87 +598,13 @@ def get_temperature():
 
 
 # =====================================================================
-# MAIN SCREEN
+# BASE SCREEN - shared store / update / system-info logic
 # =====================================================================
-class WordOfEnigma2(Screen):
-    skin = SKIN
+class WoeStoreBase(Screen):
+    update_in_progress = False
 
-    def __init__(self, session):
-        Screen.__init__(self, session)
-        self.setTitle("Word Of Enigma2")
-
-        self["categories_list"] = MenuList([])
-        self["items_list"] = MenuList([])
-        self["description"] = Label("Loading...")
-        self["version"] = Label("v" + PLUGIN_VERSION)
-        self["devname"] = Label("")
-        self["devtemp"] = Label("")
-        self["imagename"] = Label("")
-        self["pyver"] = Label("")
-
-        # Enlarge fonts for lists
-        try:
-            from enigma import gFont
-            if self["categories_list"].l:
-                self["categories_list"].l.setFont(0, gFont("Regular", 34))
-            if self["items_list"].l:
-                self["items_list"].l.setFont(0, gFont("Regular", 34))
-        except Exception:
-            pass
-
-        self["key_red"] = Label("Exit")
-        self["key_green"] = Label("Install")
-        self["key_yellow"] = Label("Refresh")
-        self["key_blue"] = Label("Batch Install")
-
-        self["actions"] = ActionMap(
-            ["OkCancelActions", "DirectionActions", "ColorActions", "MenuActions"],
-            {
-                "cancel": self.close,
-                "red": self.close,
-                "green": self.download_item,
-                "yellow": self.load_store,
-                "blue": self.blue_pressed,
-                "menu": self.main_menu,
-                "ok": self.ok_pressed,
-                "up": self.go_up,
-                "down": self.go_down,
-                "left": self.go_left,
-                "right": self.go_right,
-            },
-            -1
-        )
-
-        self.store_data = {}
-        self.categories = []
-        self.visible_items = []
-        self.current_path = []
-        self.path_stack = []
-        self.active_focus = "categories"
-        self.my_console = Console()
-        self.install_cmd = ""
-        self.install_item_name = ""
-        self.is_image_download = False
-        self.download_dest_path = ""
-        self.update_in_progress = False
-        self.selected = []
-
-        self["categories_list"].onSelectionChanged.append(self.category_changed)
-        self["items_list"].onSelectionChanged.append(self.item_changed)
-
-        self.load_local_cache()
-
-        self.bg_timer = eTimer()
-        try:
-            self.bg_timer.callback.append(self.start_network_fetch)
-        except AttributeError:
-            try:
-                self.bg_timer.timeout.connect(self.start_network_fetch)
-            except Exception:
-                pass
-        self.onLayoutFinish.append(self.schedule_fetch)
-        self.onLayoutFinish.append(self.init_system_info)
-
+    # -----------------------------------------------------------------
+    # SYSTEM INFO (header)
     # -----------------------------------------------------------------
     def update_system_info(self):
         try:
@@ -678,21 +641,23 @@ class WordOfEnigma2(Screen):
         except Exception:
             pass
 
+    def set_description(self, text):
+        try:
+            self["description"].setText(text)
+        except Exception:
+            pass
+
+    # -----------------------------------------------------------------
+    # STORE LOADING
     # -----------------------------------------------------------------
     def schedule_fetch(self):
-        if self.bg_timer:
+        if getattr(self, "bg_timer", None):
             self.bg_timer.start(200, True)
 
     def start_network_fetch(self):
         t = threading.Thread(target=self.async_fetch)
         t.daemon = True
         t.start()
-
-    def set_description(self, text):
-        try:
-            self["description"].setText(text)
-        except Exception:
-            pass
 
     def async_fetch(self):
         # Cache-buster so the GitHub CDN cannot serve a stale feed
@@ -705,7 +670,7 @@ class WordOfEnigma2(Screen):
             except Exception:
                 pass
             gui_call(self.apply_store_data, data)
-        elif self.categories:
+        elif getattr(self, "categories", None):
             gui_call(self.set_description,
                      "Refresh failed - showing cached data.\n"
                      "Press YELLOW to retry.")
@@ -729,6 +694,27 @@ class WordOfEnigma2(Screen):
         t = threading.Thread(target=self.async_fetch)
         t.daemon = True
         t.start()
+
+    def render_categories(self):
+        # Overridden by the grid screen.
+        pass
+
+    def apply_store_data(self, data):
+        try:
+            name = data.get("store_name", "Word Of Enigma2")
+            ver = data.get("version", PLUGIN_VERSION)
+            self.setTitle("%s v%s" % (name, ver))
+
+            self.store_data = data.get("categories", {})
+            if isinstance(self.store_data, dict):
+                self.categories = list(self.store_data.keys())
+            else:
+                self.store_data = {}
+                self.categories = []
+
+            self.render_categories()
+        except Exception as e:
+            self.set_description("Error: " + str(e))
 
     # -----------------------------------------------------------------
     # SELF UPDATE - MENU -> "Check for updates"
@@ -905,48 +891,283 @@ class WordOfEnigma2(Screen):
                 os.system("killall -9 enigma2")
 
     # -----------------------------------------------------------------
-    def apply_store_data(self, data):
-        try:
-            name = data.get("store_name", "Word Of Enigma2")
-            ver = data.get("version", PLUGIN_VERSION)
-            self.setTitle("%s v%s" % (name, ver))
-
-            self.store_data = data.get("categories", {})
-            if isinstance(self.store_data, dict):
-                self.categories = list(self.store_data.keys())
-            else:
-                self.categories = []
-
-            display = []
-            for cat in self.categories:
-                items = self.store_data.get(cat, [])
-                count = count_items(items)
-                clean = cat.replace("_", " ").title()
-                display.append("%s (%d)" % (clean, count))
-
-            self["categories_list"].setList(display)
-            self.current_path = []
-            self.path_stack = []
-            self.category_changed()
-        except Exception as e:
-            self["description"].setText("Error: " + str(e))
-
+    # MENU popup: Information + Item details + Check for updates
     # -----------------------------------------------------------------
-    def category_changed(self):
+    def main_menu(self):
         try:
-            idx = self["categories_list"].getSelectionIndex()
-            if idx < 0 or idx >= len(self.categories):
-                return
-            cat = self.categories[idx]
-            self.visible_items = self.store_data.get(cat, [])
-            self.current_path = []
-            self.path_stack = []
-            self.update_items()
+            options = [
+                ("Information", "info"),
+                ("Item details", "item"),
+                ("Check for updates", "update"),
+            ]
+            self.session.openWithCallback(
+                self.main_menu_done,
+                WordOfEnigma2Menu,
+                "Menu",
+                options
+            )
         except Exception:
             pass
 
+    def main_menu_done(self, choice):
+        if not choice:
+            return
+        if choice == "info":
+            try:
+                self.session.open(WordOfEnigma2Info)
+            except Exception:
+                pass
+        elif choice == "item":
+            if hasattr(self, "show_info_popup"):
+                self.show_info_popup()
+        elif choice == "update":
+            self.self_update()
+
+
+# =====================================================================
+# MAIN SCREEN - category grid (4 x 3)
+# =====================================================================
+class WordOfEnigma2(WoeStoreBase):
+    skin = SKIN
+
+    def __init__(self, session):
+        Screen.__init__(self, session)
+        self.setTitle("Word Of Enigma2")
+
+        self["version"] = Label("v" + PLUGIN_VERSION)
+        self["devname"] = Label("")
+        self["devtemp"] = Label("")
+        self["imagename"] = Label("")
+        self["pyver"] = Label("")
+        self["description"] = Label("Loading...")
+        self["key_red"] = Label("Exit")
+        self["key_green"] = Label("Open")
+        self["key_yellow"] = Label("Refresh")
+        self["key_blue"] = Label("Menu")
+
+        # Category tiles
+        self.cell_widgets = []
+        for i in range(GRID_SIZE):
+            lbl = Label("")
+            self["cell%d" % i] = lbl
+            self.cell_widgets.append(lbl)
+
+        self["actions"] = ActionMap(
+            ["OkCancelActions", "DirectionActions", "ColorActions", "MenuActions"],
+            {
+                "cancel": self.close,
+                "red": self.close,
+                "green": self.open_category,
+                "yellow": self.load_store,
+                "blue": self.main_menu,
+                "menu": self.main_menu,
+                "ok": self.open_category,
+                "up": lambda: self.move_selection(0, -1),
+                "down": lambda: self.move_selection(0, 1),
+                "left": lambda: self.move_selection(-1, 0),
+                "right": lambda: self.move_selection(1, 0),
+            },
+            -1
+        )
+
+        self.store_data = {}
+        self.categories = []
+        self.grid_categories = []
+        self.grid_index = 0
+
+        self.load_local_cache()
+
+        self.bg_timer = eTimer()
+        try:
+            self.bg_timer.callback.append(self.start_network_fetch)
+        except AttributeError:
+            try:
+                self.bg_timer.timeout.connect(self.start_network_fetch)
+            except Exception:
+                pass
+        self.onLayoutFinish.append(self.highlight_cells)
+        self.onLayoutFinish.append(self.schedule_fetch)
+        self.onLayoutFinish.append(self.init_system_info)
+
+    # -----------------------------------------------------------------
+    def render_categories(self):
+        # Only categories that actually contain items are shown in the grid.
+        self.grid_categories = []
+        for cat in self.categories:
+            if count_items(self.store_data.get(cat, [])) > 0:
+                self.grid_categories.append(cat)
+
+        for i, lbl in enumerate(self.cell_widgets):
+            if i < len(self.grid_categories):
+                cat = self.grid_categories[i]
+                count = count_items(self.store_data.get(cat, []))
+                clean = cat.replace("_", " ").upper()
+                try:
+                    lbl.setText("%s\n(%d)" % (clean, count))
+                except Exception:
+                    pass
+            else:
+                try:
+                    lbl.setText("")
+                except Exception:
+                    pass
+        if self.grid_index >= len(self.grid_categories):
+            self.grid_index = 0
+        self.highlight_cells()
+        self.update_grid_status()
+
+    def highlight_cells(self):
+        try:
+            from skin import parseColor
+        except Exception:
+            return
+        normal_bg = parseColor("#131A2A")
+        normal_fg = parseColor("#d1d5db")
+        sel_bg = parseColor("#8b5cf6")
+        sel_fg = parseColor("#ffffff")
+        empty_bg = parseColor("#0F1522")
+        empty_fg = parseColor("#374151")
+        n = len(self.grid_categories)
+        for i, lbl in enumerate(self.cell_widgets):
+            try:
+                inst = lbl.instance
+                if inst is None:
+                    continue
+                if i >= n:
+                    inst.setBackgroundColor(empty_bg)
+                    inst.setForegroundColor(empty_fg)
+                elif i == self.grid_index:
+                    inst.setBackgroundColor(sel_bg)
+                    inst.setForegroundColor(sel_fg)
+                else:
+                    inst.setBackgroundColor(normal_bg)
+                    inst.setForegroundColor(normal_fg)
+            except Exception:
+                pass
+
+    def update_grid_status(self):
+        n = len(self.grid_categories)
+        if n == 0:
+            self.set_description("No categories available. Press YELLOW to refresh.")
+            return
+        if self.grid_index >= n:
+            self.grid_index = 0
+        cat = self.grid_categories[self.grid_index]
+        count = count_items(self.store_data.get(cat, []))
+        note = ""
+        if n > GRID_SIZE:
+            note = "   (+%d more not shown)" % (n - GRID_SIZE)
+        self.set_description("%s  -  %d item(s).   OK / GREEN: open%s"
+                             % (cat.replace("_", " ").title(), count, note))
+
+    def move_selection(self, dx, dy):
+        n = len(self.grid_categories)
+        if n == 0:
+            return
+        row, col = divmod(self.grid_index, GRID_COLS)
+        col = max(0, min(GRID_COLS - 1, col + dx))
+        row = max(0, min(GRID_ROWS - 1, row + dy))
+        new = row * GRID_COLS + col
+        if new >= n:
+            new = n - 1
+        if new != self.grid_index:
+            self.grid_index = new
+            self.highlight_cells()
+            self.update_grid_status()
+
+    def open_category(self):
+        if not self.grid_categories or self.grid_index >= len(self.grid_categories):
+            return
+        cat = self.grid_categories[self.grid_index]
+        items = self.store_data.get(cat, [])
+        if not items:
+            self.set_description("%s is empty." % cat.replace("_", " ").title())
+            return
+        self.session.openWithCallback(
+            self._items_closed,
+            WordOfEnigma2Items,
+            self.store_data,
+            cat
+        )
+
+    def _items_closed(self, *args):
+        self.update_grid_status()
+
+
+# =====================================================================
+# ITEMS SCREEN - content of a selected category
+# =====================================================================
+class WordOfEnigma2Items(WoeStoreBase):
+    skin = ITEMS_SKIN
+
+    def __init__(self, session, store_data=None, category=None):
+        Screen.__init__(self, session)
+        self.category = category or ""
+        self.store_data = store_data if isinstance(store_data, dict) else {}
+        self.setTitle("Word Of Enigma2 - " + self.category.replace("_", " ").title())
+
+        self["version"] = Label("v" + PLUGIN_VERSION)
+        self["devname"] = Label("")
+        self["devtemp"] = Label("")
+        self["imagename"] = Label("")
+        self["pyver"] = Label("")
+        self["header"] = Label(self.category.replace("_", " ").upper())
+        self["items_list"] = MenuList([])
+        self["description"] = Label("")
+        self["key_red"] = Label("Back")
+        self["key_green"] = Label("Install")
+        self["key_yellow"] = Label("Select")
+        self["key_blue"] = Label("Batch Install")
+
+        try:
+            from enigma import gFont
+            if self["items_list"].l:
+                self["items_list"].l.setFont(0, gFont("Regular", 34))
+        except Exception:
+            pass
+
+        self["actions"] = ActionMap(
+            ["OkCancelActions", "DirectionActions", "ColorActions", "MenuActions"],
+            {
+                "cancel": self.close,
+                "red": self.close,
+                "green": self.download_item,
+                "yellow": self.toggle_select,
+                "blue": self.blue_pressed,
+                "menu": self.main_menu,
+                "ok": self.ok_pressed,
+                "up": self.go_up,
+                "down": self.go_down,
+                "left": self.go_left,
+                "right": self.go_right,
+            },
+            -1
+        )
+
+        self.visible_items = self.store_data.get(self.category, [])
+        self.current_path = []
+        self.path_stack = []
+        self.selected = []
+        self.install_cmd = ""
+        self.install_item_name = ""
+        self.is_image_download = False
+        self.download_dest_path = ""
+
+        self["items_list"].onSelectionChanged.append(self.item_changed)
+        self.update_items()
+        self.onLayoutFinish.append(self.init_system_info)
+
+    # -----------------------------------------------------------------
     def update_items(self):
         try:
+            title = self.category.replace("_", " ").title() if self.category else "Items"
+            if self.current_path:
+                title = " / ".join([c.get("name", "?") for c in self.current_path])
+            try:
+                self["header"].setText(title.upper())
+            except Exception:
+                pass
+
             display = []
             for item in self.visible_items:
                 if isinstance(item, dict) and "items" in item:
@@ -989,13 +1210,10 @@ class WordOfEnigma2(Screen):
 
     # -----------------------------------------------------------------
     def ok_pressed(self):
-        if self.active_focus == "categories":
-            self.active_focus = "items"
-            return
         idx = self["items_list"].getSelectionIndex()
         if 0 <= idx < len(self.visible_items):
             item = self.visible_items[idx]
-            if "items" in item:
+            if isinstance(item, dict) and "items" in item:
                 self.current_path.append(item)
                 self.path_stack.append(self.visible_items)
                 self.visible_items = item["items"]
@@ -1006,35 +1224,28 @@ class WordOfEnigma2(Screen):
 
     def go_up(self):
         try:
-            if self.active_focus == "categories":
-                self["categories_list"].up()
-            else:
-                self["items_list"].up()
+            self["items_list"].up()
         except Exception:
             pass
 
     def go_down(self):
         try:
-            if self.active_focus == "categories":
-                self["categories_list"].down()
-            else:
-                self["items_list"].down()
+            self["items_list"].down()
         except Exception:
             pass
 
     def go_left(self):
-        # Inside a sub-folder: go one level up. Otherwise jump to categories.
-        if self.active_focus == "items" and self.path_stack:
+        # Inside a sub-folder: go one level up. Otherwise go back to the grid.
+        if self.path_stack:
             self.visible_items = self.path_stack.pop()
             if self.current_path:
                 self.current_path.pop()
             self.update_items()
         else:
-            self.active_focus = "categories"
+            self.close()
 
     def go_right(self):
-        if self.visible_items:
-            self.active_focus = "items"
+        self.ok_pressed()
 
     # -----------------------------------------------------------------
     # MULTI-SELECT + BATCH INSTALL
@@ -1059,8 +1270,6 @@ class WordOfEnigma2(Screen):
 
     def toggle_select(self):
         try:
-            if self.active_focus != "items":
-                return
             idx = self["items_list"].getSelectionIndex()
             if idx < 0 or idx >= len(self.visible_items):
                 return
@@ -1077,37 +1286,6 @@ class WordOfEnigma2(Screen):
             self.update_items()
         except Exception:
             pass
-
-    # --- MENU popup: Information + Check for updates -------------------
-    def main_menu(self):
-        """MENU: small menu with Information, item details and panel update."""
-        try:
-            options = [
-                ("Information", "info"),
-                ("Item details", "item"),
-                ("Check for updates", "update"),
-            ]
-            self.session.openWithCallback(
-                self.main_menu_done,
-                WordOfEnigma2Menu,
-                "Menu",
-                options
-            )
-        except Exception:
-            pass
-
-    def main_menu_done(self, choice):
-        if not choice:
-            return
-        if choice == "info":
-            try:
-                self.session.open(WordOfEnigma2Info)
-            except Exception:
-                pass
-        elif choice == "item":
-            self.show_info_popup()
-        elif choice == "update":
-            self.self_update()
 
     def show_info_popup(self):
         """Show full details of the highlighted item."""
@@ -1279,7 +1457,7 @@ class WordOfEnigma2(Screen):
             log_file = "/tmp/wordofenigma2_wget.log"
             full_cmd = wget_cmd + " > " + log_file + " 2>&1"
             retval = os.system(full_cmd)
-            
+
             # قراءة اللوغ
             output = ""
             try:
@@ -1289,10 +1467,10 @@ class WordOfEnigma2(Screen):
                     os.remove(log_file)
             except Exception:
                 pass
-            
+
             if not output:
                 output = "wget returncode: " + str(retval)
-            
+
             self.download_finished(output, retval)
         except Exception as e:
             self.download_finished("Exception: " + str(e), 1)
@@ -1369,7 +1547,7 @@ class WordOfEnigma2(Screen):
             log_file = "/tmp/wordofenigma2_install.log"
             full_cmd = self.install_full_cmd + " > " + log_file + " 2>&1"
             retval = os.system(full_cmd)
-            
+
             output = ""
             try:
                 if os.path.exists(log_file):
