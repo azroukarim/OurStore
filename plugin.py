@@ -31,7 +31,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.8"
+PLUGIN_VERSION = "1.0.9"
 GITHUB_BASE = "https://raw.githubusercontent.com/azroukarim/OurStore/main"
 STORE_URL = GITHUB_BASE + "/feed/index.json"
 UPDATE_SCRIPT_URL = GITHUB_BASE + "/install.sh"
@@ -236,7 +236,7 @@ SKIN = """
     <widget name="key_green"  position="340,1020" size="300,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#059669" transparent="0" halign="center" valign="center" zPosition="3" />
     <widget name="key_yellow" position="650,1020" size="300,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#d97706" transparent="0" halign="center" valign="center" zPosition="3" />
     <widget name="key_blue"   position="960,1020" size="480,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
-    <eLabel position="1450,1020" size="440,50" text="INFO: select    MENU: all / none" font="Regular;26" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" valign="center" zPosition="3" />
+    <eLabel position="1450,1020" size="440,50" text="MENU: batch options" font="Regular;26" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" valign="center" zPosition="3" />
 </screen>
 """
 
@@ -262,6 +262,20 @@ CONSOLE_SKIN = """
     <widget name="key_red"  position="60,1032"  size="560,40" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#e11d48" transparent="0" halign="center" valign="center" zPosition="3" />
     <widget name="key_blue" position="700,1032" size="560,40" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
     <eLabel   position="1360,1032" size="500,40" text="Up/Down: scroll log" font="Regular;24" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" zPosition="3" />
+</screen>
+"""
+
+
+# =====================================================================
+# BATCH MENU SKIN (works on remotes without an INFO key - uses MENU)
+# =====================================================================
+BATCH_MENU_SKIN = """
+<screen name="AllStoreBatchMenu" position="center,center" size="820,600" title="Batch Install" flags="wfNoBorder">
+    <eLabel position="0,0" size="820,600" backgroundColor="#0B0F19" zPosition="-100" />
+    <eLabel position="0,0" size="820,90" backgroundColor="#131A2A" zPosition="-90" />
+    <eLabel position="0,90" size="820,3" backgroundColor="#8b5cf6" zPosition="-89" />
+    <widget name="menuheader" position="30,22" size="760,50" font="Regular;32" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <widget name="list" position="30,120" size="760,450" itemHeight="76" font="Regular;30" foregroundColor="#d1d5db" backgroundColor="#0B0F19" transparent="1" scrollbarMode="showOnDemand" zPosition="2" />
 </screen>
 """
 
@@ -305,7 +319,7 @@ class AllStore(Screen):
                 "yellow": self.load_store,
                 "blue": self.blue_pressed,
                 "info": self.toggle_select,
-                "menu": self.select_all_toggle,
+                "menu": self.select_menu,
                 "ok": self.ok_pressed,
                 "up": self.go_up,
                 "down": self.go_down,
@@ -588,10 +602,11 @@ class AllStore(Screen):
                 txt = ("Name: %s\n\nDescription:\n%s"
                        % (item.get("name", ""), item.get("description", "No description")))
                 if self.is_selected(item):
-                    txt += "\n\n[SELECTED] for batch install\n\nINFO: remove\nMENU: all / none"
+                    txt += ("\n\n[SELECTED] for batch install"
+                            "\nMENU: batch options")
                 elif self.is_selectable(item):
-                    txt += ("\n\nINFO: add to batch install\n"
-                            "MENU: select all in this view")
+                    txt += ("\n\nMENU: add to batch / select all"
+                            "\nINFO: quick add")
                 self["description"].setText(txt)
         except Exception:
             pass
@@ -718,6 +733,48 @@ class AllStore(Screen):
             self.update_items()
         except Exception:
             pass
+
+    def select_menu(self):
+        """MENU: open a batch options menu (works without an INFO key)."""
+        try:
+            idx = self["items_list"].getSelectionIndex()
+            cur = None
+            if 0 <= idx < len(self.visible_items):
+                cur = self.visible_items[idx]
+
+            n = len(self.selected)
+            options = []
+            if cur is not None and self.is_selectable(cur):
+                if self.is_selected(cur):
+                    options.append(("Remove this item from batch", "toggle"))
+                else:
+                    options.append(("Add this item to batch", "toggle"))
+            options.append(("Select all in this view", "all"))
+            if n > 0:
+                options.append(("Clear selection (%d)" % n, "clear"))
+                options.append(("Install selected (%d)" % n, "install"))
+
+            self.session.openWithCallback(
+                self.select_menu_done,
+                AllStoreBatchMenu,
+                "Batch Install",
+                options
+            )
+        except Exception:
+            pass
+
+    def select_menu_done(self, choice):
+        if not choice:
+            return
+        if choice == "toggle":
+            self.toggle_select()
+        elif choice == "all":
+            self.select_all_toggle()
+        elif choice == "clear":
+            self.selected = []
+            self.update_items()
+        elif choice == "install":
+            self.start_batch_install()
 
     def update_blue_label(self):
         try:
@@ -1131,6 +1188,38 @@ class AllStoreConsole(Screen):
                 os.system("killall -9 enigma2")
         except Exception:
             os.system("killall -9 enigma2")
+
+
+# =====================================================================
+# BATCH OPTIONS MENU (MENU key) - universal, no INFO key needed
+# =====================================================================
+class AllStoreBatchMenu(Screen):
+    skin = BATCH_MENU_SKIN
+
+    def __init__(self, session, title, options):
+        Screen.__init__(self, session)
+        self.setTitle("Batch Install")
+        self.options = options or []
+        self["menuheader"] = Label(title or "Batch Install")
+        self["list"] = MenuList([label for (label, _value) in self.options])
+        self["actions"] = ActionMap(
+            ["OkCancelActions"],
+            {
+                "ok": self.ok,
+                "cancel": self.close,
+            },
+            -1
+        )
+
+    def ok(self):
+        try:
+            idx = self["list"].getSelectionIndex()
+            if 0 <= idx < len(self.options):
+                self.close(self.options[idx][1])
+            else:
+                self.close(None)
+        except Exception:
+            self.close(None)
 
 
 # =====================================================================
