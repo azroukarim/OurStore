@@ -31,7 +31,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.12"
+PLUGIN_VERSION = "1.0.13"
 GITHUB_BASE = "https://raw.githubusercontent.com/azroukarim/OurStore/main"
 STORE_URL = GITHUB_BASE + "/feed/index.json"
 UPDATE_SCRIPT_URL = GITHUB_BASE + "/install.sh"
@@ -496,7 +496,8 @@ class AllStore(Screen):
                 except Exception:
                     pass
 
-            remote_data = load_json_network(GITHUB_BASE + "/version.json")
+            remote_data = load_json_network(
+                GITHUB_BASE + "/version.json?t=" + str(int(time.time())))
             remote_ver = remote_data.get("version", "0.0.0") if remote_data else "0.0.0"
 
             if self.version_newer(remote_ver, local_ver):
@@ -553,7 +554,7 @@ class AllStore(Screen):
             script = (
                 "#!/bin/sh\n"
                 "cd /tmp || exit 1\n"
-                "TS=$(date +%s)\n"
+                "TS=$(date +%%s)\n"
                 "rm -f allstore_dl.py allstore_dl.png allstore_dl.json allstore_dl_feed.json\n"
                 'echo "Downloading plugin.py..."\n'
                 'wget -q --no-check-certificate "%s/plugin.py?t=$TS" -O allstore_dl.py || exit 2\n'
