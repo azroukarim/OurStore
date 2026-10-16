@@ -11,6 +11,7 @@ from Components.MenuList import MenuList
 from Components.Label import Label
 from Components.ActionMap import ActionMap
 from Components.Console import Console
+from Components.Pixmap import Pixmap
 import json
 import os
 import sys
@@ -27,11 +28,17 @@ try:
 except ImportError:
     eTimer = None
 
+try:
+    from enigma import ePicLoad
+except ImportError:
+    ePicLoad = None
+
 
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.14"
+PLUGIN_VERSION = "1.0.15"
+PLUGIN_AUTHOR = "Azrou Karim"
 GITHUB_BASE = "https://raw.githubusercontent.com/azroukarim/OurStore/main"
 STORE_URL = GITHUB_BASE + "/feed/index.json"
 UPDATE_SCRIPT_URL = GITHUB_BASE + "/install.sh"
@@ -300,7 +307,7 @@ SKIN = """
     <widget name="key_green"  position="340,1020" size="300,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#059669" transparent="0" halign="center" valign="center" zPosition="3" />
     <widget name="key_yellow" position="650,1020" size="300,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#d97706" transparent="0" halign="center" valign="center" zPosition="3" />
     <widget name="key_blue"   position="960,1020" size="480,50" font="Regular;28" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
-    <eLabel position="1450,1020" size="440,50" text="OK: select    MENU: info / update" font="Regular;26" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" valign="center" zPosition="3" />
+    <eLabel position="1450,1020" size="440,50" text="OK: select    MENU: info / details / update" font="Regular;26" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" valign="center" zPosition="3" />
 </screen>
 """
 
@@ -340,6 +347,32 @@ BATCH_MENU_SKIN = """
     <eLabel position="0,90" size="820,3" backgroundColor="#8b5cf6" zPosition="-89" />
     <widget name="menuheader" position="30,22" size="760,50" font="Regular;32" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
     <widget name="list" position="30,120" size="760,450" itemHeight="76" font="Regular;30" foregroundColor="#d1d5db" backgroundColor="#0B0F19" transparent="1" scrollbarMode="showOnDemand" zPosition="2" />
+</screen>
+"""
+
+
+# =====================================================================
+# INFORMATION SCREEN (MENU -> Information)
+# Shows plugin version, author and the Facebook QR code.
+# =====================================================================
+INFO_SKIN = """
+<screen name="AllStoreInfo" position="center,center" size="1000,580" title="Information" flags="wfNoBorder">
+    <eLabel position="0,0" size="1000,580" backgroundColor="#0B0F19" zPosition="-100" />
+    <eLabel position="0,0" size="1000,80" backgroundColor="#131A2A" zPosition="-90" />
+    <eLabel position="0,80" size="1000,3" backgroundColor="#8b5cf6" zPosition="-89" />
+    <widget name="header" position="30,20" size="940,50" font="Regular;34" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+
+    <widget name="appname" position="40,130" size="600,60" font="Regular;42" foregroundColor="#8b5cf6" backgroundColor="#0B0F19" transparent="1" zPosition="2" />
+    <widget name="version" position="40,205" size="600,46" font="Regular;32" foregroundColor="#e5e7eb" backgroundColor="#0B0F19" transparent="1" zPosition="2" />
+    <widget name="author" position="40,260" size="600,46" font="Regular;32" foregroundColor="#e5e7eb" backgroundColor="#0B0F19" transparent="1" zPosition="2" />
+    <widget name="note" position="40,325" size="590,110" font="Regular;24" foregroundColor="#9ca3af" backgroundColor="#0B0F19" transparent="1" zPosition="2" />
+
+    <eLabel position="664,124" size="292,292" backgroundColor="#ffffff" zPosition="0" />
+    <widget name="qrcode" position="670,130" size="280,280" zPosition="2" />
+    <widget name="qrlabel" position="664,425" size="292,44" font="Regular;26" foregroundColor="#9ca3af" backgroundColor="#0B0F19" transparent="1" halign="center" zPosition="2" />
+
+    <eLabel position="0,500" size="1000,80" backgroundColor="#131A2A" zPosition="-90" />
+    <widget name="key_red" position="40,520" size="260,44" font="Regular;30" foregroundColor="#ef4444" backgroundColor="#131A2A" transparent="1" zPosition="2" />
 </screen>
 """
 
@@ -811,10 +844,11 @@ class AllStore(Screen):
 
     # --- MENU popup: Information + Check for updates -------------------
     def main_menu(self):
-        """MENU: small menu with Information and panel update."""
+        """MENU: small menu with Information, item details and panel update."""
         try:
             options = [
                 ("Information", "info"),
+                ("Item details", "item"),
                 ("Check for updates", "update"),
             ]
             self.session.openWithCallback(
@@ -830,6 +864,11 @@ class AllStore(Screen):
         if not choice:
             return
         if choice == "info":
+            try:
+                self.session.open(AllStoreInfo)
+            except Exception:
+                pass
+        elif choice == "item":
             self.show_info_popup()
         elif choice == "update":
             self.self_update()
@@ -1303,6 +1342,73 @@ class AllStoreMenu(Screen):
                 self.close(None)
         except Exception:
             self.close(None)
+
+
+# =====================================================================
+# INFORMATION SCREEN (MENU -> Information)
+# =====================================================================
+class AllStoreInfo(Screen):
+    skin = INFO_SKIN
+
+    def __init__(self, session):
+        Screen.__init__(self, session)
+        self.setTitle("Information")
+        self.picload = None
+
+        self["header"] = Label("Information")
+        self["appname"] = Label("AllStore")
+        self["version"] = Label("Version: v" + PLUGIN_VERSION)
+        self["author"] = Label("Author: " + PLUGIN_AUTHOR)
+        self["note"] = Label("Universal plugins & skins store for Enigma2 boxes.\n"
+                             "Scan the QR code to open the Facebook page.")
+        self["qrcode"] = Pixmap()
+        self["qrlabel"] = Label("Facebook page")
+        self["key_red"] = Label("Close")
+
+        self["actions"] = ActionMap(
+            ["OkCancelActions", "ColorActions"],
+            {
+                "ok": self.close,
+                "cancel": self.close,
+                "red": self.close,
+            },
+            -1
+        )
+
+        self.onLayoutFinish.append(self.show_qr)
+
+    def show_qr(self):
+        """Render images/qrcode.png inside the qrcode Pixmap widget."""
+        if ePicLoad is None:
+            return
+        path = os.path.join(PLUGIN_DIR, "images", "qrcode.png")
+        if not os.path.exists(path):
+            try:
+                path = os.path.join(
+                    os.path.dirname(os.path.abspath(__file__)),
+                    "images", "qrcode.png")
+            except Exception:
+                return
+        if not os.path.exists(path):
+            return
+        try:
+            w = self["qrcode"].instance.size().width()
+            h = self["qrcode"].instance.size().height()
+        except Exception:
+            w, h = 280, 280
+        try:
+            self.picload = ePicLoad()
+            try:
+                # width, height, aspect_w, aspect_h, stretch, background, bgcolor
+                self.picload.setPara((w, h, w, h, False, 0, "#00FFFFFF"))
+            except Exception:
+                self.picload.setPara((w, h))
+            if self.picload.startDecode(path) == 0:
+                pixmap = self.picload.getPixmap()
+                if pixmap:
+                    self["qrcode"].instance.setPixmap(pixmap)
+        except Exception:
+            self.picload = None
 
 
 # =====================================================================
