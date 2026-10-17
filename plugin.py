@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.33"
+PLUGIN_VERSION = "1.0.34"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -2206,7 +2206,7 @@ class WordOfEnigma2Items(WoeStoreBase):
             -1
         )
 
-        self.items = self.store_data.get(self.category, [])
+        self.entries = self.store_data.get(self.category, [])
         self.current_path = []
         self.path_stack = []
         self.selected = []
@@ -2222,7 +2222,7 @@ class WordOfEnigma2Items(WoeStoreBase):
 
     # -----------------------------------------------------------------
     def update_view(self):
-        n = len(self.items)
+        n = len(self.entries)
         if n == 0:
             self.sel = 0
         elif self.sel >= n:
@@ -2244,7 +2244,7 @@ class WordOfEnigma2Items(WoeStoreBase):
             idx = start + i
             try:
                 if idx < n:
-                    it = self.items[idx]
+                    it = self.entries[idx]
                     if isinstance(it, dict) and "items" in it:
                         nm = "[+] " + str(it.get("name", "?"))
                     else:
@@ -2273,7 +2273,7 @@ class WordOfEnigma2Items(WoeStoreBase):
         frame = parseColor("#8b5cf6")
         empty_bg = parseColor("#0F1522")
         empty_fg = parseColor("#374151")
-        n = len(self.items)
+        n = len(self.entries)
         start = self.page * ITEMS_PER_PAGE
         for i, lbl in enumerate(self.tile_widgets):
             try:
@@ -2301,7 +2301,7 @@ class WordOfEnigma2Items(WoeStoreBase):
                 pass
 
     def update_page_label(self):
-        n = len(self.items)
+        n = len(self.entries)
         pages = max(1, (n + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE)
         try:
             self["page"].setText("Page %d/%d   -   %d item(s)"
@@ -2310,11 +2310,11 @@ class WordOfEnigma2Items(WoeStoreBase):
             pass
 
     def update_info(self):
-        n = len(self.items)
+        n = len(self.entries)
         if n == 0 or self.sel >= n:
             self.set_description("No items in this section.")
             return
-        it = self.items[self.sel]
+        it = self.entries[self.sel]
         if isinstance(it, dict) and "items" in it:
             self.set_description("Folder: %s   (%d items)   -   OK: open"
                                  % (it.get("name", "?"), count_items(it["items"])))
@@ -2328,7 +2328,7 @@ class WordOfEnigma2Items(WoeStoreBase):
             self.set_description(txt)
 
     def move(self, dx, dy):
-        n = len(self.items)
+        n = len(self.entries)
         if n == 0:
             return
         new = self.sel + dx + dy * ITEMS_COLS
@@ -2343,14 +2343,14 @@ class WordOfEnigma2Items(WoeStoreBase):
 
     # -----------------------------------------------------------------
     def ok_pressed(self):
-        n = len(self.items)
+        n = len(self.entries)
         if self.sel < 0 or self.sel >= n:
             return
-        it = self.items[self.sel]
+        it = self.entries[self.sel]
         if isinstance(it, dict) and "items" in it:
-            self.path_stack.append(self.items)
+            self.path_stack.append(self.entries)
             self.current_path.append(it)
-            self.items = it["items"]
+            self.entries = it["items"]
             self.sel = 0
             self.page = 0
             self.update_view()
@@ -2359,7 +2359,7 @@ class WordOfEnigma2Items(WoeStoreBase):
 
     def back(self):
         if self.path_stack:
-            self.items = self.path_stack.pop()
+            self.entries = self.path_stack.pop()
             if self.current_path:
                 self.current_path.pop()
             self.sel = 0
@@ -2391,10 +2391,10 @@ class WordOfEnigma2Items(WoeStoreBase):
 
     def toggle_select(self):
         try:
-            n = len(self.items)
+            n = len(self.entries)
             if self.sel < 0 or self.sel >= n:
                 return
-            it = self.items[self.sel]
+            it = self.entries[self.sel]
             if not self.is_selectable(it):
                 self.set_description("Folders and system images cannot be\n"
                                      "added to a batch install.")
@@ -2411,10 +2411,10 @@ class WordOfEnigma2Items(WoeStoreBase):
     def show_info_popup(self):
         """Show full details of the highlighted item."""
         try:
-            n = len(self.items)
+            n = len(self.entries)
             if self.sel < 0 or self.sel >= n:
                 return
-            it = self.items[self.sel]
+            it = self.entries[self.sel]
             name = it.get("name", "?")
             if "items" in it:
                 msg = "Folder: %s\n\nItems: %d" % (name, count_items(it["items"]))
@@ -2505,18 +2505,18 @@ class WordOfEnigma2Items(WoeStoreBase):
     # -----------------------------------------------------------------
     def download_item(self):
         try:
-            n = len(self.items)
+            n = len(self.entries)
             if self.sel < 0 or self.sel >= n:
                 return
-            it = self.items[self.sel]
+            it = self.entries[self.sel]
             if not isinstance(it, dict):
                 return
 
             # A folder is selected -> open it instead of trying to download it.
             if "items" in it:
-                self.path_stack.append(self.items)
+                self.path_stack.append(self.entries)
                 self.current_path.append(it)
-                self.items = it["items"]
+                self.entries = it["items"]
                 self.sel = 0
                 self.page = 0
                 self.update_view()
