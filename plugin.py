@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.25"
+PLUGIN_VERSION = "1.0.26"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -382,6 +382,10 @@ def _grid_cells_skin():
         ix = x + (CELL_W - CELL_ICON) // 2
         iy = y + 14
         cells.append(
+            '    <widget name="cellsel%d" position="%d,%d" size="%d,%d" '
+            'backgroundColor="#0B0F19" transparent="0" zPosition="0" />'
+            % (i, x - 5, y - 5, CELL_W + 10, CELL_H + 10))
+        cells.append(
             '    <widget name="cellbg%d" position="%d,%d" size="%d,%d" '
             'backgroundColor="#131A2A" transparent="0" zPosition="1" />'
             % (i, x, y, CELL_W, CELL_H))
@@ -438,6 +442,10 @@ def _items_cells_skin():
         r, c = divmod(i, ITEMS_COLS)
         x = ITEMS_X0 + c * (ITILE_W + ITILE_GAP_X)
         y = ITEMS_Y0 + r * (ITILE_H + ITILE_GAP_Y)
+        cells.append(
+            '    <widget name="itilesel%d" position="%d,%d" size="%d,%d" '
+            'backgroundColor="#0B0F19" transparent="0" zPosition="1" />'
+            % (i, x - 4, y - 4, ITILE_W + 8, ITILE_H + 8))
         cells.append(
             '    <widget name="itile%d" position="%d,%d" size="%d,%d" font="Regular;26" '
             'foregroundColor="#d1d5db" backgroundColor="#131A2A" transparent="0" '
@@ -1034,16 +1042,20 @@ class WordOfEnigma2(WoeStoreBase):
         self.cell_bg = []
         self.cell_txt = []
         self.cell_icon = []
+        self.cell_sel = []
         for i in range(GRID_SIZE):
             bg = Label("")
             tx = Label("")
             ic = Pixmap()
+            fs = Label("")
             self["cellbg%d" % i] = bg
             self["celltxt%d" % i] = tx
             self["cellicon%d" % i] = ic
+            self["cellsel%d" % i] = fs
             self.cell_bg.append(bg)
             self.cell_txt.append(tx)
             self.cell_icon.append(ic)
+            self.cell_sel.append(fs)
 
         self["actions"] = ActionMap(
             ["OkCancelActions", "DirectionActions", "ColorActions", "MenuActions"],
@@ -1143,17 +1155,28 @@ class WordOfEnigma2(WoeStoreBase):
             return
         normal_bg = parseColor("#131A2A")
         normal_fg = parseColor("#d1d5db")
-        sel_bg = parseColor("#8b5cf6")
+        sel_bg = parseColor("#1C2438")
         sel_fg = parseColor("#ffffff")
+        frame = parseColor("#8b5cf6")
         empty_bg = parseColor("#0F1522")
+        empty_fg = parseColor("#374151")
         n = len(self.grid_categories)
         for i in range(GRID_SIZE):
             try:
                 bg = self.cell_bg[i].instance
                 tx = self.cell_txt[i].instance
+                fr = self.cell_sel[i].instance
+                if fr:
+                    if i < n and i == self.grid_index:
+                        fr.setBackgroundColor(frame)
+                        fr.show()
+                    else:
+                        fr.hide()
                 if i >= n:
                     if bg:
                         bg.setBackgroundColor(empty_bg)
+                    if tx:
+                        tx.setForegroundColor(empty_fg)
                 elif i == self.grid_index:
                     if bg:
                         bg.setBackgroundColor(sel_bg)
@@ -1242,10 +1265,14 @@ class WordOfEnigma2Items(WoeStoreBase):
         self["key_blue"] = Label("Batch Install")
 
         self.tile_widgets = []
+        self.tile_sel = []
         for i in range(ITEMS_PER_PAGE):
             lbl = Label("")
+            fs = Label("")
             self["itile%d" % i] = lbl
+            self["itilesel%d" % i] = fs
             self.tile_widgets.append(lbl)
+            self.tile_sel.append(fs)
 
         self["actions"] = ActionMap(
             ["OkCancelActions", "DirectionActions", "ColorActions", "MenuActions"],
@@ -1327,8 +1354,9 @@ class WordOfEnigma2Items(WoeStoreBase):
             return
         normal_bg = parseColor("#131A2A")
         normal_fg = parseColor("#d1d5db")
-        sel_bg = parseColor("#8b5cf6")
+        sel_bg = parseColor("#1C2438")
         sel_fg = parseColor("#ffffff")
+        frame = parseColor("#8b5cf6")
         empty_bg = parseColor("#0F1522")
         empty_fg = parseColor("#374151")
         n = len(self.items)
@@ -1336,9 +1364,16 @@ class WordOfEnigma2Items(WoeStoreBase):
         for i, lbl in enumerate(self.tile_widgets):
             try:
                 inst = lbl.instance
+                fr = self.tile_sel[i].instance
+                idx = start + i
+                if fr:
+                    if idx == self.sel and idx < n:
+                        fr.setBackgroundColor(frame)
+                        fr.show()
+                    else:
+                        fr.hide()
                 if inst is None:
                     continue
-                idx = start + i
                 if idx >= n:
                     inst.setBackgroundColor(empty_bg)
                     inst.setForegroundColor(empty_fg)
