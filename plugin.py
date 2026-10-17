@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.31"
+PLUGIN_VERSION = "1.0.32"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -708,6 +708,201 @@ def gui_call(func, *args, **kwargs):
         _safe()
 
 
+# ---------------------------------------------------------------------
+# Callback hardening
+#
+# Enigma2 treats EVERY exception that escapes a key / timer / reactor
+# callback as a python crash: it writes a crash log, increases its crash
+# counter and (with "Handle Python crashes" enabled) shows the "software
+# problem detected" dialog.  That dialog is itself not always able to
+# open, which produces the confusing
+#
+#     RuntimeError: [StartEnigma] Error: Modal open are allowed only from
+#     a screen which is modal!
+#
+# crash logs.
+#
+# The plugin therefore guards its own callbacks: the traceback is written
+# to ERROR_LOG and the box keeps working, so a bug cannot lock the user
+# out of the plugin - and the error is still available for reporting.
+# ---------------------------------------------------------------------
+ERROR_LOG = "/tmp/wordofenigma2_error.log"
+
+
+def _log_error(tb_text=None):
+    """Append the current (or given) traceback to the plugin error log."""
+    try:
+        import traceback
+        if tb_text is None:
+            tb_text = traceback.format_exc()
+    except Exception:
+        tb_text = "(no traceback)"
+    stamp = "?"
+    try:
+        stamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        pass
+    try:
+        f = open(ERROR_LOG, "a")
+        try:
+            f.write("=" * 60 + "\n")
+            f.write("%s  version %s\n" % (stamp, PLUGIN_VERSION))
+            f.write(str(tb_text))
+            if not str(tb_text).endswith("\n"):
+                f.write("\n")
+        finally:
+            f.close()
+    except Exception:
+        pass
+    _log(str(tb_text))
+
+
+def _guard(fn):
+    """Wrap a plugin callback so an exception can never crash Enigma2."""
+    def _wrapped(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except Exception:
+            _log_error()
+            return None
+    try:
+        _wrapped.__name__ = getattr(fn, "__name__", "guarded")
+    except Exception:
+        pass
+    return _wrapped
+
+
+def guarded_actions(mapping):
+    """Return an ActionMap dictionary with every action guarded."""
+    out = {}
+    try:
+        for key, fn in mapping.items():
+            out[key] = _guard(fn)
+    except Exception:
+        return mapping
+    return out
+
+
+# ---------------------------------------------------------------------
+# Diagnostics: locate the plugin error log and any Enigma2 crash log
+# whose traceback mentions this plugin.  Shown from MENU -> Diagnostics
+# so the user can tell us exactly which file to send.
+# ---------------------------------------------------------------------
+def _read_text(path, limit=400000):
+    """Read a text file in a py2/py3 safe way (best effort)."""
+    try:
+        f = open(path, "rb")
+    except Exception:
+        return None
+    try:
+        data = f.read(limit)
+    except Exception:
+        data = None
+    try:
+        f.close()
+    except Exception:
+        pass
+    if data is None:
+        return None
+    try:
+        if not isinstance(data, str):
+            data = data.decode("utf-8", "replace")
+    except Exception:
+        pass
+    return data
+
+
+def _last_line(text):
+    try:
+        lines = [l.strip() for l in str(text).replace("\r\n", "\n").split("\n")]
+        lines = [l for l in lines if l]
+        return lines[-1] if lines else ""
+    except Exception:
+        return ""
+
+
+def _error_log_entries():
+    """Number of tracebacks recorded in our own error log."""
+    try:
+        txt = _read_text(ERROR_LOG) or ""
+        return txt.count("=" * 60), txt
+    except Exception:
+        return 0, ""
+
+
+def _crash_log_dirs():
+    dirs = []
+    try:
+        from Components.config import config
+        d = config.crash.debug_path.value
+        if d:
+            dirs.append(d)
+    except Exception:
+        pass
+    for d in ("/home/root/logs", "/media/hdd/logs", "/media/usb/logs",
+              "/home/root", "/tmp"):
+        if d not in dirs:
+            dirs.append(d)
+    return dirs
+
+
+def find_plugin_crashes(max_files=40):
+    """Crash logs whose traceback mentions this plugin -> [path, ...]."""
+    hits = []
+    for d in _crash_log_dirs():
+        try:
+            names = os.listdir(d)
+        except Exception:
+            continue
+        files = []
+        for nm in names:
+            low = nm.lower()
+            if low.endswith(".log") and ("crash" in low or low.startswith("enigma2")):
+                p = os.path.join(d, nm)
+                try:
+                    files.append((os.path.getmtime(p), p))
+                except Exception:
+                    pass
+        files.sort(reverse=True)
+        for _mtime, p in files[:max_files]:
+            txt = _read_text(p)
+            if not txt:
+                continue
+            if "WordOfEnigma2" in txt or "plugin.py" in txt:
+                hits.append(p)
+    return hits
+
+
+def diagnostics_report():
+    """Short, on-screen report used by MENU -> Diagnostics."""
+    lines = []
+    try:
+        n, txt = _error_log_entries()
+        if n:
+            lines.append("Plugin error log: %s" % ERROR_LOG)
+            lines.append("  %d error(s), last: %s" % (n, _last_line(txt)))
+        else:
+            lines.append("Plugin error log: none")
+            lines.append("  (no plugin callback has raised an error)")
+    except Exception:
+        pass
+    try:
+        hits = find_plugin_crashes()
+        lines.append("")
+        if hits:
+            lines.append("Enigma2 crash log(s) with a plugin traceback:")
+            for p in hits[:3]:
+                lines.append("  " + p)
+        else:
+            lines.append("No Enigma2 crash log mentions this plugin.")
+    except Exception:
+        pass
+    try:
+        return "\n".join(lines)[:900] or "No diagnostics available."
+    except Exception:
+        return "No diagnostics available."
+
+
 def count_items(items):
     """Count items recursively"""
     if not isinstance(items, list):
@@ -1180,14 +1375,14 @@ class WoeStoreBase(Screen):
         try:
             self.info_timer = eTimer()
             try:
-                self.info_timer.callback.append(self.refresh_temperature)
+                self.info_timer.callback.append(_guard(self.refresh_temperature))
             except AttributeError:
-                self.info_timer.timeout.connect(self.refresh_temperature)
+                self.info_timer.timeout.connect(_guard(self.refresh_temperature))
             self.info_timer.start(5000)
         except Exception:
             pass
         try:
-            self.onClose.append(self.stop_timers)
+            self.onClose.append(_guard(self.stop_timers))
         except Exception:
             pass
 
@@ -1434,7 +1629,7 @@ class WoeStoreBase(Screen):
             out = result.strip() if result else "(no output)"
             if retval == 0:
                 self.session.openWithCallback(
-                    self.restart_callback,
+                    _guard(self.restart_callback),
                     MessageBox,
                     "Plugin updated successfully!\n\n%s\n\nRestart Enigma2 now?" % out,
                     MessageBox.TYPE_YESNO
@@ -1468,10 +1663,11 @@ class WoeStoreBase(Screen):
                 ("Item details", "item"),
                 ("Font", "font"),
                 ("Text size", "fontsize"),
+                ("Diagnostics", "diag"),
                 ("Check for updates", "update"),
             ]
             self.session.openWithCallback(
-                self.main_menu_done,
+                _guard(self.main_menu_done),
                 WordOfEnigma2Menu,
                 "Menu",
                 options
@@ -1494,8 +1690,26 @@ class WoeStoreBase(Screen):
             self._open_font_settings()
         elif choice == "fontsize":
             self._open_text_size()
+        elif choice == "diag":
+            self.show_diagnostics()
         elif choice == "update":
             self.self_update()
+
+    def show_diagnostics(self):
+        """MENU -> Diagnostics: where are the errors, if any?"""
+        def _work():
+            try:
+                report = diagnostics_report()
+            except Exception as e:
+                report = "Diagnostics failed: %s" % e
+            gui_call(safe_open, self.session, MessageBox, report, MessageBox.TYPE_INFO)
+        try:
+            t = threading.Thread(target=_work)
+            t.daemon = True
+            t.start()
+        except Exception:
+            safe_open(self.session, MessageBox,
+                      diagnostics_report(), MessageBox.TYPE_INFO)
 
     # -----------------------------------------------------------------
     # SETTINGS: font family + text size
@@ -1512,7 +1726,7 @@ class WoeStoreBase(Screen):
             mark = "   *" if fam == UI_FONT else ""
             opts.append((label + mark, fam))
         self.session.openWithCallback(
-            self._font_chosen, WordOfEnigma2Menu, "Font settings", opts)
+            _guard(self._font_chosen), WordOfEnigma2Menu, "Font settings", opts)
 
     def _font_chosen(self, family):
         if not family or family == UI_FONT:
@@ -1531,7 +1745,7 @@ class WoeStoreBase(Screen):
             mark = "   *" if abs(val - UI_FONT_SCALE) < 0.001 else ""
             opts.append((label + mark, val))
         self.session.openWithCallback(
-            self._size_chosen, WordOfEnigma2Menu, "Text size", opts)
+            _guard(self._size_chosen), WordOfEnigma2Menu, "Text size", opts)
 
     def _size_chosen(self, scale):
         if not scale:
@@ -1563,7 +1777,7 @@ class WoeStoreBase(Screen):
 
         safe_open_cb(
             self.session,
-            _ans, MessageBox,
+            _guard(_ans), MessageBox,
             msg + "\n\nReopen the store now to apply it?",
             MessageBox.TYPE_YESNO)
 
@@ -1661,7 +1875,7 @@ class WordOfEnigma2(WoeStoreBase):
 
         self["actions"] = ActionMap(
             ["OkCancelActions", "DirectionActions", "ColorActions", "MenuActions"],
-            {
+            guarded_actions({
                 "cancel": self.close,
                 "red": self.close,
                 "green": self.open_category,
@@ -1673,7 +1887,7 @@ class WordOfEnigma2(WoeStoreBase):
                 "down": lambda: self.move_selection(0, 1),
                 "left": lambda: self.move_selection(-1, 0),
                 "right": lambda: self.move_selection(1, 0),
-            },
+            }),
             -1
         )
 
@@ -1686,15 +1900,15 @@ class WordOfEnigma2(WoeStoreBase):
 
         self.bg_timer = eTimer()
         try:
-            self.bg_timer.callback.append(self.start_network_fetch)
+            self.bg_timer.callback.append(_guard(self.start_network_fetch))
         except AttributeError:
             try:
-                self.bg_timer.timeout.connect(self.start_network_fetch)
+                self.bg_timer.timeout.connect(_guard(self.start_network_fetch))
             except Exception:
                 pass
-        self.onLayoutFinish.append(self.render_categories)
-        self.onLayoutFinish.append(self.schedule_fetch)
-        self.onLayoutFinish.append(self.init_system_info)
+        self.onLayoutFinish.append(_guard(self.render_categories))
+        self.onLayoutFinish.append(_guard(self.schedule_fetch))
+        self.onLayoutFinish.append(_guard(self.init_system_info))
 
     # -----------------------------------------------------------------
     def render_categories(self):
@@ -1831,7 +2045,7 @@ class WordOfEnigma2(WoeStoreBase):
             self.set_description("%s is empty." % cat.replace("_", " ").title())
             return
         self.session.openWithCallback(
-            self._items_closed,
+            _guard(self._items_closed),
             WordOfEnigma2Items,
             self.store_data,
             cat
@@ -1878,7 +2092,7 @@ class WordOfEnigma2Items(WoeStoreBase):
 
         self["actions"] = ActionMap(
             ["OkCancelActions", "DirectionActions", "ColorActions", "MenuActions"],
-            {
+            guarded_actions({
                 "cancel": self.back,
                 "red": self.back,
                 "green": self.download_item,
@@ -1890,7 +2104,7 @@ class WordOfEnigma2Items(WoeStoreBase):
                 "down": lambda: self.move(0, 1),
                 "left": lambda: self.move(-1, 0),
                 "right": lambda: self.move(1, 0),
-            },
+            }),
             -1
         )
 
@@ -1906,7 +2120,7 @@ class WordOfEnigma2Items(WoeStoreBase):
         self.download_dest_path = ""
 
         self.update_view()
-        self.onLayoutFinish.append(self.init_system_info)
+        self.onLayoutFinish.append(_guard(self.init_system_info))
 
     # -----------------------------------------------------------------
     def update_view(self):
@@ -2147,7 +2361,7 @@ class WordOfEnigma2Items(WoeStoreBase):
                   "postponed. Enigma2 restarts ONCE at the end, after every "
                   "item has been installed." % (len(items), preview))
         self.session.openWithCallback(
-            self.start_batch_confirm,
+            _guard(self.start_batch_confirm),
             MessageBox,
             prompt,
             MessageBox.TYPE_YESNO
@@ -2177,7 +2391,7 @@ class WordOfEnigma2Items(WoeStoreBase):
                "> /dev/null 2>&1 < /dev/null &"
                % (log_file, done_file, script_path, script_path, log_file, done_file))
         self.session.openWithCallback(
-            self.batch_finished,
+            _guard(self.batch_finished),
             WordOfEnigma2Console,
             "Batch Install (%d items)" % len(items),
             cmd,
@@ -2297,7 +2511,7 @@ class WordOfEnigma2Items(WoeStoreBase):
                     prompt = ("Downloaded: %s\n\nRun this installer script now?\n"
                               "It will modify your system.") % self.install_item_name
                 self.session.openWithCallback(
-                    self.script_run_confirm,
+                    _guard(self.script_run_confirm),
                     MessageBox,
                     prompt,
                     MessageBox.TYPE_YESNO
@@ -2306,7 +2520,7 @@ class WordOfEnigma2Items(WoeStoreBase):
 
             # Packages (.ipk, .deb, .zip, .tar.gz) -> ask to install
             self.session.openWithCallback(
-                self.install_confirm,
+                _guard(self.install_confirm),
                 MessageBox,
                 "Downloaded: %s\n\nInstall now?" % self.install_item_name,
                 MessageBox.TYPE_YESNO
@@ -2371,7 +2585,7 @@ class WordOfEnigma2Items(WoeStoreBase):
         def _ui():
             if retval == 0:
                 self.session.openWithCallback(
-                    self.restart_callback,
+                    _guard(self.restart_callback),
                     MessageBox,
                     "Installed successfully!\n\nRestart GUI now?",
                     MessageBox.TYPE_YESNO
@@ -2414,33 +2628,33 @@ class WordOfEnigma2Console(Screen):
 
         self["actions"] = ActionMap(
             ["OkCancelActions", "DirectionActions", "ColorActions"],
-            {
+            guarded_actions({
                 "cancel": self.close,
                 "red": self.close,
                 "blue": self.restart_gui,
                 "up": self.scroll_up,
                 "down": self.scroll_down,
-            },
+            }),
             -1
         )
 
         self.timer = eTimer()
         try:
-            self.timer.callback.append(self.poll)
+            self.timer.callback.append(_guard(self.poll))
         except AttributeError:
             try:
-                self.timer.timeout.connect(self.poll)
+                self.timer.timeout.connect(_guard(self.poll))
             except Exception:
                 pass
 
         # The polling timer must stop when the screen goes away, otherwise it
         # keeps firing against destroyed widgets (a python crash for Enigma2).
         try:
-            self.onClose.append(self._stop_timer)
+            self.onClose.append(_guard(self._stop_timer))
         except Exception:
             pass
 
-        self.onLayoutFinish.append(self.start)
+        self.onLayoutFinish.append(_guard(self.start))
 
     def start(self):
         try:
@@ -2576,10 +2790,10 @@ class WordOfEnigma2Menu(Screen):
         self["list"] = MenuList([label for (label, _value) in self.options])
         self["actions"] = ActionMap(
             ["OkCancelActions"],
-            {
+            guarded_actions({
                 "ok": self.ok,
                 "cancel": self.close,
-            },
+            }),
             -1
         )
 
@@ -2616,15 +2830,15 @@ class WordOfEnigma2Info(Screen):
 
         self["actions"] = ActionMap(
             ["OkCancelActions", "ColorActions"],
-            {
+            guarded_actions({
                 "ok": self.close,
                 "cancel": self.close,
                 "red": self.close,
-            },
+            }),
             -1
         )
 
-        self.onLayoutFinish.append(self.show_qr)
+        self.onLayoutFinish.append(_guard(self.show_qr))
 
     def _qr_log(self, msg):
         try:
