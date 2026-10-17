@@ -33,6 +33,7 @@ mkdir -p "$PLUGIN_DIR/channels"
 mkdir -p "$PLUGIN_DIR/picons"
 mkdir -p "$PLUGIN_DIR/novaler"
 mkdir -p "$PLUGIN_DIR/system_images"
+mkdir -p "$PLUGIN_DIR/fonts"
 
 # dl <dest> <relative-url>  (cache-buster + ignore old certificates)
 dl() {
@@ -68,6 +69,10 @@ dl "$PLUGIN_DIR/images/Icons/channels.png"      "images/Icons/channels.png"
 dl "$PLUGIN_DIR/images/Icons/emus.png"          "images/Icons/emus.png"
 dl "$PLUGIN_DIR/images/Icons/novaler.png"       "images/Icons/novaler.png"
 dl "$PLUGIN_DIR/images/Icons/default.png"       "images/Icons/default.png"
+
+echo "Downloading fonts..."
+dl "$PLUGIN_DIR/fonts/OpenSans-Regular.ttf" "fonts/OpenSans-Regular.ttf"
+dl "$PLUGIN_DIR/fonts/OpenSans-Bold.ttf"    "fonts/OpenSans-Bold.ttf"
 
 find "$PLUGIN_DIR" -name "*.pyc" -delete 2>/dev/null
 find "$PLUGIN_DIR" -name "__pycache__" -exec rm -rf {} \; 2>/dev/null

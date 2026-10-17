@@ -1,0 +1,6 @@
+# Binary assets - never convert line endings
+*.ttf binary
+*.otf binary
+*.png binary
+*.zip binary
+*.ipk binary

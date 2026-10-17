@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.27"
+PLUGIN_VERSION = "1.0.28"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -338,8 +338,317 @@ def set_ui_font(family=None, scale=None):
 
 
 # =====================================================================
-# HELPERS
+# SYSTEM FONT (whole Enigma2 interface)
+#
+# Enigma2 loads "/etc/enigma2/skin_user.xml" LAST, after the active skin.
+# A <fonts> block there with replacement="true" replaces the font face for
+# the whole interface (menus, lists, infobars, ...).  We write that block
+# and let the user restart the GUI to apply it.
 # =====================================================================
+SYSTEM_SKIN_FILE = "/etc/enigma2/skin_user.xml"
+SYSTEM_SKIN_BAK = "/etc/enigma2/skin_user.xml.woebak"
+BUNDLED_FONT_DIR = os.path.join(PLUGIN_DIR, "fonts")
+WOE_FONT_MARK = "woe_ui_font"
+
+# Font files that must never be replaced (icons / glyph fallback).
+_FONT_EXCLUDE = ("enigma2icons", "fallback", "icon", "awesome", "glyph",
+                 "symbol", "emoji", "weather", "meteocon", "picon")
+
+# Faces used by the UI when we could not read the active skin.
+_FONT_COMMON_FACES = [
+    "Regular", "Bold", "Italic", "BoldItalic", "Normal", "Default",
+    "Static", "StaticBold", "NMS", "nmsbd", "Ring", "LCD", "Console",
+]
+
+# Fonts shipped with the plugin: (label, regular file, bold file)
+BUNDLED_FONTS = [
+    ("Open Sans", "OpenSans-Regular.ttf", "OpenSans-Bold.ttf"),
+]
+
+
+def _is_icon_face(name):
+    n = (name or "").lower()
+    return any(x in n for x in _FONT_EXCLUDE)
+
+
+def _face_is_bold(name):
+    n = (name or "").lower()
+    return ("bold" in n or "black" in n or "heavy" in n
+            or "strong" in n or n.endswith("bd") or n.startswith("bd"))
+
+
+def _writable_font_dir():
+    """Directory where the selected font is installed for the UI."""
+    for d in ("/usr/share/fonts", "/etc/enigma2/fonts", BUNDLED_FONT_DIR):
+        try:
+            if not os.path.isdir(d):
+                os.makedirs(d)
+            if os.access(d, os.W_OK):
+                return d
+        except Exception:
+            continue
+    return BUNDLED_FONT_DIR
+
+
+def _skin_files():
+    """Skin file(s) of the active skin (main file + its skin_*.xml parts)."""
+    files = []
+    try:
+        from Components.config import config
+        skin = config.skin.primary_skin.value  # e.g. "MySkin/skin.xml"
+    except Exception:
+        skin = ""
+    if skin:
+        main = "/usr/share/enigma2/" + skin.replace("\\", "/")
+        files.append(main)
+        d = os.path.dirname(main)
+        try:
+            for fn in sorted(os.listdir(d)):
+                if fn.endswith(".xml") and fn.startswith("skin"):
+                    p = os.path.join(d, fn)
+                    if p not in files:
+                        files.append(p)
+        except Exception:
+            pass
+    files.append("/usr/share/enigma2/skin.xml")
+    return files
+
+
+def _skin_faces():
+    """List of (face name, scale) used by the active skin."""
+    faces = {}
+    try:
+        import xml.etree.ElementTree as ET
+    except Exception:
+        return []
+    for path in _skin_files():
+        try:
+            if not os.path.isfile(path):
+                continue
+            root = ET.parse(path).getroot()
+        except Exception:
+            continue
+        for fonts in root.iter("fonts"):
+            for f in fonts.iter("font"):
+                name = f.get("name")
+                if not name or _is_icon_face(name):
+                    continue
+                try:
+                    scale = int(f.get("scale") or 100)
+                except Exception:
+                    scale = 100
+                if 20 <= scale <= 300:
+                    faces[name] = scale
+    return sorted(faces.items())
+
+
+def install_bundled_font(reg_file, bold_file):
+    """Copy the chosen font files to a stable system location."""
+    dest = _writable_font_dir()
+    out_reg = os.path.join(dest, "woe_uifont_regular.ttf")
+    out_bold = os.path.join(dest, "woe_uifont_bold.ttf")
+    for src, dst in ((reg_file, out_reg), (bold_file, out_bold)):
+        try:
+            if not (src and os.path.isfile(src)):
+                return None, None
+            if os.path.abspath(src) != os.path.abspath(dst):
+                fin = open(src, "rb")
+                try:
+                    data = fin.read()
+                finally:
+                    fin.close()
+                fout = open(dst, "wb")
+                try:
+                    fout.write(data)
+                finally:
+                    fout.close()
+        except Exception:
+            return None, None
+    if not os.path.isfile(out_reg):
+        return None, None
+    if not os.path.isfile(out_bold):
+        out_bold = out_reg
+    return out_reg, out_bold
+
+
+def _strip_woe_block(data):
+    import re
+    return re.sub(r'[ \t]*<fonts\s+%s="1">.*?</fonts>[ \t]*\r?\n?' % WOE_FONT_MARK,
+                  "", data, flags=re.S)
+
+
+def write_system_font(reg_abs, bold_abs):
+    """Write the font override into /etc/enigma2/skin_user.xml.
+
+    Returns an error string on failure, None on success.
+    """
+    faces = _skin_faces()
+    if not faces:
+        faces = [(n, 100) for n in _FONT_COMMON_FACES]
+    lines = ['  <fonts %s="1">' % WOE_FONT_MARK]
+    for name, scale in faces:
+        src = bold_abs if _face_is_bold(name) else reg_abs
+        lines.append('    <font name="%s" filename="%s" scale="%d" replacement="true" />'
+                     % (name, src, scale))
+    lines.append("  </fonts>")
+    block = "\n".join(lines) + "\n"
+
+    data = ""
+    try:
+        if os.path.isfile(SYSTEM_SKIN_FILE):
+            f = open(SYSTEM_SKIN_FILE, "r")
+            try:
+                data = f.read()
+            finally:
+                f.close()
+    except Exception:
+        data = ""
+
+    is_ours = WOE_FONT_MARK in data
+    data = _strip_woe_block(data).rstrip()
+    if not data:
+        data = "<skin>\n</skin>"
+    if "</skin>" in data:
+        idx = data.rfind("</skin>")
+        data = data[:idx] + block + data[idx:]
+    else:
+        data = data + "\n" + block
+
+    # Validate the resulting XML before touching the real file.
+    try:
+        import xml.dom.minidom
+        xml.dom.minidom.parseString(data)
+    except Exception as e:
+        return "XML error: %s" % e
+
+    # Back up the user's own file (once) before the first modification.
+    try:
+        if not is_ours and not os.path.isfile(SYSTEM_SKIN_BAK):
+            if os.path.isfile(SYSTEM_SKIN_FILE):
+                fin = open(SYSTEM_SKIN_FILE, "rb")
+                try:
+                    raw = fin.read()
+                finally:
+                    fin.close()
+                fout = open(SYSTEM_SKIN_BAK, "wb")
+                try:
+                    fout.write(raw)
+                finally:
+                    fout.close()
+    except Exception:
+        pass
+
+    try:
+        f = open(SYSTEM_SKIN_FILE, "w")
+        try:
+            f.write(data)
+        finally:
+            f.close()
+    except Exception as e:
+        return "write error: %s" % e
+    return None
+
+
+def remove_system_font():
+    """Remove our override (restore the user's original skin_user.xml)."""
+    try:
+        data = ""
+        if os.path.isfile(SYSTEM_SKIN_FILE):
+            f = open(SYSTEM_SKIN_FILE, "r")
+            try:
+                data = f.read()
+            finally:
+                f.close()
+        data = _strip_woe_block(data).rstrip()
+        empty = (not data) or (data.replace("<skin>", "").replace("</skin>", "").strip() == "")
+        if empty:
+            try:
+                if os.path.isfile(SYSTEM_SKIN_FILE):
+                    os.remove(SYSTEM_SKIN_FILE)
+            except Exception:
+                pass
+            if os.path.isfile(SYSTEM_SKIN_BAK):
+                try:
+                    fin = open(SYSTEM_SKIN_BAK, "rb")
+                    try:
+                        raw = fin.read()
+                    finally:
+                        fin.close()
+                    fout = open(SYSTEM_SKIN_FILE, "wb")
+                    try:
+                        fout.write(raw)
+                    finally:
+                        fout.close()
+                    os.remove(SYSTEM_SKIN_BAK)
+                except Exception:
+                    pass
+        else:
+            if "</skin>" not in data:
+                data += "\n</skin>"
+            f = open(SYSTEM_SKIN_FILE, "w")
+            try:
+                f.write(data + "\n")
+            finally:
+                f.close()
+            # The user's own content is still there, so the backup is redundant.
+            try:
+                if os.path.isfile(SYSTEM_SKIN_BAK):
+                    os.remove(SYSTEM_SKIN_BAK)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+
+def system_font_active():
+    try:
+        if os.path.isfile(SYSTEM_SKIN_FILE):
+            f = open(SYSTEM_SKIN_FILE, "r")
+            try:
+                return WOE_FONT_MARK in f.read()
+            finally:
+                f.close()
+    except Exception:
+        pass
+    return False
+
+
+def list_system_font_choices():
+    """(label, value) list for the "whole UI font" screen.
+
+    value = None  -> restore default
+    value = ("bundle", index)  -> a font shipped with the plugin
+    value = ("box", reg_path, bold_path) -> a font installed on the box
+    """
+    choices = [("Default (image skin font)", None)]
+    for idx, (label, reg, bold) in enumerate(BUNDLED_FONTS):
+        r = os.path.join(BUNDLED_FONT_DIR, reg)
+        if os.path.isfile(r):
+            choices.append((label + "  [bundled]", ("bundle", idx)))
+
+    seen = set()
+    for path in _scan_font_files():
+        if len(choices) >= 40:
+            break
+        base = os.path.splitext(os.path.basename(path))[0]
+        name = "".join(ch for ch in base if ch.isalnum() or ch in " -_").strip()
+        if not name or name.lower() in seen:
+            continue
+        seen.add(name.lower())
+        bold = None
+        if _face_is_bold(name):
+            continue  # bold files are paired with their regular below
+        # look for a bold sibling in the same folder
+        for cand in (name + "-Bold", name + "Bold", name + "-bd", name + "bd"):
+            for ext in (".ttf", ".otf"):
+                p = os.path.join(os.path.dirname(path), cand + ext)
+                if os.path.isfile(p):
+                    bold = p
+                    break
+            if bold:
+                break
+        choices.append((name, ("box", path, bold or path)))
+    return choices
 def load_json_network(url):
     """Load JSON from network (compatible with Python 2.7 and Python 3.x)"""
     try:
@@ -1040,7 +1349,7 @@ class WoeStoreBase(Screen):
                 'BASE="%s"\n'
                 'DEST="%s"\n'
                 "TS=$(date +%%s)\n"
-                'mkdir -p "$DEST/feed" "$DEST/images/Icons"\n'
+                'mkdir -p "$DEST/feed" "$DEST/images/Icons" "$DEST/fonts"\n'
                 'echo "Downloading core files..."\n'
                 'wget -q --no-check-certificate "$BASE/plugin.py?t=$TS" -O wordofenigma2_dl.py || exit 2\n'
                 'wget -q --no-check-certificate "$BASE/plugin.png?t=$TS" -O wordofenigma2_dl.png || exit 3\n'
@@ -1053,6 +1362,10 @@ class WoeStoreBase(Screen):
                 'for ic in plugins skins media tools system_images picons channels emus novaler default; do\n'
                 '    wget -q --no-check-certificate "$BASE/images/Icons/$ic.png?t=$TS" -O "wordofenigma2_ic_$ic.png" || true\n'
                 'done\n'
+                'echo "Downloading fonts..."\n'
+                'for fnt in OpenSans-Regular OpenSans-Bold; do\n'
+                '    wget -q --no-check-certificate "$BASE/fonts/$fnt.ttf?t=$TS" -O "wordofenigma2_fnt_$fnt.ttf" || true\n'
+                'done\n'
                 'echo "Installing to $DEST ..."\n'
                 'cp wordofenigma2_dl.py "$DEST/plugin.py" || exit 7\n'
                 'cp wordofenigma2_dl.png "$DEST/plugin.png" || exit 8\n'
@@ -1064,12 +1377,15 @@ class WoeStoreBase(Screen):
                 'for ic in plugins skins media tools system_images picons channels emus novaler default; do\n'
                 '    [ -f "wordofenigma2_ic_$ic.png" ] && cp "wordofenigma2_ic_$ic.png" "$DEST/images/Icons/$ic.png"\n'
                 'done\n'
+                'for fnt in OpenSans-Regular OpenSans-Bold; do\n'
+                '    [ -f "wordofenigma2_fnt_$fnt.ttf" ] && cp "wordofenigma2_fnt_$fnt.ttf" "$DEST/fonts/$fnt.ttf"\n'
+                'done\n'
                 'rm -f "$DEST/plugin.pyc" "$DEST/store_cache.json"\n'
                 'rm -rf "$DEST/__pycache__"\n'
                 'LEGACY="/usr/lib/enigma2/python/Plugins/Extensions/AllStore"\n'
                 'if [ "$DEST" != "$LEGACY" ] && [ -d "$LEGACY" ]; then rm -rf "$LEGACY"; echo "Removed legacy AllStore folder"; fi\n'
                 'rm -f wordofenigma2_dl.py wordofenigma2_dl.png wordofenigma2_dl.json wordofenigma2_dl_feed.json\n'
-                'rm -f wordofenigma2_img_*.png wordofenigma2_ic_*.png\n'
+                'rm -f wordofenigma2_img_*.png wordofenigma2_ic_*.png wordofenigma2_fnt_*.ttf\n'
                 'echo "DONE. Installed version.json:"\n'
                 'cat "$DEST/version.json"\n'
             ) % (base, PLUGIN_DIR)
@@ -1136,8 +1452,9 @@ class WoeStoreBase(Screen):
             options = [
                 ("Information", "info"),
                 ("Item details", "item"),
-                ("Font settings", "font"),
+                ("Font (this plugin)", "font"),
                 ("Text size", "fontsize"),
+                ("UI font (whole system)", "sysfont"),
                 ("Check for updates", "update"),
             ]
             self.session.openWithCallback(
@@ -1164,8 +1481,79 @@ class WoeStoreBase(Screen):
             self._open_font_settings()
         elif choice == "fontsize":
             self._open_text_size()
+        elif choice == "sysfont":
+            self._open_system_font()
         elif choice == "update":
             self.self_update()
+
+    # -----------------------------------------------------------------
+    # SETTINGS: whole-Enigma2 interface font (skin_user.xml)
+    # -----------------------------------------------------------------
+    def _open_system_font(self):
+        try:
+            choices = list_system_font_choices()
+        except Exception:
+            choices = [("Default (image skin font)", None)]
+        opts = []
+        for label, value in choices:
+            mark = ""
+            if value is None and not system_font_active():
+                mark = "   *"
+            elif value is not None and system_font_active():
+                pass
+            opts.append((label + mark, value))
+        self.session.openWithCallback(
+            self._system_font_chosen, WordOfEnigma2Menu,
+            "Enigma2 interface font", opts)
+
+    def _system_font_chosen(self, value):
+        if value is None and not isinstance(value, tuple):
+            # "Default" was picked -> drop our override
+            if not system_font_active():
+                return
+            remove_system_font()
+            self._ask_gui_restart("Interface font restored to the image default")
+            return
+        if not value:
+            return
+        err = None
+        try:
+            if value[0] == "bundle":
+                label, reg, bold = BUNDLED_FONTS[value[1]]
+                reg_abs, bold_abs = install_bundled_font(
+                    os.path.join(BUNDLED_FONT_DIR, reg),
+                    os.path.join(BUNDLED_FONT_DIR, bold))
+                if not reg_abs:
+                    err = "Font files are missing.\nRun Check for updates first."
+                else:
+                    err = write_system_font(reg_abs, bold_abs)
+                    label_used = label
+            else:
+                err = write_system_font(value[1], value[2])
+                label_used = os.path.basename(value[1])
+        except Exception as e:
+            err = str(e)
+        if err:
+            try:
+                self.session.open(MessageBox, "Could not apply font:\n%s" % err,
+                                  MessageBox.TYPE_ERROR)
+            except Exception:
+                pass
+            return
+        self._ask_gui_restart("Interface font applied: %s" % label_used)
+
+    def _ask_gui_restart(self, msg):
+        def _ans(answer):
+            if answer:
+                self.restart_callback(True)
+        try:
+            self.session.openWithCallback(
+                _ans, MessageBox,
+                msg + "\n\nThe interface font changes after a GUI restart."
+                      "\n\nRestart the GUI now?",
+                MessageBox.TYPE_YESNO)
+        except Exception:
+            pass
 
     # -----------------------------------------------------------------
     # SETTINGS: font family + text size
