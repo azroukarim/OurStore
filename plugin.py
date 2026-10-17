@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.41"
+PLUGIN_VERSION = "1.0.42"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -216,7 +216,7 @@ BUNDLED_FONTS = [
 
 
 def load_settings():
-    global UI_FONT, UI_FONT_SCALE
+    global UI_FONT, UI_FONT_SCALE, WEATHER_ENABLED, _WEATHER
     path = _data_file("settings.json")
     try:
         if os.path.exists(path):
@@ -235,6 +235,18 @@ def load_settings():
                     UI_FONT_SCALE = 1.0
                 if UI_FONT_SCALE < 0.6 or UI_FONT_SCALE > 1.8:
                     UI_FONT_SCALE = 1.0
+                wea = data.get("weather")
+                if isinstance(wea, bool):
+                    WEATHER_ENABLED = wea
+                wd = data.get("weather_data")
+                if isinstance(wd, dict) and wd.get("temp") is not None:
+                    try:
+                        _WEATHER = {"temp": int(wd.get("temp")),
+                                    "desc": str(wd.get("desc") or ""),
+                                    "city": str(wd.get("city") or ""),
+                                    "ts": float(wd.get("ts") or 0)}
+                    except Exception:
+                        pass
     except Exception:
         pass
 
@@ -256,6 +268,15 @@ def save_settings():
             data = {}
         data["font"] = UI_FONT
         data["font_scale"] = UI_FONT_SCALE
+        try:
+            data["weather"] = bool(WEATHER_ENABLED)
+            if _WEATHER.get("temp") is not None:
+                data["weather_data"] = {"temp": _WEATHER.get("temp"),
+                                        "desc": _WEATHER.get("desc", ""),
+                                        "city": _WEATHER.get("city", ""),
+                                        "ts": _WEATHER.get("ts", 0)}
+        except Exception:
+            pass
         f = open(path, "w")
         try:
             json.dump(data, f)
@@ -1254,7 +1275,8 @@ _HEADER_SKIN = """    <eLabel position="40,22" size="470,46" text="WORD OF ENIGM
     <widget name="devtemp" position="540,62" size="420,34" font="Regular;22" foregroundColor="#10b981" backgroundColor="#131A2A" transparent="1" zPosition="2" />
     <widget name="imagename" position="980,20" size="420,38" font="Regular;26" foregroundColor="#e5e7eb" backgroundColor="#131A2A" transparent="1" zPosition="2" />
     <widget name="pyver" position="980,62" size="420,34" font="Regular;22" foregroundColor="#3b82f6" backgroundColor="#131A2A" transparent="1" zPosition="2" />
-    <widget name="arch"  position="1490,20" size="390,38" font="Regular;26" foregroundColor="#e5e7eb" backgroundColor="#131A2A" transparent="1" halign="right" zPosition="2" />"""
+    <widget name="arch"  position="1490,20" size="390,38" font="Regular;26" foregroundColor="#e5e7eb" backgroundColor="#131A2A" transparent="1" halign="right" zPosition="2" />
+    <widget name="weather" position="1470,62" size="410,34" font="Regular;22" foregroundColor="#38bdf8" backgroundColor="#131A2A" transparent="1" halign="right" zPosition="2" />"""
 
 
 # =====================================================================
@@ -1560,6 +1582,131 @@ def get_cpu_arch():
     return raw.split()[0]
 
 
+# =====================================================================
+# WEATHER (header) - located from the box's public IP, no city to type in
+# =====================================================================
+WEATHER_ENABLED = True
+WEATHER_TTL = 1800          # refresh at most every 30 minutes
+
+# last known weather: {"temp": 24, "desc": "Light rain", "city": "?", "ts": ...}
+_WEATHER = {"temp": None, "desc": "", "city": "", "ts": 0.0}
+
+# WMO weather codes (used by open-meteo)
+_WMO_TEXT = {
+    0: "Clear", 1: "Mostly clear", 2: "Partly cloudy", 3: "Cloudy",
+    45: "Fog", 48: "Fog",
+    51: "Drizzle", 53: "Drizzle", 55: "Drizzle",
+    56: "Freezing rain", 57: "Freezing rain",
+    61: "Light rain", 63: "Rain", 65: "Heavy rain",
+    66: "Freezing rain", 67: "Freezing rain",
+    71: "Light snow", 73: "Snow", 75: "Heavy snow", 77: "Snow",
+    80: "Showers", 81: "Showers", 82: "Heavy showers",
+    85: "Snow showers", 86: "Snow showers",
+    95: "Thunderstorm", 96: "Thunderstorm", 99: "Thunderstorm",
+}
+
+
+def fetch_weather():
+    """Return {"temp": int, "desc": str, "city": str} for the box's IP.
+
+    The place is found from the public IP address, so the user never has to
+    type a city.  Two free services are tried in turn and any failure is
+    swallowed: the caller keeps the last known values.
+    """
+    lat = lon = None
+    city = ""
+    # 1) IP -> coordinates (ip-api.com, plain HTTP: no CA problems on old images)
+    data = load_json_network("http://ip-api.com/json/?fields=status,city,lat,lon")
+    if isinstance(data, dict) and data.get("status") == "success":
+        try:
+            lat = float(data.get("lat"))
+            lon = float(data.get("lon"))
+        except Exception:
+            lat = lon = None
+        try:
+            city = str(data.get("city") or "")
+        except Exception:
+            city = ""
+    # 1b) fallback IP locator
+    if lat is None or lon is None:
+        data = load_json_network("https://ipinfo.io/json")
+        if isinstance(data, dict):
+            try:
+                parts = str(data.get("loc") or "").split(",")
+                lat = float(parts[0])
+                lon = float(parts[1])
+            except Exception:
+                lat = lon = None
+            try:
+                city = city or str(data.get("city") or "")
+            except Exception:
+                pass
+    # 2) current weather for those coordinates
+    if lat is not None and lon is not None:
+        data = load_json_network(
+            "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f"
+            "&current_weather=true" % (lat, lon))
+        try:
+            cur = data.get("current_weather") or {}
+            temp = int(round(float(cur.get("temperature"))))
+            code = int(cur.get("weathercode"))
+            return {"temp": temp, "desc": _WMO_TEXT.get(code, ""), "city": city}
+        except Exception:
+            pass
+    # 3) last resort: wttr.in locates and reports in a single request
+    data = load_json_network("http://wttr.in/?format=j1")
+    try:
+        cur = data["current_condition"][0]
+        return {"temp": int(round(float(cur["temp_C"]))),
+                "desc": str(cur["weatherDesc"][0]["value"]),
+                "city": str(data["nearest_area"][0]["areaName"][0]["value"])}
+    except Exception:
+        return None
+
+
+def weather_text(short=False):
+    """'24\u00b0C Light rain' for the header ('' while still unknown)."""
+    if not WEATHER_ENABLED:
+        return ""
+    try:
+        if _WEATHER.get("temp") is None:
+            return ""
+        txt = "%d\u00b0C" % int(_WEATHER["temp"])
+        desc = _WEATHER.get("desc") or ""
+        try:
+            desc = str(desc)
+        except Exception:
+            desc = ""
+        if short:
+            desc = desc[:16]
+        if desc:
+            txt += " " + desc
+        return txt
+    except Exception:
+        return ""
+
+
+def refresh_weather(force=False):
+    """Fetch and cache the weather (blocking - call it from a worker thread)."""
+    global _WEATHER
+    try:
+        if not WEATHER_ENABLED:
+            return False
+        now = time.time()
+        if (not force and _WEATHER.get("temp") is not None
+                and (now - float(_WEATHER.get("ts") or 0)) < WEATHER_TTL):
+            return False
+        data = fetch_weather()
+        if not data or data.get("temp") is None:
+            return False
+        data["ts"] = now
+        _WEATHER = data
+        save_settings()
+        return True
+    except Exception:
+        return False
+
+
 def get_temperature():
     import re
     for p in ("/proc/stb/fp/temp_sensor_ma",
@@ -1611,10 +1758,57 @@ class WoeStoreBase(Screen):
             self["arch"].setText("Arch: " + get_cpu_arch())
         except Exception:
             pass
+        self._apply_weather()
 
     def refresh_temperature(self):
         try:
             self["devtemp"].setText("Temp: " + get_temperature())
+        except Exception:
+            pass
+
+    # -----------------------------------------------------------------
+    # WEATHER (header): cached value shown at once, refreshed in the
+    # background so the UI never waits for the network.
+    # -----------------------------------------------------------------
+    def update_weather(self):
+        self._apply_weather()
+        if not WEATHER_ENABLED:
+            return
+        try:
+            t = threading.Thread(target=self._weather_worker)
+            t.daemon = True
+            t.start()
+        except Exception:
+            pass
+
+    def _weather_worker(self):
+        try:
+            if refresh_weather():
+                gui_call(self._apply_weather)
+        except Exception:
+            pass
+
+    def _apply_weather(self):
+        try:
+            if not WEATHER_ENABLED:
+                self["weather"].setText("")
+                return
+            txt = weather_text(short=True)
+            self["weather"].setText("Weather: " + (txt if txt else "--"))
+        except Exception:
+            pass
+
+    def start_weather_timer(self):
+        """Refresh the weather every 30 minutes while a screen is open."""
+        if eTimer is None:
+            return
+        try:
+            self.weather_timer = eTimer()
+            try:
+                self.weather_timer.callback.append(_guard(self.update_weather))
+            except AttributeError:
+                self.weather_timer.timeout.connect(_guard(self.update_weather))
+            self.weather_timer.start(30 * 60 * 1000)
         except Exception:
             pass
 
@@ -1638,7 +1832,7 @@ class WoeStoreBase(Screen):
 
     def stop_timers(self):
         """Stop our timers - called when the screen is closed."""
-        for attr in ("info_timer", "bg_timer"):
+        for attr in ("info_timer", "bg_timer", "weather_timer"):
             try:
                 t = getattr(self, attr, None)
                 if t:
@@ -1878,6 +2072,7 @@ class WoeStoreBase(Screen):
                 ("Item details", "item"),
                 ("Font", "font"),
                 ("Text size", "fontsize"),
+                ("Weather", "weather"),
                 ("Diagnostics", "diag"),
                 ("Check for updates", "update"),
             ]
@@ -1905,6 +2100,8 @@ class WoeStoreBase(Screen):
             self._open_font_settings()
         elif choice == "fontsize":
             self._open_text_size()
+        elif choice == "weather":
+            self._open_weather_settings()
         elif choice == "diag":
             self.show_diagnostics()
         elif choice == "update":
@@ -1970,6 +2167,52 @@ class WoeStoreBase(Screen):
         except Exception:
             return
         self._ask_reopen("Text size changed")
+
+    # -----------------------------------------------------------------
+    # SETTINGS: weather (always located through the box's public IP)
+    # -----------------------------------------------------------------
+    def _open_weather_settings(self):
+        txt = weather_text(short=True)
+        city = ""
+        try:
+            city = str(_WEATHER.get("city") or "")
+        except Exception:
+            city = ""
+        opts = [
+            ("Now: " + (txt if txt else "not available yet"), "status"),
+            ("Location: " + (city if city else "detected from your IP"),
+             "city"),
+            ("Weather in the header: " + ("On" if WEATHER_ENABLED else "Off"),
+             "toggle"),
+            ("Update now", "refresh"),
+        ]
+        self.session.openWithCallback(
+            _guard(self._weather_chosen), WordOfEnigma2Menu, "Weather", opts)
+
+    def _weather_chosen(self, choice):
+        global WEATHER_ENABLED
+        try:
+            if choice == "toggle":
+                WEATHER_ENABLED = not WEATHER_ENABLED
+                save_settings()
+                self._apply_weather()
+                self._open_weather_settings()
+            elif choice == "refresh":
+                self.set_description("Updating the weather...")
+                session_desc = self.set_description
+
+                def _work():
+                    ok = refresh_weather(force=True)
+                    gui_call(self._apply_weather)
+                    gui_call(session_desc,
+                             "Weather updated." if ok else
+                             "Could not read the weather.\n"
+                             "Check the internet connection.")
+                t = threading.Thread(target=_work)
+                t.daemon = True
+                t.start()
+        except Exception:
+            pass
 
     def _ask_reopen(self, msg):
         session = self.session
@@ -2064,6 +2307,7 @@ class WordOfEnigma2(WoeStoreBase):
         self["imagename"] = Label("")
         self["pyver"] = Label("")
         self["arch"] = Label("")
+        self["weather"] = Label("")
         self["description"] = Label("Loading...")
         self["key_red"] = Label("Exit")
         self["key_green"] = Label("Open")
@@ -2125,6 +2369,8 @@ class WordOfEnigma2(WoeStoreBase):
         self.onLayoutFinish.append(_guard(self.render_categories))
         self.onLayoutFinish.append(_guard(self.schedule_fetch))
         self.onLayoutFinish.append(_guard(self.init_system_info))
+        self.onLayoutFinish.append(_guard(self.update_weather))
+        self.onLayoutFinish.append(_guard(self.start_weather_timer))
 
     # -----------------------------------------------------------------
     def render_categories(self):
@@ -2291,6 +2537,7 @@ class WordOfEnigma2Items(WoeStoreBase):
         self["imagename"] = Label("")
         self["pyver"] = Label("")
         self["arch"] = Label("")
+        self["weather"] = Label("")
         self["header"] = Label("")
         self["page"] = Label("")
         self["description"] = Label("")
