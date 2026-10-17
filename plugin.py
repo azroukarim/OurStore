@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.34"
+PLUGIN_VERSION = "1.0.35"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -829,7 +829,7 @@ def build_update_script(dest=None, base=None, legacy=None):
             'for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do\n'
             '    wget -q --no-check-certificate "$BASE/images/$img.png?t=$TS" -O "wordofenigma2_img_$img.png" || exit 20\n'
             'done\n'
-            'for ic in plugins skins media tools system_images picons channels emus novaler default; do\n'
+            'for ic in plugins plugins_islamics skins media tools system_images picons channels emus novaler default; do\n'
             '    wget -q --no-check-certificate "$BASE/images/Icons/$ic.png?t=$TS" -O "wordofenigma2_ic_$ic.png" || true\n'
             'done\n'
             'echo "Downloading fonts..."\n'
@@ -849,7 +849,7 @@ def build_update_script(dest=None, base=None, legacy=None):
             'for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do\n'
             '    cp "wordofenigma2_img_$img.png" "$DEST/images/$img.png" || true\n'
             'done\n'
-            'for ic in plugins skins media tools system_images picons channels emus novaler default; do\n'
+            'for ic in plugins plugins_islamics skins media tools system_images picons channels emus novaler default; do\n'
             '    [ -f "wordofenigma2_ic_$ic.png" ] && cp "wordofenigma2_ic_$ic.png" "$DEST/images/Icons/$ic.png"\n'
             'done\n'
             'for fnt in OpenSans-Regular OpenSans-Bold; do\n'
@@ -1212,6 +1212,11 @@ CELL_GAP_Y = 20
 GRID_X0 = 40
 GRID_Y0 = 150
 CELL_ICON = 170
+
+# Categories that must be listed in the grid even while they hold no items
+# (the user may fill them later from the online feed).  Any other empty
+# category stays hidden, exactly as before.
+ALWAYS_SHOW_CATEGORIES = ("plugins_islamics",)
 
 
 def _grid_cells_skin():
@@ -2010,10 +2015,12 @@ class WordOfEnigma2(WoeStoreBase):
 
     # -----------------------------------------------------------------
     def render_categories(self):
-        # Only categories that actually contain items are shown in the grid.
+        # Categories that hold items, plus the ones that must stay visible
+        # while empty (see ALWAYS_SHOW_CATEGORIES).
         self.grid_categories = []
         for cat in self.categories:
-            if count_items(self.store_data.get(cat, [])) > 0:
+            if (count_items(self.store_data.get(cat, [])) > 0
+                    or cat in ALWAYS_SHOW_CATEGORIES):
                 self.grid_categories.append(cat)
 
         for i in range(GRID_SIZE):

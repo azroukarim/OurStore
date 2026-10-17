@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.34",
+    "version": "1.0.35",
     "categories": {
         "plugins": [
             {
@@ -28,6 +28,7 @@
                 "image": ""
             }
         ],
+        "plugins_islamics": [],
         "skins": [
             {
                 "name": "All",

@@ -62,6 +62,7 @@ dl "$PLUGIN_DIR/images/progress.png"   "images/progress.png"
 
 echo "Downloading section icons..."
 dl "$PLUGIN_DIR/images/Icons/plugins.png"       "images/Icons/plugins.png"
+dl "$PLUGIN_DIR/images/Icons/plugins_islamics.png" "images/Icons/plugins_islamics.png"
 dl "$PLUGIN_DIR/images/Icons/skins.png"         "images/Icons/skins.png"
 dl "$PLUGIN_DIR/images/Icons/media.png"         "images/Icons/media.png"
 dl "$PLUGIN_DIR/images/Icons/tools.png"         "images/Icons/tools.png"
