@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.24"
+PLUGIN_VERSION = "1.0.25"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -370,7 +370,7 @@ CELL_GAP_X = 20
 CELL_GAP_Y = 20
 GRID_X0 = 40
 GRID_Y0 = 150
-CELL_ICON = 96
+CELL_ICON = 170
 
 
 def _grid_cells_skin():
@@ -380,7 +380,7 @@ def _grid_cells_skin():
         x = GRID_X0 + c * (CELL_W + CELL_GAP_X)
         y = GRID_Y0 + r * (CELL_H + CELL_GAP_Y)
         ix = x + (CELL_W - CELL_ICON) // 2
-        iy = y + 24
+        iy = y + 14
         cells.append(
             '    <widget name="cellbg%d" position="%d,%d" size="%d,%d" '
             'backgroundColor="#131A2A" transparent="0" zPosition="1" />'
@@ -393,7 +393,7 @@ def _grid_cells_skin():
             '    <widget name="celltxt%d" position="%d,%d" size="%d,%d" font="Regular;30" '
             'foregroundColor="#d1d5db" backgroundColor="#131A2A" transparent="1" '
             'halign="center" valign="center" zPosition="2" />'
-            % (i, x + 10, y + 122, CELL_W - 20, CELL_H - 132))
+            % (i, x + 10, y + 186, CELL_W - 20, 74))
     return "\n".join(cells)
 
 
