@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.22"
+PLUGIN_VERSION = "1.0.23"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -359,7 +359,7 @@ _HEADER_SKIN = """    <eLabel position="40,22" size="470,46" text="WORD OF ENIGM
 
 
 # =====================================================================
-# SKIN - MAIN SCREEN (category grid 4 x 3)
+# SKIN - MAIN SCREEN (category grid 4 x 3 with icons)
 # =====================================================================
 GRID_COLS = 4
 GRID_ROWS = 3
@@ -370,6 +370,7 @@ CELL_GAP_X = 20
 CELL_GAP_Y = 20
 GRID_X0 = 40
 GRID_Y0 = 150
+CELL_ICON = 96
 
 
 def _grid_cells_skin():
@@ -378,11 +379,21 @@ def _grid_cells_skin():
         r, c = divmod(i, GRID_COLS)
         x = GRID_X0 + c * (CELL_W + CELL_GAP_X)
         y = GRID_Y0 + r * (CELL_H + CELL_GAP_Y)
+        ix = x + (CELL_W - CELL_ICON) // 2
+        iy = y + 24
         cells.append(
-            '    <widget name="cell%d" position="%d,%d" size="%d,%d" font="Regular;30" '
-            'foregroundColor="#d1d5db" backgroundColor="#131A2A" transparent="0" '
-            'halign="center" valign="center" zPosition="2" />'
+            '    <widget name="cellbg%d" position="%d,%d" size="%d,%d" '
+            'backgroundColor="#131A2A" transparent="0" zPosition="1" />'
             % (i, x, y, CELL_W, CELL_H))
+        cells.append(
+            '    <widget name="cellicon%d" position="%d,%d" size="%d,%d" '
+            'transparent="1" alphatest="blend" scale="1" zPosition="2" />'
+            % (i, ix, iy, CELL_ICON, CELL_ICON))
+        cells.append(
+            '    <widget name="celltxt%d" position="%d,%d" size="%d,%d" font="Regular;30" '
+            'foregroundColor="#d1d5db" backgroundColor="#131A2A" transparent="1" '
+            'halign="center" valign="center" zPosition="2" />'
+            % (i, x + 10, y + 122, CELL_W - 20, CELL_H - 132))
     return "\n".join(cells)
 
 
@@ -409,8 +420,32 @@ SKIN = """
 
 
 # =====================================================================
-# SKIN - ITEMS SCREEN (content of a selected category)
+# SKIN - ITEMS SCREEN (content of a category, shown as a grid too)
 # =====================================================================
+ITEMS_COLS = 4
+ITEMS_PER_PAGE = 16
+ITILE_W = 450
+ITILE_H = 168
+ITILE_GAP_X = 20
+ITILE_GAP_Y = 16
+ITEMS_X0 = 40
+ITEMS_Y0 = 180
+
+
+def _items_cells_skin():
+    cells = []
+    for i in range(ITEMS_PER_PAGE):
+        r, c = divmod(i, ITEMS_COLS)
+        x = ITEMS_X0 + c * (ITILE_W + ITILE_GAP_X)
+        y = ITEMS_Y0 + r * (ITILE_H + ITILE_GAP_Y)
+        cells.append(
+            '    <widget name="itile%d" position="%d,%d" size="%d,%d" font="Regular;26" '
+            'foregroundColor="#d1d5db" backgroundColor="#131A2A" transparent="0" '
+            'halign="center" valign="center" zPosition="2" />'
+            % (i, x, y, ITILE_W, ITILE_H))
+    return "\n".join(cells)
+
+
 ITEMS_SKIN = """
 <screen name="WordOfEnigma2Items" position="0,0" size="1920,1080" title="Word Of Enigma2" flags="wfNoBorder">
     <eLabel position="0,0" size="1920,1080" backgroundColor="#0B0F19" zPosition="-100" />
@@ -418,19 +453,18 @@ ITEMS_SKIN = """
     <eLabel position="0,110" size="1920,3" backgroundColor="#3b82f6" zPosition="-89" />
 """ + _HEADER_SKIN + """
 
-    <!-- LEFT: items -->
-    <eLabel position="30,140" size="1200,850" backgroundColor="#131A2A" zPosition="-50" />
-    <eLabel position="30,140" size="1200,4" backgroundColor="#10b981" zPosition="-49" />
-    <widget name="header" position="50,158" size="1160,44" font="Regular;32" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
-    <eLabel position="50,205" size="1160,2" backgroundColor="#1A2235" zPosition="-48" />
-    <widget name="items_list" position="40,225" size="1180,750" itemHeight="100" font="Regular;34" scrollbarMode="showOnDemand" foregroundColor="#d1d5db" backgroundColor="#131A2A" transparent="1" zPosition="2" />
+    <!-- Section title + page indicator -->
+    <widget name="header" position="40,150" size="900,40" font="Regular;30" foregroundColor="#ffffff" backgroundColor="#0B0F19" transparent="1" zPosition="2" />
+    <widget name="page"   position="1450,150" size="450,40" font="Regular;24" foregroundColor="#8b5cf6" backgroundColor="#0B0F19" transparent="1" halign="right" zPosition="2" />
+    <eLabel position="40,192" size="1860,2" backgroundColor="#1A2235" zPosition="-50" />
 
-    <!-- RIGHT: info -->
-    <eLabel position="1250,140" size="640,850" backgroundColor="#131A2A" zPosition="-50" />
-    <eLabel position="1250,140" size="640,4" backgroundColor="#8b5cf6" zPosition="-49" />
-    <eLabel position="1270,160" size="600,40" text="INFORMATION" font="Regular;32" foregroundColor="#ffffff" backgroundColor="#131A2A" transparent="1" zPosition="2" />
-    <eLabel position="1270,205" size="600,2" backgroundColor="#1A2235" zPosition="-48" />
-    <widget name="description" position="1270,225" size="600,750" font="Regular;30" foregroundColor="#9ca3af" backgroundColor="#131A2A" transparent="1" valign="top" zPosition="2" />
+    <!-- Item tiles (4 x 4) -->
+""" + _items_cells_skin() + """
+
+    <!-- Info strip -->
+    <eLabel position="0,905" size="1920,102" backgroundColor="#131A2A" zPosition="-50" />
+    <eLabel position="0,905" size="1920,2" backgroundColor="#1A2235" zPosition="-49" />
+    <widget name="description" position="40,912" size="1840,88" font="Regular;24" foregroundColor="#9ca3af" backgroundColor="#131A2A" transparent="1" valign="top" zPosition="2" />
 
     <!-- Footer -->
     <eLabel position="0,1010" size="1920,70" backgroundColor="#131A2A" zPosition="-90" />
@@ -439,7 +473,7 @@ ITEMS_SKIN = """
     <widget name="key_green"  position="340,1020" size="300,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#059669" transparent="0" halign="center" valign="center" zPosition="3" />
     <widget name="key_yellow" position="650,1020" size="300,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#d97706" transparent="0" halign="center" valign="center" zPosition="3" />
     <widget name="key_blue"   position="960,1020" size="480,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
-    <eLabel position="1450,1020" size="440,50" text="OK: select   MENU: details" font="Regular;24" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" valign="center" zPosition="3" />
+    <eLabel position="1450,1020" size="440,50" text="Arrows: move   OK: open/select" font="Regular;24" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" valign="center" zPosition="3" />
 </screen>
 """
 
@@ -812,7 +846,7 @@ class WoeStoreBase(Screen):
                 'for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do\n'
                 '    wget -q --no-check-certificate "$BASE/images/$img.png?t=$TS" -O "wordofenigma2_img_$img.png" || exit 20\n'
                 'done\n'
-                'for ic in plugins skins tools system_images picons channels novaler; do\n'
+                'for ic in plugins skins media tools system_images picons channels emus novaler default; do\n'
                 '    wget -q --no-check-certificate "$BASE/images/Icons/$ic.png?t=$TS" -O "wordofenigma2_ic_$ic.png" || true\n'
                 'done\n'
                 'echo "Installing to $DEST ..."\n'
@@ -823,7 +857,7 @@ class WoeStoreBase(Screen):
                 'for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do\n'
                 '    cp "wordofenigma2_img_$img.png" "$DEST/images/$img.png" || true\n'
                 'done\n'
-                'for ic in plugins skins tools system_images picons channels novaler; do\n'
+                'for ic in plugins skins media tools system_images picons channels emus novaler default; do\n'
                 '    [ -f "wordofenigma2_ic_$ic.png" ] && cp "wordofenigma2_ic_$ic.png" "$DEST/images/Icons/$ic.png"\n'
                 'done\n'
                 'rm -f "$DEST/plugin.pyc" "$DEST/store_cache.json"\n'
@@ -925,7 +959,58 @@ class WoeStoreBase(Screen):
 
 
 # =====================================================================
-# MAIN SCREEN - category grid (4 x 3)
+# IMAGE HELPERS (category icons)
+# =====================================================================
+def load_pixmap_ptr(path):
+    """Load a PNG into an ePixmap pointer using the most common APIs."""
+    if not path:
+        return None
+    try:
+        from Tools.LoadPixmap import LoadPixmap
+        ptr = LoadPixmap(path)
+        if ptr is not None:
+            return ptr
+    except Exception:
+        pass
+    try:
+        from Tools.LoadPixmap import loadPixmap
+        ptr = loadPixmap(path)
+        if ptr is not None:
+            return ptr
+    except Exception:
+        pass
+    try:
+        from enigma import loadPNG
+        return loadPNG(path, 0, 1)
+    except Exception:
+        return None
+
+
+def _icons_dir():
+    dirs = [os.path.join(PLUGIN_DIR, "images", "Icons")]
+    try:
+        dirs.append(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "images", "Icons"))
+    except Exception:
+        pass
+    return dirs
+
+
+def category_icon_path(cat):
+    """Return the icon path for a category, or the default icon."""
+    for base in _icons_dir():
+        for name in (cat, "default"):
+            p = os.path.join(base, name + ".png")
+            try:
+                if os.path.exists(p) and os.path.getsize(p) > 200:
+                    return p
+            except Exception:
+                continue
+    return None
+
+
+# =====================================================================
+# MAIN SCREEN - category grid (4 x 3) with icons
 # =====================================================================
 class WordOfEnigma2(WoeStoreBase):
     skin = SKIN
@@ -945,12 +1030,20 @@ class WordOfEnigma2(WoeStoreBase):
         self["key_yellow"] = Label("Refresh")
         self["key_blue"] = Label("Menu")
 
-        # Category tiles
-        self.cell_widgets = []
+        # Category tiles: background + icon + text
+        self.cell_bg = []
+        self.cell_txt = []
+        self.cell_icon = []
         for i in range(GRID_SIZE):
-            lbl = Label("")
-            self["cell%d" % i] = lbl
-            self.cell_widgets.append(lbl)
+            bg = Label("")
+            tx = Label("")
+            ic = Pixmap()
+            self["cellbg%d" % i] = bg
+            self["celltxt%d" % i] = tx
+            self["cellicon%d" % i] = ic
+            self.cell_bg.append(bg)
+            self.cell_txt.append(tx)
+            self.cell_icon.append(ic)
 
         self["actions"] = ActionMap(
             ["OkCancelActions", "DirectionActions", "ColorActions", "MenuActions"],
@@ -985,7 +1078,7 @@ class WordOfEnigma2(WoeStoreBase):
                 self.bg_timer.timeout.connect(self.start_network_fetch)
             except Exception:
                 pass
-        self.onLayoutFinish.append(self.highlight_cells)
+        self.onLayoutFinish.append(self.render_categories)
         self.onLayoutFinish.append(self.schedule_fetch)
         self.onLayoutFinish.append(self.init_system_info)
 
@@ -997,24 +1090,51 @@ class WordOfEnigma2(WoeStoreBase):
             if count_items(self.store_data.get(cat, [])) > 0:
                 self.grid_categories.append(cat)
 
-        for i, lbl in enumerate(self.cell_widgets):
+        for i in range(GRID_SIZE):
             if i < len(self.grid_categories):
                 cat = self.grid_categories[i]
                 count = count_items(self.store_data.get(cat, []))
                 clean = cat.replace("_", " ").upper()
                 try:
-                    lbl.setText("%s\n(%d)" % (clean, count))
+                    self.cell_txt[i].setText("%s\n(%d)" % (clean, count))
                 except Exception:
                     pass
+                self._load_cat_icon(i, cat)
             else:
                 try:
-                    lbl.setText("")
+                    self.cell_txt[i].setText("")
                 except Exception:
                     pass
+                try:
+                    self.cell_icon[i].instance.hide()
+                except Exception:
+                    pass
+
         if self.grid_index >= len(self.grid_categories):
             self.grid_index = 0
         self.highlight_cells()
         self.update_grid_status()
+
+    def _load_cat_icon(self, i, cat):
+        inst = None
+        try:
+            inst = self.cell_icon[i].instance
+        except Exception:
+            inst = None
+        if inst is None:
+            return
+        ptr = load_pixmap_ptr(category_icon_path(cat))
+        if ptr is not None:
+            try:
+                inst.setPixmap(ptr)
+                inst.show()
+                return
+            except Exception:
+                pass
+        try:
+            inst.hide()
+        except Exception:
+            pass
 
     def highlight_cells(self):
         try:
@@ -1026,22 +1146,24 @@ class WordOfEnigma2(WoeStoreBase):
         sel_bg = parseColor("#8b5cf6")
         sel_fg = parseColor("#ffffff")
         empty_bg = parseColor("#0F1522")
-        empty_fg = parseColor("#374151")
         n = len(self.grid_categories)
-        for i, lbl in enumerate(self.cell_widgets):
+        for i in range(GRID_SIZE):
             try:
-                inst = lbl.instance
-                if inst is None:
-                    continue
+                bg = self.cell_bg[i].instance
+                tx = self.cell_txt[i].instance
                 if i >= n:
-                    inst.setBackgroundColor(empty_bg)
-                    inst.setForegroundColor(empty_fg)
+                    if bg:
+                        bg.setBackgroundColor(empty_bg)
                 elif i == self.grid_index:
-                    inst.setBackgroundColor(sel_bg)
-                    inst.setForegroundColor(sel_fg)
+                    if bg:
+                        bg.setBackgroundColor(sel_bg)
+                    if tx:
+                        tx.setForegroundColor(sel_fg)
                 else:
-                    inst.setBackgroundColor(normal_bg)
-                    inst.setForegroundColor(normal_fg)
+                    if bg:
+                        bg.setBackgroundColor(normal_bg)
+                    if tx:
+                        tx.setForegroundColor(normal_fg)
             except Exception:
                 pass
 
@@ -1095,7 +1217,7 @@ class WordOfEnigma2(WoeStoreBase):
 
 
 # =====================================================================
-# ITEMS SCREEN - content of a selected category
+# ITEMS SCREEN - content of a selected category (shown as a grid)
 # =====================================================================
 class WordOfEnigma2Items(WoeStoreBase):
     skin = ITEMS_SKIN
@@ -1111,141 +1233,191 @@ class WordOfEnigma2Items(WoeStoreBase):
         self["devtemp"] = Label("")
         self["imagename"] = Label("")
         self["pyver"] = Label("")
-        self["header"] = Label(self.category.replace("_", " ").upper())
-        self["items_list"] = MenuList([])
+        self["header"] = Label("")
+        self["page"] = Label("")
         self["description"] = Label("")
         self["key_red"] = Label("Back")
         self["key_green"] = Label("Install")
         self["key_yellow"] = Label("Select")
         self["key_blue"] = Label("Batch Install")
 
-        try:
-            from enigma import gFont
-            if self["items_list"].l:
-                self["items_list"].l.setFont(0, gFont("Regular", 34))
-        except Exception:
-            pass
+        self.tile_widgets = []
+        for i in range(ITEMS_PER_PAGE):
+            lbl = Label("")
+            self["itile%d" % i] = lbl
+            self.tile_widgets.append(lbl)
 
         self["actions"] = ActionMap(
             ["OkCancelActions", "DirectionActions", "ColorActions", "MenuActions"],
             {
-                "cancel": self.close,
-                "red": self.close,
+                "cancel": self.back,
+                "red": self.back,
                 "green": self.download_item,
                 "yellow": self.toggle_select,
                 "blue": self.blue_pressed,
                 "menu": self.main_menu,
                 "ok": self.ok_pressed,
-                "up": self.go_up,
-                "down": self.go_down,
-                "left": self.go_left,
-                "right": self.go_right,
+                "up": lambda: self.move(0, -1),
+                "down": lambda: self.move(0, 1),
+                "left": lambda: self.move(-1, 0),
+                "right": lambda: self.move(1, 0),
             },
             -1
         )
 
-        self.visible_items = self.store_data.get(self.category, [])
+        self.items = self.store_data.get(self.category, [])
         self.current_path = []
         self.path_stack = []
         self.selected = []
+        self.sel = 0
+        self.page = 0
         self.install_cmd = ""
         self.install_item_name = ""
         self.is_image_download = False
         self.download_dest_path = ""
 
-        self["items_list"].onSelectionChanged.append(self.item_changed)
-        self.update_items()
+        self.update_view()
         self.onLayoutFinish.append(self.init_system_info)
 
     # -----------------------------------------------------------------
-    def update_items(self):
+    def update_view(self):
+        n = len(self.items)
+        if n == 0:
+            self.sel = 0
+        elif self.sel >= n:
+            self.sel = n - 1
+        elif self.sel < 0:
+            self.sel = 0
+        self.page = self.sel // ITEMS_PER_PAGE
+
         try:
             title = self.category.replace("_", " ").title() if self.category else "Items"
             if self.current_path:
-                title = " / ".join([c.get("name", "?") for c in self.current_path])
+                title = " / ".join([str(c.get("name", "?")) for c in self.current_path])
+            self["header"].setText(title.upper())
+        except Exception:
+            pass
+
+        start = self.page * ITEMS_PER_PAGE
+        for i, lbl in enumerate(self.tile_widgets):
+            idx = start + i
             try:
-                self["header"].setText(title.upper())
+                if idx < n:
+                    it = self.items[idx]
+                    if isinstance(it, dict) and "items" in it:
+                        nm = "[+] " + str(it.get("name", "?"))
+                    else:
+                        nm = str(it.get("name", "?"))
+                        if self.is_selected(it):
+                            nm = "[x] " + nm
+                    lbl.setText(nm)
+                else:
+                    lbl.setText("")
             except Exception:
                 pass
 
-            display = []
-            for item in self.visible_items:
-                if isinstance(item, dict) and "items" in item:
-                    count = count_items(item["items"])
-                    display.append("[+] %s (%d)" % (item.get("name", "?"), count))
+        self.highlight_tiles()
+        self.update_page_label()
+        self.update_info()
+
+    def highlight_tiles(self):
+        try:
+            from skin import parseColor
+        except Exception:
+            return
+        normal_bg = parseColor("#131A2A")
+        normal_fg = parseColor("#d1d5db")
+        sel_bg = parseColor("#8b5cf6")
+        sel_fg = parseColor("#ffffff")
+        empty_bg = parseColor("#0F1522")
+        empty_fg = parseColor("#374151")
+        n = len(self.items)
+        start = self.page * ITEMS_PER_PAGE
+        for i, lbl in enumerate(self.tile_widgets):
+            try:
+                inst = lbl.instance
+                if inst is None:
+                    continue
+                idx = start + i
+                if idx >= n:
+                    inst.setBackgroundColor(empty_bg)
+                    inst.setForegroundColor(empty_fg)
+                elif idx == self.sel:
+                    inst.setBackgroundColor(sel_bg)
+                    inst.setForegroundColor(sel_fg)
                 else:
-                    name = item.get("name", "?")
-                    if self.is_selected(item):
-                        name = "[x] " + name
-                    display.append(name)
-            self["items_list"].setList(display)
-            self.update_blue_label()
-            self.item_changed()
+                    inst.setBackgroundColor(normal_bg)
+                    inst.setForegroundColor(normal_fg)
+            except Exception:
+                pass
+
+    def update_page_label(self):
+        n = len(self.items)
+        pages = max(1, (n + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE)
+        try:
+            self["page"].setText("Page %d/%d   -   %d item(s)"
+                                 % (self.page + 1, pages, n))
         except Exception:
             pass
 
-    def item_changed(self):
-        try:
-            idx = self["items_list"].getSelectionIndex()
-            if idx < 0 or idx >= len(self.visible_items):
-                return
-            item = self.visible_items[idx]
-            if "items" in item:
-                self["description"].setText(
-                    "Folder: %s\nItems: %d\n\nPress OK to open."
-                    % (item.get("name", ""), count_items(item["items"]))
-                )
-            else:
-                txt = ("Name: %s\n\nDescription:\n%s"
-                       % (item.get("name", ""), item.get("description", "No description")))
-                if self.is_selected(item):
-                    txt += ("\n\n[SELECTED] for batch install"
-                            "\nOK: deselect")
-                elif self.is_selectable(item):
-                    txt += ("\n\nOK: select for batch install"
-                            "\nBLUE: install all selected")
-                self["description"].setText(txt)
-        except Exception:
-            pass
+    def update_info(self):
+        n = len(self.items)
+        if n == 0 or self.sel >= n:
+            self.set_description("No items in this section.")
+            return
+        it = self.items[self.sel]
+        if isinstance(it, dict) and "items" in it:
+            self.set_description("Folder: %s   (%d items)   -   OK: open"
+                                 % (it.get("name", "?"), count_items(it["items"])))
+        else:
+            txt = "%s\n%s" % (it.get("name", "?"),
+                              it.get("description", "No description") or "")
+            if self.is_selected(it):
+                txt += "    [SELECTED]"
+            elif self.is_selectable(it):
+                txt += "    OK: select   GREEN: install"
+            self.set_description(txt)
+
+    def move(self, dx, dy):
+        n = len(self.items)
+        if n == 0:
+            return
+        new = self.sel + dx + dy * ITEMS_COLS
+        if new < 0:
+            new = 0
+        if new >= n:
+            new = n - 1
+        if new != self.sel:
+            self.sel = new
+            self.page = self.sel // ITEMS_PER_PAGE
+            self.update_view()
 
     # -----------------------------------------------------------------
     def ok_pressed(self):
-        idx = self["items_list"].getSelectionIndex()
-        if 0 <= idx < len(self.visible_items):
-            item = self.visible_items[idx]
-            if isinstance(item, dict) and "items" in item:
-                self.current_path.append(item)
-                self.path_stack.append(self.visible_items)
-                self.visible_items = item["items"]
-                self.update_items()
-            else:
-                # OK on a plugin item marks it for the batch install
-                self.toggle_select()
+        n = len(self.items)
+        if self.sel < 0 or self.sel >= n:
+            return
+        it = self.items[self.sel]
+        if isinstance(it, dict) and "items" in it:
+            self.path_stack.append(self.items)
+            self.current_path.append(it)
+            self.items = it["items"]
+            self.sel = 0
+            self.page = 0
+            self.update_view()
+        else:
+            self.toggle_select()
 
-    def go_up(self):
-        try:
-            self["items_list"].up()
-        except Exception:
-            pass
-
-    def go_down(self):
-        try:
-            self["items_list"].down()
-        except Exception:
-            pass
-
-    def go_left(self):
-        # Inside a sub-folder: go one level up. Otherwise go back to the grid.
+    def back(self):
         if self.path_stack:
-            self.visible_items = self.path_stack.pop()
+            self.items = self.path_stack.pop()
             if self.current_path:
                 self.current_path.pop()
-            self.update_items()
+            self.sel = 0
+            self.page = 0
+            self.update_view()
         else:
             self.close()
-
-    def go_right(self):
-        self.ok_pressed()
 
     # -----------------------------------------------------------------
     # MULTI-SELECT + BATCH INSTALL
@@ -1270,40 +1442,40 @@ class WordOfEnigma2Items(WoeStoreBase):
 
     def toggle_select(self):
         try:
-            idx = self["items_list"].getSelectionIndex()
-            if idx < 0 or idx >= len(self.visible_items):
+            n = len(self.items)
+            if self.sel < 0 or self.sel >= n:
                 return
-            item = self.visible_items[idx]
-            if not self.is_selectable(item):
+            it = self.items[self.sel]
+            if not self.is_selectable(it):
                 self.set_description("Folders and system images cannot be\n"
                                      "added to a batch install.")
                 return
-            if self.is_selected(item):
-                url = item.get("file", "")
+            if self.is_selected(it):
+                url = it.get("file", "")
                 self.selected = [s for s in self.selected if s.get("file") != url]
             else:
-                self.selected.append(item)
-            self.update_items()
+                self.selected.append(it)
+            self.update_view()
         except Exception:
             pass
 
     def show_info_popup(self):
         """Show full details of the highlighted item."""
         try:
-            idx = self["items_list"].getSelectionIndex()
-            if idx < 0 or idx >= len(self.visible_items):
+            n = len(self.items)
+            if self.sel < 0 or self.sel >= n:
                 return
-            item = self.visible_items[idx]
-            name = item.get("name", "?")
-            if "items" in item:
-                msg = "Folder: %s\n\nItems: %d" % (name, count_items(item["items"]))
+            it = self.items[self.sel]
+            name = it.get("name", "?")
+            if "items" in it:
+                msg = "Folder: %s\n\nItems: %d" % (name, count_items(it["items"]))
             else:
                 msg = "Name: %s\n\nDescription:\n%s" % (
-                    name, item.get("description", "No description"))
-                url = (item.get("file") or "").strip()
+                    name, it.get("description", "No description"))
+                url = (it.get("file") or "").strip()
                 if url:
                     msg += "\n\nSource:\n" + url
-                if self.is_selected(item):
+                if self.is_selected(it):
                     msg += "\n\nStatus: selected for batch install"
             self.session.open(MessageBox, msg, MessageBox.TYPE_INFO)
         except Exception:
@@ -1323,9 +1495,7 @@ class WordOfEnigma2Items(WoeStoreBase):
         if self.selected:
             self.start_batch_install()
         else:
-            self.set_description("No items selected.\n\n"
-                                 "Use OK on the plugins you want, then press\n"
-                                 "the blue button to install them all.")
+            self.set_description("No items selected.   OK: select items, then BLUE to install all.")
 
     def start_batch_install(self):
         items = list(self.selected)
@@ -1349,7 +1519,7 @@ class WordOfEnigma2Items(WoeStoreBase):
     def start_batch_confirm(self, answer):
         if not answer:
             self.set_description("Batch install cancelled.")
-            self.item_changed()
+            self.update_info()
             return
         items = list(self.selected)
         script = build_batch_script(items)
@@ -1381,30 +1551,30 @@ class WordOfEnigma2Items(WoeStoreBase):
 
     def batch_finished(self, *args):
         self.selected = []
-        self.update_items()
+        self.update_view()
 
     # -----------------------------------------------------------------
     def download_item(self):
         try:
-
-            idx = self["items_list"].getSelectionIndex()
-            if idx < 0 or idx >= len(self.visible_items):
+            n = len(self.items)
+            if self.sel < 0 or self.sel >= n:
                 return
-            item = self.visible_items[idx]
-            if not isinstance(item, dict):
+            it = self.items[self.sel]
+            if not isinstance(it, dict):
                 return
 
             # A folder is selected -> open it instead of trying to download it.
-            if "items" in item:
-                self.current_path.append(item)
-                self.path_stack.append(self.visible_items)
-                self.visible_items = item["items"]
-                self.update_items()
+            if "items" in it:
+                self.path_stack.append(self.items)
+                self.current_path.append(it)
+                self.items = it["items"]
+                self.sel = 0
+                self.page = 0
+                self.update_view()
                 return
 
-            url = item.get("file", "").strip()
-            name = item.get("name", "package")
-
+            url = it.get("file", "").strip()
+            name = it.get("name", "package")
 
             if not url:
                 self.session.open(MessageBox, "Download URL not found", MessageBox.TYPE_ERROR)
@@ -1443,14 +1613,14 @@ class WordOfEnigma2Items(WoeStoreBase):
             self.install_item_name = name
             self.download_dest_path = dest
 
-            self["description"].setText("Downloading: %s\n\nPlease wait..." % name)
+            self.set_description("Downloading: %s\n\nPlease wait..." % name)
 
             wget_cmd = "wget -q --no-check-certificate --timeout=60 --tries=3 -O %s '%s'" % (dest, url)
             self.wget_thread = threading.Thread(target=self.run_wget, args=(wget_cmd,))
             self.wget_thread.daemon = True
             self.wget_thread.start()
         except Exception as e:
-            self["description"].setText("Error: " + str(e))
+            self.set_description("Error: " + str(e))
 
     def run_wget(self, wget_cmd):
         try:
@@ -1458,7 +1628,6 @@ class WordOfEnigma2Items(WoeStoreBase):
             full_cmd = wget_cmd + " > " + log_file + " 2>&1"
             retval = os.system(full_cmd)
 
-            # قراءة اللوغ
             output = ""
             try:
                 if os.path.exists(log_file):
@@ -1510,7 +1679,7 @@ class WordOfEnigma2Items(WoeStoreBase):
     def script_run_confirm(self, answer):
         if not answer:
             self.set_description("Skipped.")
-            self.item_changed()
+            self.update_info()
             return
         # Run the script fully detached (setsid) so an Enigma2 restart inside
         # it (init 4; init 3) is not killed halfway, then show its live output
@@ -1540,7 +1709,7 @@ class WordOfEnigma2Items(WoeStoreBase):
             t.start()
         else:
             self.set_description("Skipped.")
-            self.item_changed()
+            self.update_info()
 
     def run_install(self):
         try:

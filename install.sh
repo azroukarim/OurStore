@@ -54,11 +54,14 @@ dl "$PLUGIN_DIR/images/progress.png"   "images/progress.png"
 echo "Downloading section icons..."
 dl "$PLUGIN_DIR/images/Icons/plugins.png"       "images/Icons/plugins.png"
 dl "$PLUGIN_DIR/images/Icons/skins.png"         "images/Icons/skins.png"
+dl "$PLUGIN_DIR/images/Icons/media.png"         "images/Icons/media.png"
 dl "$PLUGIN_DIR/images/Icons/tools.png"         "images/Icons/tools.png"
 dl "$PLUGIN_DIR/images/Icons/system_images.png" "images/Icons/system_images.png"
 dl "$PLUGIN_DIR/images/Icons/picons.png"        "images/Icons/picons.png"
 dl "$PLUGIN_DIR/images/Icons/channels.png"      "images/Icons/channels.png"
+dl "$PLUGIN_DIR/images/Icons/emus.png"          "images/Icons/emus.png"
 dl "$PLUGIN_DIR/images/Icons/novaler.png"       "images/Icons/novaler.png"
+dl "$PLUGIN_DIR/images/Icons/default.png"       "images/Icons/default.png"
 
 find "$PLUGIN_DIR" -name "*.pyc" -delete 2>/dev/null
 find "$PLUGIN_DIR" -name "__pycache__" -exec rm -rf {} \; 2>/dev/null
