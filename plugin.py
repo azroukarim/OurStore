@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.39"
+PLUGIN_VERSION = "1.0.40"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -2295,6 +2295,23 @@ class WordOfEnigma2Items(WoeStoreBase):
 
         self.update_view()
         self.onLayoutFinish.append(_guard(self.init_system_info))
+        self.onLayoutFinish.append(_guard(self.refresh_cursor))
+
+    def refresh_cursor(self):
+        """Draw the selection cursor as soon as the screen is really shown.
+
+        update_view() also runs at the end of __init__, but at that moment
+        Enigma2 has not applied the skin yet: the widget instances do not
+        exist, so the selection frame could not be drawn and the cursor only
+        appeared after the first arrow key.  Redraw it on layout finish and
+        once more shortly after (slow skins), so the first item always looks
+        selected when a section is opened.
+        """
+        try:
+            self.update_view()
+        except Exception:
+            pass
+        _deferred_call(self.highlight_tiles, 150)
 
     # -----------------------------------------------------------------
     def update_view(self):
