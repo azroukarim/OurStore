@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.45"
+PLUGIN_VERSION = "1.0.46"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -224,6 +224,22 @@ def write_runtime_file(name, data):
         except Exception as e:
             last = e
     return None, last
+
+
+def runtime_dir():
+    """First runtime folder that really accepts a write.
+
+    Used for downloaded packages and their log files, so a box whose /tmp
+    is unusable can still install from the store.
+    """
+    path, _err = write_runtime_file(".wordofenigma2_probe", b"x")
+    if path:
+        try:
+            os.remove(path)
+        except Exception:
+            pass
+        return os.path.dirname(path)
+    return "/tmp"
 
 
 def bundled_feed_file():
@@ -2965,23 +2981,24 @@ class WordOfEnigma2Items(WoeStoreBase):
             elif "." in pure.split("/")[-1]:
                 ext = "." + pure.split(".")[-1].lower()
 
+            _rdir = runtime_dir()
             if ext == ".ipk":
-                dest = "/tmp/wordofenigma2.ipk"
+                dest = os.path.join(_rdir, "wordofenigma2.ipk")
                 cmd = "opkg install --force-overwrite %s && rm -f %s" % (dest, dest)
             elif ext == ".deb":
-                dest = "/tmp/wordofenigma2.deb"
+                dest = os.path.join(_rdir, "wordofenigma2.deb")
                 cmd = "dpkg -i %s && rm -f %s" % (dest, dest)
             elif ext == ".sh":
-                dest = "/tmp/wordofenigma2.sh"
-                cmd = "chmod +x %s && cd /tmp && sh %s 2>&1; rm -f %s" % (dest, dest, dest)
+                dest = os.path.join(_rdir, "wordofenigma2.sh")
+                cmd = "chmod +x %s && cd %s && sh %s 2>&1; rm -f %s" % (dest, _rdir, dest, dest)
             elif ext == ".zip":
-                dest = "/tmp/wordofenigma2.zip"
+                dest = os.path.join(_rdir, "wordofenigma2.zip")
                 cmd = "unzip -o %s -d / && rm -f %s" % (dest, dest)
             elif ext in (".tar.gz", ".tgz"):
-                dest = "/tmp/wordofenigma2.tar.gz"
+                dest = os.path.join(_rdir, "wordofenigma2.tar.gz")
                 cmd = "tar -xzf %s -C / && rm -f %s" % (dest, dest)
             else:
-                dest = "/tmp/wordofenigma2.ipk"
+                dest = os.path.join(_rdir, "wordofenigma2.ipk")
                 cmd = "opkg install --force-overwrite %s && rm -f %s" % (dest, dest)
 
             self.install_cmd = cmd
@@ -2999,7 +3016,7 @@ class WordOfEnigma2Items(WoeStoreBase):
 
     def run_wget(self, wget_cmd):
         try:
-            log_file = "/tmp/wordofenigma2_wget.log"
+            log_file = os.path.join(runtime_dir(), "wordofenigma2_wget.log")
             full_cmd = wget_cmd + " > " + log_file + " 2>&1"
             retval = os.system(full_cmd)
 
@@ -3059,8 +3076,8 @@ class WordOfEnigma2Items(WoeStoreBase):
         # Run the script fully detached (setsid) so an Enigma2 restart inside
         # it (init 4; init 3) is not killed halfway, then show its live output
         # in the console until the box restarts.
-        log_file = "/tmp/wordofenigma2_console.log"
-        done_file = "/tmp/wordofenigma2_done"
+        log_file = os.path.join(runtime_dir(), "wordofenigma2_console.log")
+        done_file = os.path.join(runtime_dir(), "wordofenigma2_done")
         dest = self.download_dest_path
         cmd = ("rm -f %s %s; chmod +x %s; "
                "setsid sh -c 'sh %s > %s 2>&1 < /dev/null; echo done > %s' "
@@ -3088,7 +3105,7 @@ class WordOfEnigma2Items(WoeStoreBase):
 
     def run_install(self):
         try:
-            log_file = "/tmp/wordofenigma2_install.log"
+            log_file = os.path.join(runtime_dir(), "wordofenigma2_install.log")
             full_cmd = self.install_full_cmd + " > " + log_file + " 2>&1"
             retval = os.system(full_cmd)
 

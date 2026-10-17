@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.45",
+    "version": "1.0.46",
     "categories": {
         "plugins": [
             {
@@ -236,7 +236,38 @@
         "picons": [],
         "channels": [],
         "backups": [],
-        "others": [],
+        "others": [
+            {
+                "name": "Update Image",
+                "description": "opkg update + upgrade all installed packages",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/others/update_image.sh",
+                "image": ""
+            },
+            {
+                "name": "ServiceApp",
+                "description": "Install ServiceApp + ExtePlayer3 (from the feed)",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/others/install_serviceapp.sh",
+                "image": ""
+            },
+            {
+                "name": "GStreamer",
+                "description": "Install the GStreamer 1.0 playback plugins",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/others/install_gstreamer.sh",
+                "image": ""
+            },
+            {
+                "name": "Wget",
+                "description": "Install wget (used by every download)",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/others/install_wget.sh",
+                "image": ""
+            },
+            {
+                "name": "Curl",
+                "description": "Install curl + CA certificates",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/others/install_curl.sh",
+                "image": ""
+            }
+        ],
         "emus": [
             {
                 "name": "Ncam EMU V15.8",
