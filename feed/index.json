@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.43",
+    "version": "1.0.44",
     "categories": {
         "plugins": [
             {
@@ -235,6 +235,8 @@
         ],
         "picons": [],
         "channels": [],
+        "backups": [],
+        "others": [],
         "emus": [
             {
                 "name": "Ncam EMU V15.8",

@@ -64,7 +64,7 @@ for img in qrcode logo background avatar key_red key_green key_yellow key_blue p
 done
 
 echo "Downloading section icons..."
-for ic in plugins plugins_islamics skins media tools system_images picons channels emus novaler default; do
+for ic in plugins plugins_islamics skins media tools system_images picons channels backups others emus novaler default; do
     dl "images/Icons/$ic.png" 200 || true
 done
 
