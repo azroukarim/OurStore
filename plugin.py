@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.32"
+PLUGIN_VERSION = "1.0.33"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -131,7 +131,16 @@ GITHUB_BASE = "https://raw.githubusercontent.com/azroukarim/OurStore/main"
 STORE_URL = GITHUB_BASE + "/feed/index.json"
 UPDATE_SCRIPT_URL = GITHUB_BASE + "/install.sh"
 
-PLUGIN_DIR = "/usr/lib/enigma2/python/Plugins/Extensions/WordOfEnigma2"
+# Canonical install location.  This is ALSO the target of the self-updater:
+# it must never be derived from __file__, otherwise an old "AllStore"
+# installation would keep updating itself in place for ever and never
+# migrate to the new folder name.
+INSTALL_DIR = "/usr/lib/enigma2/python/Plugins/Extensions/WordOfEnigma2"
+# Old folder name(s) of this plugin - removed when the updater migrates.
+LEGACY_DIRS = ["/usr/lib/enigma2/python/Plugins/Extensions/AllStore"]
+
+# Directory this module was actually loaded from (used to READ local files).
+PLUGIN_DIR = INSTALL_DIR
 try:
     if not os.path.isdir(PLUGIN_DIR):
         PLUGIN_DIR = os.path.dirname(__file__)
@@ -140,6 +149,34 @@ except Exception:
 
 CACHE_FILE = os.path.join(PLUGIN_DIR, "store_cache.json")
 SETTINGS_FILE = os.path.join(PLUGIN_DIR, "settings.json")
+
+
+def _data_dir():
+    """Return the folder used for the plugin's data files.
+
+    Normally this is the folder the plugin runs from.  Right after a
+    migration from the old folder name the updater has removed that folder
+    while Enigma2 keeps the old module in memory, so fall back to the
+    canonical install folder which then holds the migrated data.
+    """
+    try:
+        if os.path.isdir(PLUGIN_DIR):
+            return PLUGIN_DIR
+    except Exception:
+        pass
+    try:
+        if os.path.isdir(INSTALL_DIR):
+            return INSTALL_DIR
+    except Exception:
+        pass
+    return PLUGIN_DIR
+
+
+def _data_file(name):
+    try:
+        return os.path.join(_data_dir(), name)
+    except Exception:
+        return name
 
 
 # =====================================================================
@@ -163,9 +200,10 @@ BUNDLED_FONTS = [
 
 def load_settings():
     global UI_FONT, UI_FONT_SCALE
+    path = _data_file("settings.json")
     try:
-        if os.path.exists(SETTINGS_FILE):
-            f = open(SETTINGS_FILE, "r")
+        if os.path.exists(path):
+            f = open(path, "r")
             try:
                 data = json.load(f)
             finally:
@@ -185,11 +223,12 @@ def load_settings():
 
 
 def save_settings():
+    path = _data_file("settings.json")
     try:
         data = {}
         try:
-            if os.path.exists(SETTINGS_FILE):
-                f = open(SETTINGS_FILE, "r")
+            if os.path.exists(path):
+                f = open(path, "r")
                 try:
                     data = json.load(f) or {}
                 finally:
@@ -200,7 +239,7 @@ def save_settings():
             data = {}
         data["font"] = UI_FONT
         data["font_scale"] = UI_FONT_SCALE
-        f = open(SETTINGS_FILE, "w")
+        f = open(path, "w")
         try:
             json.dump(data, f)
         finally:
@@ -757,8 +796,111 @@ def _log_error(tb_text=None):
     _log(str(tb_text))
 
 
+
+
+def build_update_script(dest=None, base=None, legacy=None):
+    """Build the /bin/sh script that installs the newest plugin files.
+
+    It always installs into the canonical INSTALL_DIR (so an old
+    "AllStore" installation is migrated, never updated in place) and then
+    removes the old folders.  Kept as a module level function so the
+    generated script can be validated with "sh -n" by the tests.
+    """
+    if base is None:
+        base = GITHUB_BASE
+    if dest is None:
+        dest = INSTALL_DIR
+    if legacy is None:
+        legacy = " ".join(LEGACY_DIRS)
+    return (
+            "#!/bin/sh\n"
+            "cd /tmp || exit 1\n"
+            'BASE="%s"\n'
+            'DEST="%s"\n'
+            "TS=$(date +%%s)\n"
+            'mkdir -p "$DEST/feed" "$DEST/images/Icons" "$DEST/fonts" "$DEST/plugins" "$DEST/skins" "$DEST/tools" "$DEST/channels" "$DEST/picons" "$DEST/novaler" "$DEST/system_images"\n'
+            'echo "Downloading core files..."\n'
+            'wget -q --no-check-certificate "$BASE/plugin.py?t=$TS" -O wordofenigma2_dl.py || exit 2\n'
+            'wget -q --no-check-certificate "$BASE/plugin.png?t=$TS" -O wordofenigma2_dl.png || exit 3\n'
+            'wget -q --no-check-certificate "$BASE/version.json?t=$TS" -O wordofenigma2_dl.json || exit 4\n'
+            'wget -q --no-check-certificate "$BASE/feed/index.json?t=$TS" -O wordofenigma2_dl_feed.json || exit 5\n'
+            'wget -q --no-check-certificate "$BASE/__init__.py?t=$TS" -O wordofenigma2_dl_init.py || true\n'
+            'echo "Downloading images..."\n'
+            'for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do\n'
+            '    wget -q --no-check-certificate "$BASE/images/$img.png?t=$TS" -O "wordofenigma2_img_$img.png" || exit 20\n'
+            'done\n'
+            'for ic in plugins skins media tools system_images picons channels emus novaler default; do\n'
+            '    wget -q --no-check-certificate "$BASE/images/Icons/$ic.png?t=$TS" -O "wordofenigma2_ic_$ic.png" || true\n'
+            'done\n'
+            'echo "Downloading fonts..."\n'
+            'for fnt in OpenSans-Regular OpenSans-Bold; do\n'
+            '    wget -q --no-check-certificate "$BASE/fonts/$fnt.ttf?t=$TS" -O "wordofenigma2_fnt_$fnt.ttf" || true\n'
+            'done\n'
+            'echo "Installing to $DEST ..."\n'
+            'cp wordofenigma2_dl.py "$DEST/plugin.py" || exit 7\n'
+            'cp wordofenigma2_dl.png "$DEST/plugin.png" || exit 8\n'
+            'cp wordofenigma2_dl.json "$DEST/version.json" || exit 9\n'
+            'cp wordofenigma2_dl_feed.json "$DEST/feed/index.json" || exit 10\n'
+            # __init__.py makes the folder a real python package; Enigma2
+            # imports plugins with my_import("Plugins.<folder>.plugin").
+            # An empty file is a valid fallback if the download failed.
+            '[ -f wordofenigma2_dl_init.py ] || : > wordofenigma2_dl_init.py\n'
+            'cp wordofenigma2_dl_init.py "$DEST/__init__.py" || exit 11\n'
+            'for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do\n'
+            '    cp "wordofenigma2_img_$img.png" "$DEST/images/$img.png" || true\n'
+            'done\n'
+            'for ic in plugins skins media tools system_images picons channels emus novaler default; do\n'
+            '    [ -f "wordofenigma2_ic_$ic.png" ] && cp "wordofenigma2_ic_$ic.png" "$DEST/images/Icons/$ic.png"\n'
+            'done\n'
+            'for fnt in OpenSans-Regular OpenSans-Bold; do\n'
+            '    [ -f "wordofenigma2_fnt_$fnt.ttf" ] && cp "wordofenigma2_fnt_$fnt.ttf" "$DEST/fonts/$fnt.ttf"\n'
+            'done\n'
+            'rm -f "$DEST/plugin.pyc" "$DEST/store_cache.json"\n'
+            'rm -rf "$DEST/__pycache__"\n'
+            'rm -f wordofenigma2_dl.py wordofenigma2_dl.png wordofenigma2_dl.json wordofenigma2_dl_feed.json wordofenigma2_dl_init.py\n'
+            'rm -f wordofenigma2_img_*.png wordofenigma2_ic_*.png wordofenigma2_fnt_*.ttf\n'
+            'LEGACY="%s"\n'
+            'for OLD in $LEGACY; do\n'
+            '    if [ -d "$OLD" ] && [ "$OLD" != "$DEST" ]; then\n'
+            '        if [ ! -f "$DEST/settings.json" ] && [ -f "$OLD/settings.json" ]; then\n'
+            '            cp "$OLD/settings.json" "$DEST/settings.json"\n'
+            '        fi\n'
+            '        rm -rf "$OLD" && echo "Migrated from old folder: $OLD"\n'
+            '    fi\n'
+            'done\n'
+            'echo "DONE. Installed version.json:"\n'
+            'cat "$DEST/version.json"\n'
+    ) % (base, dest, legacy)
+
+
 def _guard(fn):
-    """Wrap a plugin callback so an exception can never crash Enigma2."""
+    """Wrap a plugin callback so an exception can never crash Enigma2.
+
+    The wrapper keeps the *type* of the wrapped callable: for a bound
+    method a bound method is returned.  This matters because Enigma2's
+    Screen.createGUIScreen() decides whether an onLayoutFinish entry is
+    inline python (str) or a callable by testing
+
+        isinstance(entry, type(self.close))     # a bound method
+
+    A plain function fails that test and would be passed to exec(), which
+    crashes with "TypeError: exec() arg 1 must be a string, bytes or code
+    object" - and the plugin screen never opens.
+    """
+    self_obj = getattr(fn, "__self__", None)
+    if self_obj is not None:
+        def _wrapped_method(_self, *args, **kwargs):
+            try:
+                return fn(*args, **kwargs)
+            except Exception:
+                _log_error()
+                return None
+        try:
+            import types
+            return types.MethodType(_wrapped_method, self_obj)
+        except Exception:
+            return fn
+
     def _wrapped(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
@@ -1420,7 +1562,7 @@ class WoeStoreBase(Screen):
         data = load_json_network(STORE_URL + "?t=" + str(int(time.time())))
         if data and "categories" in data:
             try:
-                with open(CACHE_FILE, "w") as f:
+                with open(_data_file("store_cache.json"), "w") as f:
                     json.dump(data, f)
             except Exception:
                 pass
@@ -1433,9 +1575,10 @@ class WoeStoreBase(Screen):
             gui_call(self.set_description, "Failed to connect to server.")
 
     def load_local_cache(self):
+        cache = _data_file("store_cache.json")
         try:
-            if os.path.exists(CACHE_FILE):
-                with open(CACHE_FILE, "r") as f:
+            if os.path.exists(cache):
+                with open(cache, "r") as f:
                     data = json.load(f)
                 if data and "categories" in data:
                     self.apply_store_data(data)
@@ -1551,53 +1694,8 @@ class WoeStoreBase(Screen):
         try:
             # Use a cache-busting timestamp so the GitHub CDN cannot serve a
             # stale plugin.py/version.json right after a new release.
-            base = GITHUB_BASE
-            script = (
-                "#!/bin/sh\n"
-                "cd /tmp || exit 1\n"
-                'BASE="%s"\n'
-                'DEST="%s"\n'
-                "TS=$(date +%%s)\n"
-                'mkdir -p "$DEST/feed" "$DEST/images/Icons" "$DEST/fonts"\n'
-                'echo "Downloading core files..."\n'
-                'wget -q --no-check-certificate "$BASE/plugin.py?t=$TS" -O wordofenigma2_dl.py || exit 2\n'
-                'wget -q --no-check-certificate "$BASE/plugin.png?t=$TS" -O wordofenigma2_dl.png || exit 3\n'
-                'wget -q --no-check-certificate "$BASE/version.json?t=$TS" -O wordofenigma2_dl.json || exit 4\n'
-                'wget -q --no-check-certificate "$BASE/feed/index.json?t=$TS" -O wordofenigma2_dl_feed.json || exit 5\n'
-                'echo "Downloading images..."\n'
-                'for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do\n'
-                '    wget -q --no-check-certificate "$BASE/images/$img.png?t=$TS" -O "wordofenigma2_img_$img.png" || exit 20\n'
-                'done\n'
-                'for ic in plugins skins media tools system_images picons channels emus novaler default; do\n'
-                '    wget -q --no-check-certificate "$BASE/images/Icons/$ic.png?t=$TS" -O "wordofenigma2_ic_$ic.png" || true\n'
-                'done\n'
-                'echo "Downloading fonts..."\n'
-                'for fnt in OpenSans-Regular OpenSans-Bold; do\n'
-                '    wget -q --no-check-certificate "$BASE/fonts/$fnt.ttf?t=$TS" -O "wordofenigma2_fnt_$fnt.ttf" || true\n'
-                'done\n'
-                'echo "Installing to $DEST ..."\n'
-                'cp wordofenigma2_dl.py "$DEST/plugin.py" || exit 7\n'
-                'cp wordofenigma2_dl.png "$DEST/plugin.png" || exit 8\n'
-                'cp wordofenigma2_dl.json "$DEST/version.json" || exit 9\n'
-                'cp wordofenigma2_dl_feed.json "$DEST/feed/index.json" || exit 10\n'
-                'for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do\n'
-                '    cp "wordofenigma2_img_$img.png" "$DEST/images/$img.png" || true\n'
-                'done\n'
-                'for ic in plugins skins media tools system_images picons channels emus novaler default; do\n'
-                '    [ -f "wordofenigma2_ic_$ic.png" ] && cp "wordofenigma2_ic_$ic.png" "$DEST/images/Icons/$ic.png"\n'
-                'done\n'
-                'for fnt in OpenSans-Regular OpenSans-Bold; do\n'
-                '    [ -f "wordofenigma2_fnt_$fnt.ttf" ] && cp "wordofenigma2_fnt_$fnt.ttf" "$DEST/fonts/$fnt.ttf"\n'
-                'done\n'
-                'rm -f "$DEST/plugin.pyc" "$DEST/store_cache.json"\n'
-                'rm -rf "$DEST/__pycache__"\n'
-                'LEGACY="/usr/lib/enigma2/python/Plugins/Extensions/AllStore"\n'
-                'if [ "$DEST" != "$LEGACY" ] && [ -d "$LEGACY" ]; then rm -rf "$LEGACY"; echo "Removed legacy AllStore folder"; fi\n'
-                'rm -f wordofenigma2_dl.py wordofenigma2_dl.png wordofenigma2_dl.json wordofenigma2_dl_feed.json\n'
-                'rm -f wordofenigma2_img_*.png wordofenigma2_ic_*.png wordofenigma2_fnt_*.ttf\n'
-                'echo "DONE. Installed version.json:"\n'
-                'cat "$DEST/version.json"\n'
-            ) % (base, PLUGIN_DIR)
+            script = build_update_script()
+            script_path = "/tmp/wordofenigma2_update.sh"
             script_path = "/tmp/wordofenigma2_update.sh"
             log_file = "/tmp/wordofenigma2_update.log"
             data = script if isinstance(script, bytes) else script.encode("utf-8")

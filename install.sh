@@ -17,6 +17,8 @@ echo "========================================="
 SETTINGS_BAK="/tmp/wordofenigma2_settings.json"
 if [ -f "$PLUGIN_DIR/settings.json" ]; then
     cp "$PLUGIN_DIR/settings.json" "$SETTINGS_BAK" 2>/dev/null
+elif [ -f "$LEGACY_DIR/settings.json" ]; then
+    cp "$LEGACY_DIR/settings.json" "$SETTINGS_BAK" 2>/dev/null
 fi
 
 rm -rf "$PLUGIN_DIR"
