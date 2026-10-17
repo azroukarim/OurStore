@@ -2,89 +2,120 @@
 # ============================================================
 # Word Of Enigma2 - Installation / Update Script
 # ============================================================
+# Everything is downloaded into a staging folder first and the important
+# files are size checked.  Only when that succeeded is the installed
+# plugin replaced.  An interrupted or empty download therefore can never
+# leave the plugin without its feed and icons behind.
 
-PLUGIN_DIR="/usr/lib/enigma2/python/Plugins/Extensions/WordOfEnigma2"
+PLUGIN_DIR="${WOE_PLUGIN_DIR:-/usr/lib/enigma2/python/Plugins/Extensions/WordOfEnigma2}"
 # Old installation path (previous name "AllStore") - removed during migration
-LEGACY_DIR="/usr/lib/enigma2/python/Plugins/Extensions/AllStore"
-BASE_URL="https://raw.githubusercontent.com/azroukarim/OurStore/main"
+LEGACY_DIR="${WOE_LEGACY_DIR:-/usr/lib/enigma2/python/Plugins/Extensions/AllStore}"
+BASE_URL="${WOE_BASE_URL:-https://raw.githubusercontent.com/azroukarim/OurStore/main}"
 TS=$(date +%s)
+STAGE="/tmp/wordofenigma2_stage.$$"
 
 echo "========================================="
 echo "    Installing Word Of Enigma2..."
 echo "========================================="
 
-# Preserve the user's settings (font / text size) across a full reinstall
+rm -rf "$STAGE"
+mkdir -p "$STAGE/feed" "$STAGE/images/Icons" "$STAGE/fonts"
+
+# dl <relative-url> <min-bytes>
+# Downloads into the staging folder; returns 0 only if the file arrived
+# completely, otherwise the incomplete file is deleted again.
+dl() {
+    _rel="$1"
+    _min="$2"
+    _out="$STAGE/$_rel"
+    rm -f "$_out"
+    wget -q --no-check-certificate -O "$_out" "$BASE_URL/$_rel?t=$TS" || true
+    _size=$(wc -c < "$_out" 2>/dev/null | tr -d " ")
+    if [ "${_size:-0}" -ge "$_min" ]; then
+        return 0
+    fi
+    echo "  !! $_rel is incomplete (${_size:-0} bytes) - skipped"
+    rm -f "$_out"
+    return 1
+}
+
+echo "Downloading core files..."
+dl "plugin.py" 10000 || {
+    echo "plugin.py could not be downloaded - aborting, nothing was changed."
+    rm -rf "$STAGE"
+    exit 1
+}
+dl "version.json" 10 || {
+    echo "version.json could not be downloaded - aborting, nothing was changed."
+    rm -rf "$STAGE"
+    exit 1
+}
+dl "feed/index.json" 200 || {
+    echo "feed/index.json could not be downloaded - aborting, nothing was changed."
+    rm -rf "$STAGE"
+    exit 1
+}
+dl "plugin.png" 200 || true
+dl "__init__.py" 0 || true
+
+echo "Downloading main images..."
+for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do
+    dl "images/$img.png" 200 || true
+done
+
+echo "Downloading section icons..."
+for ic in plugins plugins_islamics skins media tools system_images picons channels emus novaler default; do
+    dl "images/Icons/$ic.png" 200 || true
+done
+
+echo "Downloading fonts..."
+for fnt in OpenSans-Regular OpenSans-Bold; do
+    dl "fonts/$fnt.ttf" 1000 || true
+done
+
+# ---------- every important file arrived: now install ----------------
+echo "Installing to $PLUGIN_DIR ..."
+
+# Preserve the user's settings (font / text size) and the last known store
+# across the reinstall, so the plugin keeps working even without network.
 SETTINGS_BAK="/tmp/wordofenigma2_settings.json"
+CACHE_BAK="/tmp/wordofenigma2_cache.json"
+rm -f "$SETTINGS_BAK" "$CACHE_BAK"
 if [ -f "$PLUGIN_DIR/settings.json" ]; then
     cp "$PLUGIN_DIR/settings.json" "$SETTINGS_BAK" 2>/dev/null
 elif [ -f "$LEGACY_DIR/settings.json" ]; then
     cp "$LEGACY_DIR/settings.json" "$SETTINGS_BAK" 2>/dev/null
+fi
+if [ -f "$PLUGIN_DIR/store_cache.json" ]; then
+    cp "$PLUGIN_DIR/store_cache.json" "$CACHE_BAK" 2>/dev/null
 fi
 
 rm -rf "$PLUGIN_DIR"
 rm -rf "$LEGACY_DIR"
 
 mkdir -p "$PLUGIN_DIR"
-mkdir -p "$PLUGIN_DIR/feed"
-mkdir -p "$PLUGIN_DIR/images"
-mkdir -p "$PLUGIN_DIR/images/Icons"
-mkdir -p "$PLUGIN_DIR/plugins"
-mkdir -p "$PLUGIN_DIR/skins"
-mkdir -p "$PLUGIN_DIR/tools"
-mkdir -p "$PLUGIN_DIR/channels"
-mkdir -p "$PLUGIN_DIR/picons"
-mkdir -p "$PLUGIN_DIR/novaler"
-mkdir -p "$PLUGIN_DIR/system_images"
-mkdir -p "$PLUGIN_DIR/fonts"
+cp -R "$STAGE/." "$PLUGIN_DIR/" 2>/dev/null
+rm -rf "$STAGE"
 
-# dl <dest> <relative-url>  (cache-buster + ignore old certificates)
-dl() {
-    wget -q --no-check-certificate -O "$1" "$BASE_URL/$2?t=$TS"
-}
+[ -f "$PLUGIN_DIR/__init__.py" ] || : > "$PLUGIN_DIR/__init__.py"
 
-echo "Downloading core files..."
-dl "$PLUGIN_DIR/plugin.py"       "plugin.py"
-dl "$PLUGIN_DIR/plugin.png"      "plugin.png"
-dl "$PLUGIN_DIR/__init__.py"     "__init__.py"
-dl "$PLUGIN_DIR/version.json"    "version.json"
-dl "$PLUGIN_DIR/feed/index.json" "feed/index.json"
+# The plugin installs downloaded files into these folders, keep the same
+# layout the updater uses.
+for _d in feed images images/Icons fonts plugins skins tools channels picons novaler system_images; do
+    mkdir -p "$PLUGIN_DIR/$_d"
+done
 
-echo "Downloading main images..."
-dl "$PLUGIN_DIR/images/logo.png"       "images/logo.png"
-dl "$PLUGIN_DIR/images/background.png" "images/background.png"
-dl "$PLUGIN_DIR/images/avatar.png"     "images/avatar.png"
-dl "$PLUGIN_DIR/images/qrcode.png"     "images/qrcode.png"
-dl "$PLUGIN_DIR/images/key_red.png"    "images/key_red.png"
-dl "$PLUGIN_DIR/images/key_green.png"  "images/key_green.png"
-dl "$PLUGIN_DIR/images/key_yellow.png" "images/key_yellow.png"
-dl "$PLUGIN_DIR/images/key_blue.png"   "images/key_blue.png"
-dl "$PLUGIN_DIR/images/progress.png"   "images/progress.png"
-
-echo "Downloading section icons..."
-dl "$PLUGIN_DIR/images/Icons/plugins.png"       "images/Icons/plugins.png"
-dl "$PLUGIN_DIR/images/Icons/plugins_islamics.png" "images/Icons/plugins_islamics.png"
-dl "$PLUGIN_DIR/images/Icons/skins.png"         "images/Icons/skins.png"
-dl "$PLUGIN_DIR/images/Icons/media.png"         "images/Icons/media.png"
-dl "$PLUGIN_DIR/images/Icons/tools.png"         "images/Icons/tools.png"
-dl "$PLUGIN_DIR/images/Icons/system_images.png" "images/Icons/system_images.png"
-dl "$PLUGIN_DIR/images/Icons/picons.png"        "images/Icons/picons.png"
-dl "$PLUGIN_DIR/images/Icons/channels.png"      "images/Icons/channels.png"
-dl "$PLUGIN_DIR/images/Icons/emus.png"          "images/Icons/emus.png"
-dl "$PLUGIN_DIR/images/Icons/novaler.png"       "images/Icons/novaler.png"
-dl "$PLUGIN_DIR/images/Icons/default.png"       "images/Icons/default.png"
-
-echo "Downloading fonts..."
-dl "$PLUGIN_DIR/fonts/OpenSans-Regular.ttf" "fonts/OpenSans-Regular.ttf"
-dl "$PLUGIN_DIR/fonts/OpenSans-Bold.ttf"    "fonts/OpenSans-Bold.ttf"
-
-find "$PLUGIN_DIR" -name "*.pyc" -delete 2>/dev/null
-find "$PLUGIN_DIR" -name "__pycache__" -exec rm -rf {} \; 2>/dev/null
-
-# Restore the user's settings saved before the wipe
 if [ -f "$SETTINGS_BAK" ]; then
     cp "$SETTINGS_BAK" "$PLUGIN_DIR/settings.json" 2>/dev/null
     rm -f "$SETTINGS_BAK"
 fi
+if [ -f "$CACHE_BAK" ]; then
+    cp "$CACHE_BAK" "$PLUGIN_DIR/store_cache.json" 2>/dev/null
+    rm -f "$CACHE_BAK"
+fi
+
+find "$PLUGIN_DIR" -name "*.pyc" -delete 2>/dev/null
+find "$PLUGIN_DIR" -name "__pycache__" -exec rm -rf {} \; 2>/dev/null
 
 chmod -R 755 "$PLUGIN_DIR"
 
@@ -93,8 +124,10 @@ sync
 echo "Installed version:"
 cat "$PLUGIN_DIR/version.json"
 
-echo "Restarting Enigma2..."
-sleep 2
-killall -9 enigma2
+if [ "${WOE_NO_RESTART:-0}" != "1" ]; then
+    echo "Restarting Enigma2..."
+    sleep 2
+    killall -9 enigma2
+fi
 
 exit 0

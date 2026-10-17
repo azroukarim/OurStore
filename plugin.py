@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.37"
+PLUGIN_VERSION = "1.0.38"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -177,6 +177,23 @@ def _data_file(name):
         return os.path.join(_data_dir(), name)
     except Exception:
         return name
+
+
+def bundled_feed_file():
+    """The feed/index.json shipped inside the plugin folder.
+
+    It is used as a fallback when the store cache is missing, empty or
+    unreadable (for example right after an update), so the plugin always
+    has something to show instead of an empty grid without icons.
+    """
+    for base in (_data_dir(), PLUGIN_DIR):
+        try:
+            path = os.path.join(base, "feed", "index.json")
+            if os.path.exists(path) and os.path.getsize(path) > 200:
+                return path
+        except Exception:
+            continue
+    return None
 
 
 # =====================================================================
@@ -820,25 +837,46 @@ def build_update_script(dest=None, base=None, legacy=None):
             "TS=$(date +%%s)\n"
             'mkdir -p "$DEST/feed" "$DEST/images/Icons" "$DEST/fonts" "$DEST/plugins" "$DEST/skins" "$DEST/tools" "$DEST/channels" "$DEST/picons" "$DEST/novaler" "$DEST/system_images"\n'
             'echo "Downloading core files..."\n'
-            'wget -q --no-check-certificate "$BASE/plugin.py?t=$TS" -O wordofenigma2_dl.py || exit 2\n'
-            'wget -q --no-check-certificate "$BASE/plugin.png?t=$TS" -O wordofenigma2_dl.png || exit 3\n'
-            'wget -q --no-check-certificate "$BASE/version.json?t=$TS" -O wordofenigma2_dl.json || exit 4\n'
-            'wget -q --no-check-certificate "$BASE/feed/index.json?t=$TS" -O wordofenigma2_dl_feed.json || exit 5\n'
+            'wget -q --no-check-certificate "$BASE/plugin.py?t=$TS" -O wordofenigma2_dl.py || true\n'
+            'wget -q --no-check-certificate "$BASE/plugin.png?t=$TS" -O wordofenigma2_dl.png || true\n'
+            'wget -q --no-check-certificate "$BASE/version.json?t=$TS" -O wordofenigma2_dl.json || true\n'
+            'wget -q --no-check-certificate "$BASE/feed/index.json?t=$TS" -O wordofenigma2_dl_feed.json || true\n'
             'wget -q --no-check-certificate "$BASE/__init__.py?t=$TS" -O wordofenigma2_dl_init.py || true\n'
+            # A download can answer HTTP 200 and still deliver an empty file
+            # (that once wiped the feed and every icon).  Nothing is copied
+            # before the important files have been size checked.
+            'bad=0\n'
+            'fsize=$(wc -c < wordofenigma2_dl.py 2>/dev/null | tr -d " " || echo 0)\n'
+            '[ "${fsize:-0}" -ge 10000 ] || { echo "  !! plugin.py download is incomplete"; bad=1; }\n'
+            'fsize=$(wc -c < wordofenigma2_dl.json 2>/dev/null | tr -d " " || echo 0)\n'
+            '[ "${fsize:-0}" -ge 10 ] || { echo "  !! version.json download is incomplete"; bad=1; }\n'
+            'fsize=$(wc -c < wordofenigma2_dl_feed.json 2>/dev/null | tr -d " " || echo 0)\n'
+            '[ "${fsize:-0}" -ge 200 ] || { echo "  !! store feed download is incomplete"; bad=1; }\n'
+            'if [ "$bad" = "1" ]; then\n'
+            '    echo "Update aborted - the installed plugin was left untouched."\n'
+            '    rm -f wordofenigma2_dl.py wordofenigma2_dl.json wordofenigma2_dl_feed.json\n'
+            '    exit 6\n'
+            'fi\n'
             'echo "Downloading images..."\n'
             'for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do\n'
-            '    wget -q --no-check-certificate "$BASE/images/$img.png?t=$TS" -O "wordofenigma2_img_$img.png" || exit 20\n'
+            '    wget -q --no-check-certificate "$BASE/images/$img.png?t=$TS" -O "wordofenigma2_img_$img.png" || true\n'
+            '    fsize=$(wc -c < "wordofenigma2_img_$img.png" 2>/dev/null | tr -d " " || echo 0)\n'
+            '    [ "${fsize:-0}" -ge 200 ] || rm -f "wordofenigma2_img_$img.png"\n'
             'done\n'
             'for ic in plugins plugins_islamics skins media tools system_images picons channels emus novaler default; do\n'
             '    wget -q --no-check-certificate "$BASE/images/Icons/$ic.png?t=$TS" -O "wordofenigma2_ic_$ic.png" || true\n'
+            '    fsize=$(wc -c < "wordofenigma2_ic_$ic.png" 2>/dev/null | tr -d " " || echo 0)\n'
+            '    [ "${fsize:-0}" -ge 200 ] || rm -f "wordofenigma2_ic_$ic.png"\n'
             'done\n'
             'echo "Downloading fonts..."\n'
             'for fnt in OpenSans-Regular OpenSans-Bold; do\n'
             '    wget -q --no-check-certificate "$BASE/fonts/$fnt.ttf?t=$TS" -O "wordofenigma2_fnt_$fnt.ttf" || true\n'
+            '    fsize=$(wc -c < "wordofenigma2_fnt_$fnt.ttf" 2>/dev/null | tr -d " " || echo 0)\n'
+            '    [ "${fsize:-0}" -ge 1000 ] || rm -f "wordofenigma2_fnt_$fnt.ttf"\n'
             'done\n'
             'echo "Installing to $DEST ..."\n'
             'cp wordofenigma2_dl.py "$DEST/plugin.py" || exit 7\n'
-            'cp wordofenigma2_dl.png "$DEST/plugin.png" || exit 8\n'
+            '[ -s wordofenigma2_dl.png ] && cp wordofenigma2_dl.png "$DEST/plugin.png"\n'
             'cp wordofenigma2_dl.json "$DEST/version.json" || exit 9\n'
             'cp wordofenigma2_dl_feed.json "$DEST/feed/index.json" || exit 10\n'
             # __init__.py makes the folder a real python package; Enigma2
@@ -847,15 +885,17 @@ def build_update_script(dest=None, base=None, legacy=None):
             '[ -f wordofenigma2_dl_init.py ] || : > wordofenigma2_dl_init.py\n'
             'cp wordofenigma2_dl_init.py "$DEST/__init__.py" || exit 11\n'
             'for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do\n'
-            '    cp "wordofenigma2_img_$img.png" "$DEST/images/$img.png" || true\n'
+            '    [ -s "wordofenigma2_img_$img.png" ] && cp "wordofenigma2_img_$img.png" "$DEST/images/$img.png"\n'
             'done\n'
             'for ic in plugins plugins_islamics skins media tools system_images picons channels emus novaler default; do\n'
-            '    [ -f "wordofenigma2_ic_$ic.png" ] && cp "wordofenigma2_ic_$ic.png" "$DEST/images/Icons/$ic.png"\n'
+            '    [ -s "wordofenigma2_ic_$ic.png" ] && cp "wordofenigma2_ic_$ic.png" "$DEST/images/Icons/$ic.png"\n'
             'done\n'
             'for fnt in OpenSans-Regular OpenSans-Bold; do\n'
-            '    [ -f "wordofenigma2_fnt_$fnt.ttf" ] && cp "wordofenigma2_fnt_$fnt.ttf" "$DEST/fonts/$fnt.ttf"\n'
+            '    [ -s "wordofenigma2_fnt_$fnt.ttf" ] && cp "wordofenigma2_fnt_$fnt.ttf" "$DEST/fonts/$fnt.ttf"\n'
             'done\n'
-            'rm -f "$DEST/plugin.pyc" "$DEST/store_cache.json"\n'
+            # The store cache is deliberately kept: if the fresh feed cannot be
+            # fetched at runtime the plugin still shows the previous store.
+            'rm -f "$DEST/plugin.pyc"\n'
             'rm -rf "$DEST/__pycache__"\n'
             'rm -f wordofenigma2_dl.py wordofenigma2_dl.png wordofenigma2_dl.json wordofenigma2_dl_feed.json wordofenigma2_dl_init.py\n'
             'rm -f wordofenigma2_img_*.png wordofenigma2_ic_*.png wordofenigma2_fnt_*.ttf\n'
@@ -1056,6 +1096,24 @@ def count_items(items):
         else:
             total += 1
     return total
+
+
+def store_is_usable(data):
+    """True when a feed really carries something the grid can show.
+
+    A truncated or empty download must never replace a working store, so
+    both the local cache and the network feed are checked with this first.
+    """
+    try:
+        cats = data.get("categories")
+        if not isinstance(cats, dict) or not cats:
+            return False
+        for key, value in cats.items():
+            if key in ALWAYS_SHOW_CATEGORIES or count_items(value) > 0:
+                return True
+    except Exception:
+        pass
+    return False
 
 
 def batch_install_body(url, dest):
@@ -1260,11 +1318,12 @@ SKIN = """
     <!-- Footer -->
     <eLabel position="0,1010" size="1920,70" backgroundColor="#131A2A" zPosition="-90" />
     <eLabel position="0,1010" size="1920,2" backgroundColor="#1A2235" zPosition="-89" />
-    <widget name="description" position="40,1020" size="1020,50" font="Regular;24" foregroundColor="#9ca3af" backgroundColor="#131A2A" transparent="1" valign="center" zPosition="2" />
-    <widget name="key_red"    position="1090,1020" size="190,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#e11d48" transparent="0" halign="center" valign="center" zPosition="3" />
-    <widget name="key_green"  position="1290,1020" size="190,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#059669" transparent="0" halign="center" valign="center" zPosition="3" />
-    <widget name="key_yellow" position="1490,1020" size="190,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#d97706" transparent="0" halign="center" valign="center" zPosition="3" />
-    <widget name="key_blue"   position="1690,1020" size="190,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
+    <!-- Small coloured keys on the left, the free right side is used for information -->
+    <widget name="key_red"    position="40,1025"  size="150,40" font="Regular;22" foregroundColor="#ffffff" backgroundColor="#e11d48" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_green"  position="200,1025" size="150,40" font="Regular;22" foregroundColor="#ffffff" backgroundColor="#059669" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_yellow" position="360,1025" size="150,40" font="Regular;22" foregroundColor="#ffffff" backgroundColor="#d97706" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_blue"   position="520,1025" size="150,40" font="Regular;22" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="description" position="700,1012" size="1180,64" font="Regular;24" foregroundColor="#9ca3af" backgroundColor="#131A2A" transparent="1" halign="right" valign="center" zPosition="2" />
 </screen>
 """
 
@@ -1323,11 +1382,12 @@ ITEMS_SKIN = """
     <!-- Footer -->
     <eLabel position="0,1010" size="1920,70" backgroundColor="#131A2A" zPosition="-90" />
     <eLabel position="0,1010" size="1920,2" backgroundColor="#1A2235" zPosition="-89" />
-    <widget name="key_red"    position="30,1020"  size="300,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#e11d48" transparent="0" halign="center" valign="center" zPosition="3" />
-    <widget name="key_green"  position="340,1020" size="300,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#059669" transparent="0" halign="center" valign="center" zPosition="3" />
-    <widget name="key_yellow" position="650,1020" size="300,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#d97706" transparent="0" halign="center" valign="center" zPosition="3" />
-    <widget name="key_blue"   position="960,1020" size="480,50" font="Regular;26" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
-    <eLabel position="1450,1020" size="440,50" text="Arrows: move   OK: open/select" font="Regular;24" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" valign="center" zPosition="3" />
+    <!-- Small coloured keys on the left, information on the right -->
+    <widget name="key_red"    position="40,1025"  size="140,40" font="Regular;22" foregroundColor="#ffffff" backgroundColor="#e11d48" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_green"  position="190,1025" size="140,40" font="Regular;22" foregroundColor="#ffffff" backgroundColor="#059669" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_yellow" position="340,1025" size="140,40" font="Regular;22" foregroundColor="#ffffff" backgroundColor="#d97706" transparent="0" halign="center" valign="center" zPosition="3" />
+    <widget name="key_blue"   position="490,1025" size="220,40" font="Regular;22" foregroundColor="#ffffff" backgroundColor="#0284c7" transparent="0" halign="center" valign="center" zPosition="3" />
+    <eLabel position="730,1014" size="1150,62" text="Arrows: move   OK: open/select" font="Regular;24" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" valign="center" zPosition="3" />
 </screen>
 """
 
@@ -1565,7 +1625,7 @@ class WoeStoreBase(Screen):
         # Cache-buster so the GitHub CDN cannot serve a stale feed
         # (otherwise newly added/removed store items don't appear).
         data = load_json_network(STORE_URL + "?t=" + str(int(time.time())))
-        if data and "categories" in data:
+        if store_is_usable(data):
             try:
                 with open(_data_file("store_cache.json"), "w") as f:
                     json.dump(data, f)
@@ -1580,16 +1640,25 @@ class WoeStoreBase(Screen):
             gui_call(self.set_description, "Failed to connect to server.")
 
     def load_local_cache(self):
-        cache = _data_file("store_cache.json")
-        try:
-            if os.path.exists(cache):
-                with open(cache, "r") as f:
+        """Load the cached feed, falling back to the feed shipped with the plugin.
+
+        The fallback matters: an interrupted or failed download used to leave
+        an empty store_cache.json behind, which left the user with an empty
+        grid and no icons.
+        """
+        for path in (_data_file("store_cache.json"), bundled_feed_file()):
+            if not path:
+                continue
+            try:
+                if not os.path.exists(path) or os.path.getsize(path) < 200:
+                    continue
+                with open(path, "r") as f:
                     data = json.load(f)
-                if data and "categories" in data:
-                    self.apply_store_data(data)
-                    return True
-        except Exception:
-            pass
+            except Exception:
+                continue
+            if store_is_usable(data):
+                self.apply_store_data(data)
+                return True
         return False
 
     def load_store(self):
@@ -2441,9 +2510,9 @@ class WordOfEnigma2Items(WoeStoreBase):
         try:
             n = len(self.selected)
             if n > 0:
-                self["key_blue"].setText("Batch Install (%d)" % n)
+                self["key_blue"].setText("Batch (%d)" % n)
             else:
-                self["key_blue"].setText("Batch Install")
+                self["key_blue"].setText("Batch")
         except Exception:
             pass
 
