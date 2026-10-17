@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.35"
+PLUGIN_VERSION = "1.0.36"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -2029,7 +2029,7 @@ class WordOfEnigma2(WoeStoreBase):
                 count = count_items(self.store_data.get(cat, []))
                 clean = cat.replace("_", " ").upper()
                 try:
-                    self.cell_txt[i].setText("%s\n(%d)" % (clean, count))
+                    self.cell_txt[i].setText("%s" % clean)
                 except Exception:
                     pass
                 self._load_cat_icon(i, cat)
