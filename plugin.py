@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.38"
+PLUGIN_VERSION = "1.0.39"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -1366,10 +1366,10 @@ ITEMS_SKIN = """
     <eLabel position="0,110" size="1920,3" backgroundColor="#3b82f6" zPosition="-89" />
 """ + _HEADER_SKIN + """
 
-    <!-- Section title + page indicator -->
-    <widget name="header" position="40,150" size="900,40" font="Regular;30" foregroundColor="#ffffff" backgroundColor="#0B0F19" transparent="1" zPosition="2" />
-    <widget name="page"   position="1450,150" size="450,40" font="Regular;24" foregroundColor="#8b5cf6" backgroundColor="#0B0F19" transparent="1" halign="right" zPosition="2" />
-    <eLabel position="40,192" size="1860,2" backgroundColor="#1A2235" zPosition="-50" />
+    <!-- Section title + page indicator (above the tile grid, no overlap) -->
+    <widget name="header" position="40,120" size="900,44" font="Regular;30" foregroundColor="#ffffff" backgroundColor="#0B0F19" transparent="1" zPosition="2" />
+    <widget name="page"   position="1450,120" size="450,44" font="Regular;24" foregroundColor="#8b5cf6" backgroundColor="#0B0F19" transparent="1" halign="right" zPosition="2" />
+    <eLabel position="40,170" size="1860,2" backgroundColor="#1A2235" zPosition="-50" />
 
     <!-- Item tiles (4 x 4) -->
 """ + _items_cells_skin() + """
@@ -2252,7 +2252,7 @@ class WordOfEnigma2Items(WoeStoreBase):
         self["key_red"] = Label("Back")
         self["key_green"] = Label("Install")
         self["key_yellow"] = Label("Select")
-        self["key_blue"] = Label("Batch Install")
+        self["key_blue"] = Label("Batch")
 
         self.tile_widgets = []
         self.tile_sel = []
@@ -2336,6 +2336,7 @@ class WordOfEnigma2Items(WoeStoreBase):
         self.highlight_tiles()
         self.update_page_label()
         self.update_info()
+        self.update_blue_label()
 
     def highlight_tiles(self):
         try:
