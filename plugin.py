@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.30"
+PLUGIN_VERSION = "1.0.31"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -616,20 +616,96 @@ def load_json_network(url):
         return None
 
 
+def _log(msg):
+    try:
+        print("[WordOfEnigma2] " + str(msg))
+    except Exception:
+        pass
+
+
+def safe_open(session, *args, **kwargs):
+    """session.open() that can never take Enigma2 down.
+
+    Opening a screen is not always allowed: when the session is between
+    dialogs (a screen was just closed/opened and the session has not popped
+    it yet) Enigma2 raises
+
+        RuntimeError: [StartEnigma] Error: Modal open are allowed only from
+        a screen which is modal!
+
+    Any exception that escapes a timer / thread / reactor callback is
+    treated by Enigma2 as a python crash (it writes a crash log and shows
+    the "software problem detected" dialog), so a store plugin must swallow
+    and log it instead.
+    """
+    try:
+        return session.open(*args, **kwargs)
+    except Exception as e:
+        _log("open failed (%s): %s" % (type(e).__name__, e))
+        return None
+
+
+def safe_open_cb(session, callback, *args, **kwargs):
+    """session.openWithCallback() with the same crash protection."""
+    try:
+        return session.openWithCallback(callback, *args, **kwargs)
+    except Exception as e:
+        _log("openWithCallback failed (%s): %s" % (type(e).__name__, e))
+        return None
+
+
+# Strong references to the pending deferred timers (eTimer objects are
+# garbage collected - and then never fire - if nobody holds them).
+_PENDING_TIMERS = []
+
+
+def _deferred_call(func, ms=400):
+    """Run func later, on the GUI thread, once the session has settled.
+
+    Needed right after close(): Enigma2 pops the closed screen on its next
+    timer tick, and opening a screen before that raises the "Modal open are
+    allowed only from a screen which is modal!" RuntimeError above.
+    """
+    def _fire():
+        try:
+            func()
+        except Exception as e:
+            _log("deferred call failed (%s): %s" % (type(e).__name__, e))
+
+    timer = None
+    try:
+        if eTimer is not None:
+            timer = eTimer()
+            timer.callback.append(_fire)
+            _PENDING_TIMERS.append(timer)
+            del _PENDING_TIMERS[:-8]
+            timer.start(int(ms), True)
+            return True
+    except Exception as e:
+        _log("deferred timer failed: %s" % e)
+    _fire()
+    return False
+
+
 def gui_call(func, *args, **kwargs):
     """Run a GUI operation on the main (reactor) thread.
 
     Enigma2's GUI is not thread-safe: session.open()/widget updates must happen
     on the main thread. Worker threads use this helper to marshal back safely.
+    The call is wrapped so that a failure can never reach Enigma2's crash
+    handler (see safe_open).
     """
-    try:
-        from twisted.internet import reactor
-        reactor.callFromThread(func, *args, **kwargs)
-    except Exception:
+    def _safe():
         try:
             func(*args, **kwargs)
-        except Exception:
-            pass
+        except Exception as e:
+            _log("gui_call failed (%s): %s" % (type(e).__name__, e))
+
+    try:
+        from twisted.internet import reactor
+        reactor.callFromThread(_safe)
+    except Exception:
+        _safe()
 
 
 def count_items(items):
@@ -1110,6 +1186,20 @@ class WoeStoreBase(Screen):
             self.info_timer.start(5000)
         except Exception:
             pass
+        try:
+            self.onClose.append(self.stop_timers)
+        except Exception:
+            pass
+
+    def stop_timers(self):
+        """Stop our timers - called when the screen is closed."""
+        for attr in ("info_timer", "bg_timer"):
+            try:
+                t = getattr(self, attr, None)
+                if t:
+                    t.stop()
+            except Exception:
+                pass
 
     def set_description(self, text):
         try:
@@ -1243,9 +1333,10 @@ class WoeStoreBase(Screen):
     def show_update_dialog(self, msg, info_only=False):
         # Always invoked on the main thread via gui_call().
         if info_only:
-            self.session.open(MessageBox, msg, MessageBox.TYPE_INFO)
+            safe_open(self.session, MessageBox, msg, MessageBox.TYPE_INFO)
         else:
-            self.session.openWithCallback(
+            safe_open_cb(
+                self.session,
                 self.confirm_update,
                 MessageBox,
                 msg,
@@ -1452,24 +1543,29 @@ class WoeStoreBase(Screen):
         self._ask_reopen("Text size changed")
 
     def _ask_reopen(self, msg):
+        session = self.session
+
+        def _reopen():
+            safe_open(session, WordOfEnigma2)
+
         def _ans(answer):
             if not answer:
                 return
+            # NOTE: never call session.open() straight after self.close():
+            # the session pops the closed screen on its next timer tick, and
+            # opening before that raises "Modal open are allowed only from a
+            # screen which is modal!".  Close, then reopen deferred.
             try:
                 self.close()
-            except Exception:
-                pass
-            try:
-                self.session.open(WordOfEnigma2)
-            except Exception:
-                pass
-        try:
-            self.session.openWithCallback(
-                _ans, MessageBox,
-                msg + "\n\nReopen the store now to apply it?",
-                MessageBox.TYPE_YESNO)
-        except Exception:
-            pass
+            except Exception as e:
+                _log("close failed: %s" % e)
+            _deferred_call(_reopen, 400)
+
+        safe_open_cb(
+            self.session,
+            _ans, MessageBox,
+            msg + "\n\nReopen the store now to apply it?",
+            MessageBox.TYPE_YESNO)
 
 
 # =====================================================================
@@ -2337,6 +2433,13 @@ class WordOfEnigma2Console(Screen):
             except Exception:
                 pass
 
+        # The polling timer must stop when the screen goes away, otherwise it
+        # keeps firing against destroyed widgets (a python crash for Enigma2).
+        try:
+            self.onClose.append(self._stop_timer)
+        except Exception:
+            pass
+
         self.onLayoutFinish.append(self.start)
 
     def start(self):
@@ -2381,7 +2484,25 @@ class WordOfEnigma2Console(Screen):
         start = max(0, end - self.visible_count())
         self["log"].setText("\n".join(self.all_lines[start:end]))
 
+    def _stop_timer(self):
+        try:
+            if getattr(self, "timer", None):
+                self.timer.stop()
+        except Exception:
+            pass
+
     def poll(self):
+        # Runs from a 500 ms timer.  The screen can be closed (and its widgets
+        # destroyed) while the command still runs, so anything that can fail
+        # here must not escape: an exception in a timer callback is treated by
+        # Enigma2 as a python crash (crash log + "software problem" dialog).
+        try:
+            self._poll()
+        except Exception as e:
+            _log("console poll stopped: %s" % e)
+            self._stop_timer()
+
+    def _poll(self):
         raw = self._read_log()
         if raw != self.last_raw:
             self.last_raw = raw
@@ -2393,32 +2514,37 @@ class WordOfEnigma2Console(Screen):
 
         if not self.finished and self.done_file and os.path.exists(self.done_file):
             self.finished = True
-            try:
-                if self.timer:
-                    self.timer.stop()
-            except Exception:
-                pass
+            self._stop_timer()
             self.view_end = len(self.all_lines)
             self.refresh()
             self["status"].setText("Finished")
             self.finish()
 
     def finish(self):
+        # Called from poll(), i.e. from a timer callback: defer the popups so
+        # the timer returns first (opening a screen inside a timer callback is
+        # what produced "Modal open are allowed only from a screen which is
+        # modal!" on this image).
+        session = self.session
+        close_cb = self.close
+        restart_cb = self.restart_cb
         if self.is_image:
-            self.session.openWithCallback(
-                self.close,
+            _deferred_call(lambda: safe_open_cb(
+                session,
+                close_cb,
                 MessageBox,
                 "Image download finished.\n\nSaved to /media/hdd/images (or /media/usb/images).\n"
                 "Use Flash Online to install it.",
                 MessageBox.TYPE_INFO
-            )
+            ), 200)
         else:
-            self.session.openWithCallback(
-                self.restart_cb,
+            _deferred_call(lambda: safe_open_cb(
+                session,
+                restart_cb,
                 MessageBox,
                 "Installation finished.\n\nRestart Enigma2 now?",
                 MessageBox.TYPE_YESNO
-            )
+            ), 200)
 
     def restart_cb(self, answer):
         if answer:
