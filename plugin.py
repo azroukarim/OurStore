@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.40"
+PLUGIN_VERSION = "1.0.41"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -1254,7 +1254,7 @@ _HEADER_SKIN = """    <eLabel position="40,22" size="470,46" text="WORD OF ENIGM
     <widget name="devtemp" position="540,62" size="420,34" font="Regular;22" foregroundColor="#10b981" backgroundColor="#131A2A" transparent="1" zPosition="2" />
     <widget name="imagename" position="980,20" size="420,38" font="Regular;26" foregroundColor="#e5e7eb" backgroundColor="#131A2A" transparent="1" zPosition="2" />
     <widget name="pyver" position="980,62" size="420,34" font="Regular;22" foregroundColor="#3b82f6" backgroundColor="#131A2A" transparent="1" zPosition="2" />
-    <eLabel position="1640,35" size="240,50" text="Plugin Store" font="Regular;26" foregroundColor="#8b5cf6" backgroundColor="#131A2A" transparent="1" halign="right" zPosition="2" />"""
+    <widget name="arch"  position="1490,20" size="390,38" font="Regular;26" foregroundColor="#e5e7eb" backgroundColor="#131A2A" transparent="1" halign="right" zPosition="2" />"""
 
 
 # =====================================================================
@@ -1521,6 +1521,45 @@ def get_python_version():
         return "-"
 
 
+def get_cpu_arch():
+    """Return the CPU family of the box, e.g. "armv7" or "mips".
+
+    platform.machine() is the most reliable source on the receivers
+    ("armv7l", "aarch64", "mips", ...); boxbranding is used as a fallback
+    for images where platform.machine() is empty or useless.
+    """
+    raw = ""
+    try:
+        import platform
+        raw = platform.machine() or ""
+    except Exception:
+        raw = ""
+    if not raw:
+        try:
+            raw = os.uname()[4] or ""
+        except Exception:
+            raw = ""
+    if not raw:
+        try:
+            from boxbranding import getImageArch
+            raw = getImageArch() or ""
+        except Exception:
+            raw = ""
+    try:
+        raw = str(raw).strip().lower()
+    except Exception:
+        raw = ""
+    if not raw:
+        return "unknown"
+    if raw.startswith("mips"):
+        return "mips64" if "64" in raw else "mips"
+    for fam in ("aarch64", "armv8", "armv7", "armv6", "armv5",
+                "sh4", "x86_64", "i686", "i386"):
+        if raw.startswith(fam):
+            return "x86" if fam in ("i686", "i386") else fam
+    return raw.split()[0]
+
+
 def get_temperature():
     import re
     for p in ("/proc/stb/fp/temp_sensor_ma",
@@ -1566,6 +1605,10 @@ class WoeStoreBase(Screen):
             pass
         try:
             self["pyver"].setText("Python: " + get_python_version())
+        except Exception:
+            pass
+        try:
+            self["arch"].setText("Arch: " + get_cpu_arch())
         except Exception:
             pass
 
@@ -2020,6 +2063,7 @@ class WordOfEnigma2(WoeStoreBase):
         self["devtemp"] = Label("")
         self["imagename"] = Label("")
         self["pyver"] = Label("")
+        self["arch"] = Label("")
         self["description"] = Label("Loading...")
         self["key_red"] = Label("Exit")
         self["key_green"] = Label("Open")
@@ -2246,6 +2290,7 @@ class WordOfEnigma2Items(WoeStoreBase):
         self["devtemp"] = Label("")
         self["imagename"] = Label("")
         self["pyver"] = Label("")
+        self["arch"] = Label("")
         self["header"] = Label("")
         self["page"] = Label("")
         self["description"] = Label("")
