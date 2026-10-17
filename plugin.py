@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.26"
+PLUGIN_VERSION = "1.0.27"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -139,6 +139,202 @@ except Exception:
     pass
 
 CACHE_FILE = os.path.join(PLUGIN_DIR, "store_cache.json")
+SETTINGS_FILE = os.path.join(PLUGIN_DIR, "settings.json")
+
+
+# =====================================================================
+# SETTINGS - user selectable UI font (family) and text size
+# =====================================================================
+DEFAULT_FONT = "Regular"
+UI_FONT = DEFAULT_FONT
+UI_FONT_SCALE = 1.0
+
+# Raw (font independent) skins, filled at the end of this module.
+_RAW_SKINS = {}
+
+
+def load_settings():
+    global UI_FONT, UI_FONT_SCALE
+    try:
+        if os.path.exists(SETTINGS_FILE):
+            f = open(SETTINGS_FILE, "r")
+            try:
+                data = json.load(f)
+            finally:
+                f.close()
+            if isinstance(data, dict):
+                fam = data.get("font")
+                if isinstance(fam, str) and fam.strip():
+                    UI_FONT = fam.strip()
+                try:
+                    UI_FONT_SCALE = float(data.get("font_scale", 1.0))
+                except Exception:
+                    UI_FONT_SCALE = 1.0
+                if UI_FONT_SCALE < 0.6 or UI_FONT_SCALE > 1.8:
+                    UI_FONT_SCALE = 1.0
+    except Exception:
+        pass
+
+
+def save_settings():
+    try:
+        data = {}
+        try:
+            if os.path.exists(SETTINGS_FILE):
+                f = open(SETTINGS_FILE, "r")
+                try:
+                    data = json.load(f) or {}
+                finally:
+                    f.close()
+        except Exception:
+            data = {}
+        if not isinstance(data, dict):
+            data = {}
+        data["font"] = UI_FONT
+        data["font_scale"] = UI_FONT_SCALE
+        f = open(SETTINGS_FILE, "w")
+        try:
+            json.dump(data, f)
+        finally:
+            f.close()
+    except Exception:
+        pass
+
+
+def _font_available(family):
+    """Check whether a font family is registered with the skin engine."""
+    if not family:
+        return False
+    if family == DEFAULT_FONT:
+        return True
+    try:
+        from enigma import gFont
+        return gFont("%s;20" % family) is not None
+    except Exception:
+        return False
+
+
+def register_font_file(path, family):
+    """Register an on-disk font file with the skin engine."""
+    try:
+        from enigma import addFont
+        addFont(path, family, 100, False, False)
+    except Exception:
+        return False
+    return _font_available(family)
+
+
+def _scan_font_files():
+    found = []
+    roots = ["/usr/share/fonts", "/usr/local/share/fonts", "/usr/share/enigma2"]
+    exts = (".ttf", ".otf")
+    for root in roots:
+        if not os.path.isdir(root):
+            continue
+        base_depth = root.rstrip("/").count("/")
+        try:
+            for dirpath, dirnames, filenames in os.walk(root):
+                if dirpath.count("/") - base_depth > 3:
+                    dirnames[:] = []
+                    continue
+                for fn in filenames:
+                    if fn.lower().endswith(exts):
+                        found.append(os.path.join(dirpath, fn))
+        except Exception:
+            continue
+    return found
+
+
+def list_font_choices():
+    """Fonts the user may pick: common Enigma2 families plus every font
+    file installed on the box (registered on the fly)."""
+    choices = []
+    seen = set()
+
+    common = [
+        ("Regular (skin default)", "Regular"),
+        ("Bold", "Bold"),
+        ("Strong / bold (nmsbd)", "nmsbd"),
+        ("NMS", "NMS"),
+        ("Static", "Static"),
+        ("LCD (digital)", "LCD"),
+        ("Console (monospace)", "Console"),
+        ("Ring", "Ring"),
+        ("Noto Sans", "Noto Sans"),
+        ("DejaVu Sans", "DejaVu Sans"),
+        ("Roboto", "Roboto"),
+        ("Ubuntu", "Ubuntu"),
+    ]
+    for label, fam in common:
+        if fam in seen:
+            continue
+        if _font_available(fam):
+            seen.add(fam)
+            choices.append((label, fam))
+
+    for path in _scan_font_files():
+        if len(choices) >= 80:
+            break
+        base = os.path.splitext(os.path.basename(path))[0]
+        fam = "".join(ch for ch in base if ch.isalnum() or ch in " -_").strip()
+        if not fam or fam in seen:
+            continue
+        ok = _font_available(fam) or register_font_file(path, fam)
+        if ok:
+            seen.add(fam)
+            choices.append((fam, fam))
+    return choices
+
+
+def _fontize(xml):
+    """Rewrite 'font="Regular;N"' with the selected family and size."""
+    import re
+
+    def repl(m):
+        size = int(m.group(1))
+        size = max(8, int(round(size * UI_FONT_SCALE)))
+        return 'font="%s;%d"' % (UI_FONT, size)
+    try:
+        return re.sub(r'font="Regular;(\d+)"', repl, xml)
+    except Exception:
+        return xml
+
+
+def rebuild_ui():
+    """Re-apply the user's font / text size to every screen skin."""
+    global SKIN, ITEMS_SKIN, CONSOLE_SKIN, INFO_SKIN, BATCH_MENU_SKIN
+    if not _RAW_SKINS:
+        return
+    try:
+        SKIN = _fontize(_RAW_SKINS["SKIN"])
+        ITEMS_SKIN = _fontize(_RAW_SKINS["ITEMS_SKIN"])
+        CONSOLE_SKIN = _fontize(_RAW_SKINS["CONSOLE_SKIN"])
+        INFO_SKIN = _fontize(_RAW_SKINS["INFO_SKIN"])
+        BATCH_MENU_SKIN = _fontize(_RAW_SKINS["BATCH_MENU_SKIN"])
+    except Exception:
+        return
+    try:
+        WordOfEnigma2.skin = SKIN
+        WordOfEnigma2Items.skin = ITEMS_SKIN
+        WordOfEnigma2Console.skin = CONSOLE_SKIN
+        WordOfEnigma2Info.skin = INFO_SKIN
+        WordOfEnigma2Menu.skin = BATCH_MENU_SKIN
+    except Exception:
+        pass
+
+
+def set_ui_font(family=None, scale=None):
+    """Change and persist the UI font / size, then rebuild the skins."""
+    global UI_FONT, UI_FONT_SCALE
+    if family:
+        UI_FONT = family
+    if scale:
+        try:
+            UI_FONT_SCALE = float(scale)
+        except Exception:
+            pass
+    save_settings()
+    rebuild_ui()
 
 
 # =====================================================================
@@ -940,6 +1136,8 @@ class WoeStoreBase(Screen):
             options = [
                 ("Information", "info"),
                 ("Item details", "item"),
+                ("Font settings", "font"),
+                ("Text size", "fontsize"),
                 ("Check for updates", "update"),
             ]
             self.session.openWithCallback(
@@ -962,8 +1160,77 @@ class WoeStoreBase(Screen):
         elif choice == "item":
             if hasattr(self, "show_info_popup"):
                 self.show_info_popup()
+        elif choice == "font":
+            self._open_font_settings()
+        elif choice == "fontsize":
+            self._open_text_size()
         elif choice == "update":
             self.self_update()
+
+    # -----------------------------------------------------------------
+    # SETTINGS: font family + text size
+    # -----------------------------------------------------------------
+    def _open_font_settings(self):
+        try:
+            choices = list_font_choices()
+        except Exception:
+            choices = []
+        if not choices:
+            choices = [(DEFAULT_FONT, DEFAULT_FONT)]
+        opts = []
+        for label, fam in choices:
+            mark = "   *" if fam == UI_FONT else ""
+            opts.append((label + mark, fam))
+        self.session.openWithCallback(
+            self._font_chosen, WordOfEnigma2Menu, "Font settings", opts)
+
+    def _font_chosen(self, family):
+        if not family or family == UI_FONT:
+            return
+        try:
+            set_ui_font(family=family)
+        except Exception:
+            return
+        self._ask_reopen("Font changed to: %s" % family)
+
+    def _open_text_size(self):
+        sizes = [("Small", 0.85), ("Normal", 1.0),
+                 ("Large", 1.15), ("Extra large", 1.3)]
+        opts = []
+        for label, val in sizes:
+            mark = "   *" if abs(val - UI_FONT_SCALE) < 0.001 else ""
+            opts.append((label + mark, val))
+        self.session.openWithCallback(
+            self._size_chosen, WordOfEnigma2Menu, "Text size", opts)
+
+    def _size_chosen(self, scale):
+        if not scale:
+            return
+        try:
+            set_ui_font(scale=scale)
+        except Exception:
+            return
+        self._ask_reopen("Text size changed")
+
+    def _ask_reopen(self, msg):
+        def _ans(answer):
+            if not answer:
+                return
+            try:
+                self.close()
+            except Exception:
+                pass
+            try:
+                self.session.open(WordOfEnigma2)
+            except Exception:
+                pass
+        try:
+            self.session.openWithCallback(
+                _ans, MessageBox,
+                msg + "\n\nReopen the store now to apply it?",
+                MessageBox.TYPE_YESNO)
+        except Exception:
+            pass
 
 
 # =====================================================================
@@ -2159,3 +2426,16 @@ def Plugins(**kwargs):
             fnc=main
         )
     ]
+
+
+# =====================================================================
+# BOOTSTRAP - load the user's settings and apply them to every skin
+# =====================================================================
+_RAW_SKINS["SKIN"] = SKIN
+_RAW_SKINS["ITEMS_SKIN"] = ITEMS_SKIN
+_RAW_SKINS["CONSOLE_SKIN"] = CONSOLE_SKIN
+_RAW_SKINS["INFO_SKIN"] = INFO_SKIN
+_RAW_SKINS["BATCH_MENU_SKIN"] = BATCH_MENU_SKIN
+
+load_settings()
+rebuild_ui()

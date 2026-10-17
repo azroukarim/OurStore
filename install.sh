@@ -13,6 +13,12 @@ echo "========================================="
 echo "    Installing Word Of Enigma2..."
 echo "========================================="
 
+# Preserve the user's settings (font / text size) across a full reinstall
+SETTINGS_BAK="/tmp/wordofenigma2_settings.json"
+if [ -f "$PLUGIN_DIR/settings.json" ]; then
+    cp "$PLUGIN_DIR/settings.json" "$SETTINGS_BAK" 2>/dev/null
+fi
+
 rm -rf "$PLUGIN_DIR"
 rm -rf "$LEGACY_DIR"
 
@@ -65,6 +71,12 @@ dl "$PLUGIN_DIR/images/Icons/default.png"       "images/Icons/default.png"
 
 find "$PLUGIN_DIR" -name "*.pyc" -delete 2>/dev/null
 find "$PLUGIN_DIR" -name "__pycache__" -exec rm -rf {} \; 2>/dev/null
+
+# Restore the user's settings saved before the wipe
+if [ -f "$SETTINGS_BAK" ]; then
+    cp "$SETTINGS_BAK" "$PLUGIN_DIR/settings.json" 2>/dev/null
+    rm -f "$SETTINGS_BAK"
+fi
 
 chmod -R 755 "$PLUGIN_DIR"
 
