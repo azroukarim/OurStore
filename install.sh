@@ -12,14 +12,29 @@ PLUGIN_DIR="${WOE_PLUGIN_DIR:-/usr/lib/enigma2/python/Plugins/Extensions/WordOfE
 LEGACY_DIR="${WOE_LEGACY_DIR:-/usr/lib/enigma2/python/Plugins/Extensions/AllStore}"
 BASE_URL="${WOE_BASE_URL:-https://raw.githubusercontent.com/azroukarim/OurStore/main}"
 TS=$(date +%s)
-STAGE="/tmp/wordofenigma2_stage.$$"
 
 echo "========================================="
 echo "    Installing Word Of Enigma2..."
 echo "========================================="
 
-rm -rf "$STAGE"
-mkdir -p "$STAGE/feed" "$STAGE/images/Icons" "$STAGE/fonts"
+# Some images ship /tmp as a dangling symlink or never mount it.  The staging
+# folder is created in the first writable place; when none of them works the
+# installer stops before the installed plugin is touched.
+STAGE=""
+for _base in "${TMPDIR:-}" /tmp /var/volatile/tmp /run /dev/shm "${HOME:-}" "$PLUGIN_DIR"; do
+    [ -n "$_base" ] || continue
+    _dir="$_base/wordofenigma2_stage.$$"
+    rm -rf "$_dir" 2>/dev/null
+    if mkdir -p "$_dir/feed" "$_dir/images/Icons" "$_dir/fonts" 2>/dev/null; then
+        STAGE="$_dir"
+        break
+    fi
+done
+if [ -z "$STAGE" ]; then
+    echo "ERROR: no writable temporary folder - nothing was changed."
+    exit 1
+fi
+echo "Staging in $STAGE"
 
 # dl <relative-url> <min-bytes>
 # Downloads into the staging folder; returns 0 only if the file arrived

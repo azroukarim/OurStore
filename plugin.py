@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.44"
+PLUGIN_VERSION = "1.0.45"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -177,6 +177,53 @@ def _data_file(name):
         return os.path.join(_data_dir(), name)
     except Exception:
         return name
+
+
+def runtime_dirs():
+    """Folders that may hold the plugin's temporary scripts, best first.
+
+    Some images ship /tmp as a dangling symlink (or never mount it at all).
+    Writing the self-update script there then fails with
+    "[Errno 2] ... /tmp/wordofenigma2_update.sh" and the update never starts.
+    The plugin folder always works: settings.json and the store cache are
+    written there too.
+    """
+    out = []
+    for d in ("/tmp", "/var/volatile/tmp", "/run", "/dev/shm",
+              _data_dir(), INSTALL_DIR, PLUGIN_DIR, os.getcwd()):
+        try:
+            if d and d not in out:
+                out.append(d)
+        except Exception:
+            pass
+    return out
+
+
+def write_runtime_file(name, data):
+    """Write data into the first writable runtime folder.
+
+    Returns (path, None) on success and (None, last_error) when every
+    candidate folder refused the write, so the caller can show a real
+    message instead of a bare traceback string.
+    """
+    last = None
+    for folder in runtime_dirs():
+        try:
+            if not os.path.isdir(folder):
+                os.makedirs(folder)
+        except Exception:
+            pass
+        path = os.path.join(folder, name)
+        try:
+            f = open(path, "wb")
+            try:
+                f.write(data)
+            finally:
+                f.close()
+            return path, None
+        except Exception as e:
+            last = e
+    return None, last
 
 
 def bundled_feed_file():
@@ -852,7 +899,7 @@ def build_update_script(dest=None, base=None, legacy=None):
         legacy = " ".join(LEGACY_DIRS)
     return (
             "#!/bin/sh\n"
-            "cd /tmp || exit 1\n"
+            'cd "$(dirname "$0")" 2>/dev/null || cd /tmp || exit 1\n'
             'BASE="%s"\n'
             'DEST="%s"\n'
             "TS=$(date +%%s)\n"
@@ -2004,14 +2051,13 @@ class WoeStoreBase(Screen):
             # Use a cache-busting timestamp so the GitHub CDN cannot serve a
             # stale plugin.py/version.json right after a new release.
             script = build_update_script()
-            script_path = "/tmp/wordofenigma2_update.sh"
-            script_path = "/tmp/wordofenigma2_update.sh"
-            log_file = "/tmp/wordofenigma2_update.log"
             data = script if isinstance(script, bytes) else script.encode("utf-8")
-            f = open(script_path, "wb")
-            f.write(data)
-            f.close()
-            retval = os.system("chmod +x %s && sh %s > %s 2>&1" % (script_path, script_path, log_file))
+            script_path, err = write_runtime_file("wordofenigma2_update.sh", data)
+            if not script_path:
+                raise IOError("no writable folder for the update script (%s)" % err)
+            log_file = os.path.join(os.path.dirname(script_path),
+                                    "wordofenigma2_update.log")
+            retval = os.system('sh "%s" > "%s" 2>&1' % (script_path, log_file))
             output = ""
             try:
                 f = open(log_file, "r")
@@ -2854,18 +2900,16 @@ class WordOfEnigma2Items(WoeStoreBase):
             return
         items = list(self.selected)
         script = build_batch_script(items)
-        script_path = "/tmp/wordofenigma2_batch.sh"
-        log_file = "/tmp/wordofenigma2_console.log"
-        done_file = "/tmp/wordofenigma2_done"
-        try:
-            data = script if isinstance(script, bytes) else script.encode("utf-8")
-            f = open(script_path, "wb")
-            f.write(data)
-            f.close()
-        except Exception as e:
-            self.session.open(MessageBox, "Cannot write batch script:\n%s" % str(e),
+        data = script if isinstance(script, bytes) else script.encode("utf-8")
+        script_path, err = write_runtime_file("wordofenigma2_batch.sh", data)
+        if not script_path:
+            self.session.open(MessageBox,
+                              "Cannot write batch script:\n%s" % str(err),
                               MessageBox.TYPE_ERROR)
             return
+        _folder = os.path.dirname(script_path)
+        log_file = os.path.join(_folder, "wordofenigma2_console.log")
+        done_file = os.path.join(_folder, "wordofenigma2_done")
         cmd = ("rm -f %s %s; chmod +x %s; "
                "setsid sh -c 'sh %s > %s 2>&1 < /dev/null; echo done > %s' "
                "> /dev/null 2>&1 < /dev/null &"
