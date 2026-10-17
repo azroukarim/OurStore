@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.42"
+PLUGIN_VERSION = "1.0.43"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -1275,8 +1275,7 @@ _HEADER_SKIN = """    <eLabel position="40,22" size="470,46" text="WORD OF ENIGM
     <widget name="devtemp" position="540,62" size="420,34" font="Regular;22" foregroundColor="#10b981" backgroundColor="#131A2A" transparent="1" zPosition="2" />
     <widget name="imagename" position="980,20" size="420,38" font="Regular;26" foregroundColor="#e5e7eb" backgroundColor="#131A2A" transparent="1" zPosition="2" />
     <widget name="pyver" position="980,62" size="420,34" font="Regular;22" foregroundColor="#3b82f6" backgroundColor="#131A2A" transparent="1" zPosition="2" />
-    <widget name="arch"  position="1490,20" size="390,38" font="Regular;26" foregroundColor="#e5e7eb" backgroundColor="#131A2A" transparent="1" halign="right" zPosition="2" />
-    <widget name="weather" position="1470,62" size="410,34" font="Regular;22" foregroundColor="#38bdf8" backgroundColor="#131A2A" transparent="1" halign="right" zPosition="2" />"""
+    <widget name="weather" position="1480,20" size="400,38" font="Regular;24" foregroundColor="#38bdf8" backgroundColor="#131A2A" transparent="1" halign="right" zPosition="2" />"""
 
 
 # =====================================================================
@@ -1752,10 +1751,6 @@ class WoeStoreBase(Screen):
             pass
         try:
             self["pyver"].setText("Python: " + get_python_version())
-        except Exception:
-            pass
-        try:
-            self["arch"].setText("Arch: " + get_cpu_arch())
         except Exception:
             pass
         self._apply_weather()
@@ -2306,7 +2301,6 @@ class WordOfEnigma2(WoeStoreBase):
         self["devtemp"] = Label("")
         self["imagename"] = Label("")
         self["pyver"] = Label("")
-        self["arch"] = Label("")
         self["weather"] = Label("")
         self["description"] = Label("Loading...")
         self["key_red"] = Label("Exit")
@@ -2536,7 +2530,6 @@ class WordOfEnigma2Items(WoeStoreBase):
         self["devtemp"] = Label("")
         self["imagename"] = Label("")
         self["pyver"] = Label("")
-        self["arch"] = Label("")
         self["weather"] = Label("")
         self["header"] = Label("")
         self["page"] = Label("")
