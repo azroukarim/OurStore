@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.29"
+PLUGIN_VERSION = "1.0.30"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -209,32 +209,112 @@ def save_settings():
         pass
 
 
+def _defined_faces():
+    """Face names known to the skin engine (None when unsupported).
+
+    getFontFaces() is the same API Enigma2's own skin engine uses.
+    """
+    try:
+        from enigma import getFontFaces
+        faces = getFontFaces()
+    except Exception:
+        return None
+    if faces is None:
+        return None
+    out = set()
+    try:
+        for f in faces:
+            try:
+                out.add(f.decode("utf-8") if isinstance(f, bytes) else str(f))
+            except Exception:
+                pass
+    except Exception:
+        return None
+    return out or None
+
+
+def _face_known(family, faces):
+    """Exact / case-insensitive lookup in the engine's face list.
+
+    Returns None when the list is unavailable (unknown -> caller decides).
+    """
+    if faces is None:
+        return None
+    if family in faces:
+        return True
+    low = (family or "").lower()
+    for f in faces:
+        try:
+            if f.lower() == low:
+                return True
+        except Exception:
+            continue
+    return False
+
+
 def _font_available(family):
-    """Check whether a font family is registered with the skin engine."""
+    """Is this font family usable?
+
+    Unknown results are treated as usable: Enigma2 silently falls back to
+    the 'Body' font for a family it does not know, so a wrong guess never
+    breaks the interface - but it must never empty out the font list.
+    """
     if not family:
         return False
     if family == DEFAULT_FONT:
         return True
+    known = _face_known(family, _defined_faces())
+    if known is not None:
+        return known
     try:
         from enigma import gFont
-        return gFont("%s;20" % family) is not None
+        ok = gFont("%s;20" % family) is not None
+        return True if ok is None else bool(ok)
+    except Exception:
+        return True
+
+
+_ICON_FACE_HINTS = ("enigma2icons", "fallback", "icon", "awesome", "glyph",
+                    "symbol", "emoji", "weather", "meteocon", "picon")
+
+
+def _is_icon_face(name):
+    n = (name or "").lower()
+    return any(x in n for x in _ICON_FACE_HINTS)
+
+
+def _is_font_file(path):
+    """True when the file looks like a real TrueType/OpenType font."""
+    try:
+        f = open(path, "rb")
+        try:
+            head = f.read(4)
+        finally:
+            f.close()
+        return head in (b"\x00\x01\x00\x00", b"true", b"ttcf", b"OTTO")
     except Exception:
         return False
 
 
 def register_font_file(path, family):
     """Register an on-disk font file with the skin engine."""
+    if not _is_font_file(path):
+        return False
     try:
         from enigma import addFont
         addFont(path, family, 100, False, False)
     except Exception:
         return False
-    return _font_available(family)
+    known = _face_known(family, _defined_faces())
+    if known is not None:
+        return known
+    return True
 
 
 def _scan_font_files():
     found = []
-    roots = ["/usr/share/fonts", "/usr/local/share/fonts", "/usr/share/enigma2"]
+    roots = ["/usr/share/fonts", "/usr/local/share/fonts",
+             "/usr/share/enigma2", "/etc/enigma2/fonts"]
     exts = (".ttf", ".otf")
     for root in roots:
         if not os.path.isdir(root):
@@ -242,25 +322,88 @@ def _scan_font_files():
         base_depth = root.rstrip("/").count("/")
         try:
             for dirpath, dirnames, filenames in os.walk(root):
-                if dirpath.count("/") - base_depth > 3:
+                if dirpath.count("/") - base_depth > 4:
                     dirnames[:] = []
                     continue
                 for fn in filenames:
                     if fn.lower().endswith(exts):
-                        found.append(os.path.join(dirpath, fn))
+                        p = os.path.join(dirpath, fn)
+                        if _is_font_file(p):
+                            found.append(p)
         except Exception:
             continue
     return found
 
 
+def _skin_xml_files():
+    """Skin file(s) of the active skin (main file + its skin_*.xml parts)."""
+    files = []
+    try:
+        from Components.config import config
+        skin = str(config.skin.primary_skin.value)  # e.g. "MySkin/skin.xml"
+    except Exception:
+        skin = ""
+    if skin:
+        main = "/usr/share/enigma2/" + skin.replace("\\", "/")
+        files.append(main)
+        d = os.path.dirname(main)
+        try:
+            for fn in sorted(os.listdir(d)):
+                if fn.startswith("skin") and fn.endswith(".xml"):
+                    p = os.path.join(d, fn)
+                    if p not in files:
+                        files.append(p)
+        except Exception:
+            pass
+    files.append("/usr/share/enigma2/skin.xml")
+    return files
+
+
+def _skin_face_names():
+    """Font faces declared by the active skin (these always exist)."""
+    names = []
+    try:
+        import xml.etree.ElementTree as ET
+    except Exception:
+        return names
+    for path in _skin_xml_files():
+        try:
+            if not os.path.isfile(path):
+                continue
+            root = ET.parse(path).getroot()
+        except Exception:
+            continue
+        for fonts in root.iter("fonts"):
+            for f in fonts.iter("font"):
+                name = f.get("name")
+                if not name or _is_icon_face(name):
+                    continue
+                if name not in names:
+                    names.append(name)
+    return names
+
+
 def list_font_choices():
-    """Fonts the user may pick: common Enigma2 families plus every font
-    file installed on the box (registered on the fly)."""
+    """Fonts the user may pick for the plugin's own screens."""
     choices = []
     seen = set()
 
+    def add(label, family):
+        if not family or family in seen:
+            return
+        seen.add(family)
+        choices.append((label, family))
+
+    add("Regular (skin default)", "Regular")
+
+    # 1) Faces declared by the active skin - guaranteed to exist.
+    for name in _skin_face_names():
+        add(name, name)
+
+    # 2) Common Enigma2 families (skipped when the skin engine reports the
+    #    list of known faces and one of them is missing).
+    faces = _defined_faces()
     common = [
-        ("Regular (skin default)", "Regular"),
         ("Bold", "Bold"),
         ("Strong / bold (nmsbd)", "nmsbd"),
         ("NMS", "NMS"),
@@ -270,36 +413,32 @@ def list_font_choices():
         ("Ring", "Ring"),
         ("Noto Sans", "Noto Sans"),
         ("DejaVu Sans", "DejaVu Sans"),
-        ("Roboto", "Roboto"),
-        ("Ubuntu", "Ubuntu"),
     ]
     for label, fam in common:
-        if fam in seen:
-            continue
-        if _font_available(fam):
-            seen.add(fam)
-            choices.append((label, fam))
+        known = _face_known(fam, faces)
+        # included when known, and also when the engine cannot tell us
+        # (better a long list than an almost empty one)
+        if known is None or known:
+            add(label, fam)
 
-    # Fonts shipped with the plugin (see BUNDLED_FONTS).
+    # 3) Fonts shipped with the plugin (see BUNDLED_FONTS).
     for label, fname, family in BUNDLED_FONTS:
         if family in seen:
             continue
         path = os.path.join(BUNDLED_FONT_DIR, fname)
-        if os.path.isfile(path) and (_font_available(family) or register_font_file(path, family)):
-            seen.add(family)
-            choices.append((label + "  [plugin]", family))
+        if os.path.isfile(path) and register_font_file(path, family):
+            add(label + "  [plugin]", family)
 
+    # 4) Any font file installed on the box.
     for path in _scan_font_files():
         if len(choices) >= 80:
             break
         base = os.path.splitext(os.path.basename(path))[0]
         fam = "".join(ch for ch in base if ch.isalnum() or ch in " -_").strip()
-        if not fam or fam in seen:
+        if not fam or _is_icon_face(fam) or fam in seen:
             continue
-        ok = _font_available(fam) or register_font_file(path, fam)
-        if ok:
-            seen.add(fam)
-            choices.append((fam, fam))
+        if register_font_file(path, fam):
+            add(fam, fam)
     return choices
 
 
@@ -360,13 +499,74 @@ def register_bundled_fonts():
     They are used by the plugin's own screens only; the rest of Enigma2 is
     not affected.
     """
+    faces = _defined_faces()
     for _label, fname, family in BUNDLED_FONTS:
         try:
             path = os.path.join(BUNDLED_FONT_DIR, fname)
-            if os.path.isfile(path) and not _font_available(family):
-                register_font_file(path, family)
+            if not _is_font_file(path):
+                continue
+            if _face_known(family, faces):
+                continue
+            register_font_file(path, family)
         except Exception:
             pass
+
+
+_fonts_bootstrap_started = False
+
+
+def ensure_bundled_fonts(force=False):
+    """Download the bundled font files when they are missing.
+
+    A box that updated from a version predating the fonts (or that lost
+    them) would otherwise never see the [plugin] entries.  The download
+    runs in a worker thread so the GUI is never blocked.
+    """
+    global _fonts_bootstrap_started
+    try:
+        missing = [f for _l, f, _fam in BUNDLED_FONTS
+                   if not _is_font_file(os.path.join(BUNDLED_FONT_DIR, f))]
+    except Exception:
+        return False
+    if not missing:
+        return False
+    if _fonts_bootstrap_started and not force:
+        return False
+    _fonts_bootstrap_started = True
+
+    def _work():
+        try:
+            if not os.path.isdir(BUNDLED_FONT_DIR):
+                os.makedirs(BUNDLED_FONT_DIR)
+        except Exception:
+            pass
+        for fname in missing:
+            dst = os.path.join(BUNDLED_FONT_DIR, fname)
+            tmp = dst + ".tmp"
+            cmd = ('wget -q --no-check-certificate -O "%s" "%s/fonts/%s?t=%d"'
+                   ' && mv -f "%s" "%s"' % (tmp, GITHUB_BASE, fname,
+                                            int(time.time()), tmp, dst))
+            try:
+                os.system(cmd)
+            except Exception:
+                pass
+            try:
+                if not _is_font_file(dst) and os.path.isfile(tmp):
+                    os.remove(tmp)
+            except Exception:
+                pass
+        try:
+            gui_call(register_bundled_fonts)
+        except Exception:
+            pass
+
+    try:
+        t = threading.Thread(target=_work)
+        t.setDaemon(True)
+        t.start()
+    except Exception:
+        pass
+    return True
 
 
 # =====================================================================
@@ -2452,6 +2652,16 @@ class WordOfEnigma2Info(Screen):
 # ENTRY POINT
 # =====================================================================
 def main(session, **kwargs):
+    # Re-register the bundled fonts (a skin reload clears the engine's
+    # font table) and fetch them once if they are missing on the box.
+    try:
+        register_bundled_fonts()
+    except Exception:
+        pass
+    try:
+        ensure_bundled_fonts()
+    except Exception:
+        pass
     session.open(WordOfEnigma2)
 
 
