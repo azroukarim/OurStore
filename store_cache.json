@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.47",
+    "version": "1.0.48",
     "categories": {
         "plugins": [
             {
@@ -291,6 +291,30 @@
                 "name": "OSCam Master",
                 "description": "OSCam Master for StreamRelay - OpenATV only",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/softcams/oscam_master.sh",
+                "image": ""
+            },
+            {
+                "name": "GoSatPlus OSCam",
+                "description": "GoSatPlus OSCam 11968-emu r802 - all boxes",
+                "file": "https://raw.githubusercontent.com/azroukarim/plugins/main/emus/enigma2-plugin-softcams-gosatplus-oscam_11968-emu-r802_all.ipk",
+                "image": ""
+            },
+            {
+                "name": "PowerCam OSCam",
+                "description": "PowerCam OSCam 11968-emu r802 - all boxes",
+                "file": "https://raw.githubusercontent.com/azroukarim/plugins/main/emus/enigma2-plugin-softcams-powercam-oscam_11968-emu-r802_all.ipk",
+                "image": ""
+            },
+            {
+                "name": "SupCam OSCam",
+                "description": "SupCam OSCam 11968-emu r802 - all boxes",
+                "file": "https://raw.githubusercontent.com/azroukarim/plugins/main/emus/enigma2-plugin-softcams-supcam-oscam_11968-emu-r802_all.ipk",
+                "image": ""
+            },
+            {
+                "name": "UltraCam OSCam",
+                "description": "UltraCam OSCam 11968-emu r802 - all boxes",
+                "file": "https://raw.githubusercontent.com/azroukarim/plugins/main/emus/enigma2-plugin-softcams-ultracam-oscam_11968-emu-r802_all.ipk",
                 "image": ""
             }
         ]
