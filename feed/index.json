@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.55",
+    "version": "1.0.56",
     "categories": {
         "plugins": [
             {
@@ -464,6 +464,12 @@
                 "name": "UltraCam OSCam",
                 "description": "UltraCam OSCam 11968-emu r802 - all boxes",
                 "file": "https://raw.githubusercontent.com/azroukarim/plugins/main/emus/enigma2-plugin-softcams-ultracam-oscam_11968-emu-r802_all.ipk",
+                "image": ""
+            },
+            {
+                "name": "OSCamicam Kitte888",
+                "description": "OSCamicam Kitte888 - OSCam with emu (017-Update-Kitte888) by biko-73",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/softcams/oscamicam_kitte888.sh",
                 "image": ""
             }
         ],
