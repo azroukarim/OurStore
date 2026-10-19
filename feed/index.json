@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.52",
+    "version": "1.0.53",
     "categories": {
         "plugins": [
             {
@@ -145,6 +145,18 @@
                 "name": "FootOnSat",
                 "description": "FootOnSat by fairbird - live football scores, fixtures and standings",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/FootOnSat.sh",
+                "image": ""
+            },
+            {
+                "name": "TiviMateE2",
+                "description": "TiviMateE2 by opesboy - IPTV player with the TiviMate look",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/TiviMateE2.sh",
+                "image": ""
+            },
+            {
+                "name": "E2IPlayer",
+                "description": "E2IPlayer / IPTVPlayer by biko-73 - IPTV player with online sources",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/E2IPlayer.sh",
                 "image": ""
             }
         ],
