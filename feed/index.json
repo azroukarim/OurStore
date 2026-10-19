@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.50",
+    "version": "1.0.51",
     "categories": {
         "plugins": [
             {
@@ -31,6 +31,12 @@
                 "name": "Levi45 Free Server",
                 "description": "Levi45 Free Server v2.8 - installer by Biko_73",
                 "file": "https://raw.githubusercontent.com/biko-73/levi45-freeserver/main/installer.sh",
+                "image": ""
+            },
+            {
+                "name": "AlternativeSoftCamManager",
+                "description": "Official auto installer (by iet5 / Saiedf) - softcam manager",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/AlternativeSoftCamManager.sh",
                 "image": ""
             }
         ],
