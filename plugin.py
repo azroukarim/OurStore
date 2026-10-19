@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.48"
+PLUGIN_VERSION = "1.0.49"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -1233,7 +1233,9 @@ def batch_install_body(url, dest):
 # becomes a harmless no-op. The user is asked to restart ONCE at the very end.
 BATCH_RESTART_BLOCKER = r'''
 # --- WordOfEnigma2: block per-item Enigma2 restarts until the batch is done ---
-BLOCKDIR="/tmp/wordofenigma2_block"
+# The block folder lives next to this script, so a box where /tmp is not
+# usable can still run a batch install.
+BLOCKDIR="$(dirname "$0")/wordofenigma2_block"
 rm -rf "$BLOCKDIR"; mkdir -p "$BLOCKDIR"
 RKILLALL=$(command -v killall 2>/dev/null)
 [ -z "$RKILLALL" ] && RKILLALL="busybox killall"
@@ -1294,7 +1296,7 @@ def build_batch_script(items):
     actively suppressed (see BATCH_RESTART_BLOCKER) so only ONE restart is
     needed at the very end, after every item has been installed.
     """
-    dest = "/tmp/wordofenigma2_batch_file"
+    dest = os.path.join(runtime_dir(), "wordofenigma2_batch_file")
     out = ["#!/bin/sh", "# WordOfEnigma2 batch installer", ""]
     out.extend(BATCH_RESTART_BLOCKER.strip("\n").split("\n"))
     out.append("")
