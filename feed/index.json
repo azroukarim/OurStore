@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.51",
+    "version": "1.0.52",
     "categories": {
         "plugins": [
             {
@@ -133,6 +133,18 @@
                 "name": "XStreamity",
                 "description": "XStreamity IPTV player by Biko_73",
                 "file": "https://raw.githubusercontent.com/biko-73/xstreamity/main/installer.sh",
+                "image": ""
+            },
+            {
+                "name": "Epg-plugin",
+                "description": "EPGGrabber by ziko-ZR1 - EPG plugin (installs epgimport + python-requests)",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/Epg-plugin.sh",
+                "image": ""
+            },
+            {
+                "name": "FootOnSat",
+                "description": "FootOnSat by fairbird - live football scores, fixtures and standings",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/FootOnSat.sh",
                 "image": ""
             }
         ],
