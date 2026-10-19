@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.53"
+PLUGIN_VERSION = "1.0.54"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
