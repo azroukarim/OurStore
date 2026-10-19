@@ -37,7 +37,7 @@ except ImportError:
 # =====================================================================
 # CONFIG
 # =====================================================================
-PLUGIN_VERSION = "1.0.54"
+PLUGIN_VERSION = "1.0.55"
 PLUGIN_AUTHOR = "Karim Azrou"
 QR_FALLBACK_B64 = (
     "iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCCAIAAADzel4SAAAQAElEQVR4nOzd23LcuhWEYTmV939l52JSLpctwdQ0G90L/L87"
@@ -947,7 +947,7 @@ def build_update_script(dest=None, base=None, legacy=None):
             '    fsize=$(wc -c < "wordofenigma2_img_$img.png" 2>/dev/null | tr -d " " || echo 0)\n'
             '    [ "${fsize:-0}" -ge 200 ] || rm -f "wordofenigma2_img_$img.png"\n'
             'done\n'
-            'for ic in plugins plugins_islamics skins media tools system_images picons channels backups others emus novaler default; do\n'
+            'for ic in plugins plugins_islamics skins media tools system_images picons channels backups others emus multiboot novaler default; do\n'
             '    wget -q --no-check-certificate "$BASE/images/Icons/$ic.png?t=$TS" -O "wordofenigma2_ic_$ic.png" || true\n'
             '    fsize=$(wc -c < "wordofenigma2_ic_$ic.png" 2>/dev/null | tr -d " " || echo 0)\n'
             '    [ "${fsize:-0}" -ge 200 ] || rm -f "wordofenigma2_ic_$ic.png"\n'
@@ -971,7 +971,7 @@ def build_update_script(dest=None, base=None, legacy=None):
             'for img in qrcode logo background avatar key_red key_green key_yellow key_blue progress; do\n'
             '    [ -s "wordofenigma2_img_$img.png" ] && cp "wordofenigma2_img_$img.png" "$DEST/images/$img.png"\n'
             'done\n'
-            'for ic in plugins plugins_islamics skins media tools system_images picons channels backups others emus novaler default; do\n'
+            'for ic in plugins plugins_islamics skins media tools system_images picons channels backups others emus multiboot novaler default; do\n'
             '    [ -s "wordofenigma2_ic_$ic.png" ] && cp "wordofenigma2_ic_$ic.png" "$DEST/images/Icons/$ic.png"\n'
             'done\n'
             'for fnt in OpenSans-Regular OpenSans-Bold; do\n'

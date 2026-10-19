@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.54",
+    "version": "1.0.55",
     "categories": {
         "plugins": [
             {
@@ -425,7 +425,7 @@
         ],
         "emus": [
             {
-                "name": "Ncam EMU V15.8",
+                "name": "Ncam (latest)",
                 "description": "Ncam EMU softcam - Installer by Biko_73",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/softcams/ncam.sh",
                 "image": ""
@@ -464,6 +464,14 @@
                 "name": "UltraCam OSCam",
                 "description": "UltraCam OSCam 11968-emu r802 - all boxes",
                 "file": "https://raw.githubusercontent.com/azroukarim/plugins/main/emus/enigma2-plugin-softcams-ultracam-oscam_11968-emu-r802_all.ipk",
+                "image": ""
+            }
+        ],
+        "multiboot": [
+            {
+                "name": "OpenMultiboot",
+                "description": "Multiboot manager by biko-73 - install several images and boot between them",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/multiboot/OpenMultiboot.sh",
                 "image": ""
             }
         ]
