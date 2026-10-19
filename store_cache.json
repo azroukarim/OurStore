@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.49",
+    "version": "1.0.50",
     "categories": {
         "plugins": [
             {
@@ -239,8 +239,14 @@
                 ]
             }
         ],
-        "picons": [],
-        "channels": [
+        "picons": [
+            {
+                "name": "Picons 220x132",
+                "description": "Picons 220x132 for 13E + 19.2E - 22,818 PNGs, about 165 MB (HDD/USB)",
+                "file": "https://raw.githubusercontent.com/azroukarim/plugins/main/picons/install-picons.sh",
+                "image": ""
+            }
+        ],        "channels": [
             {
                 "name": "ciefp channel-list",
                 "items": [
