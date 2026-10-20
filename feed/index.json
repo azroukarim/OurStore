@@ -320,7 +320,8 @@
                 "file": "https://raw.githubusercontent.com/azroukarim/plugins/main/picons/install-picons.sh",
                 "image": ""
             }
-        ],        "channels": [
+        ],
+        "channels": [
             {
                 "name": "ciefp channel-list",
                 "items": [
@@ -427,8 +428,158 @@
                         "image": ""
                     }
                 ]
+            },
+            {
+                "name": "Morph883 channel-list",
+                "items": [
+                    {
+                        "name": "13E Hotbird",
+                        "description": "Morph883 12.10.2026 - 1 satellite: 13E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-13E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "13E+19.2E",
+                        "description": "Morph883 12.10.2026 - 13E, 19.2E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-13E-19.2E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "30W+13E",
+                        "description": "Morph883 12.10.2026 - 30W, 13E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-30W-13E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "30W+13E+19.2E",
+                        "description": "Morph883 12.10.2026 - 30W, 13E, 19.2E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-30W-13E-19.2E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "0.8W+13E",
+                        "description": "Morph883 12.10.2026 - 0.8W, 13E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-0.8W-13E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "0.8W+13E+19.2E",
+                        "description": "Morph883 12.10.2026 - 0.8W, 13E, 19.2E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-0.8W-13E-19.2E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "4.8E+13E",
+                        "description": "Morph883 12.10.2026 - 4.8E, 13E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-4.8E-13E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "4.8E+13E+19.2E",
+                        "description": "Morph883 12.10.2026 - 4.8E, 13E, 19.2E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-4.8E-13E-19.2E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "9E+13E",
+                        "description": "Morph883 12.10.2026 - 9E, 13E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-9E-13E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "9E+13E+19.2E",
+                        "description": "Morph883 12.10.2026 - 9E, 13E, 19.2E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-9E-13E-19.2E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "13E+16E",
+                        "description": "Morph883 12.10.2026 - 13E, 16E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-13E-16E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "13E+16E+19.2E",
+                        "description": "Morph883 12.10.2026 - 13E, 16E, 19.2E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-13E-16E-19.2E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "13E+23.5E",
+                        "description": "Morph883 12.10.2026 - 13E, 23.5E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-13E-23.5E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "13E+19.2E+23.5E",
+                        "description": "Morph883 12.10.2026 - 13E, 19.2E, 23.5E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-13E-19.2E-23.5E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "13E+28.2E",
+                        "description": "Morph883 12.10.2026 - 13E, 28.2E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-13E-28.2E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "13E+19.2E+28.2E",
+                        "description": "Morph883 12.10.2026 - 13E, 19.2E, 28.2E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-13E-19.2E-28.2E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "13E+42E",
+                        "description": "Morph883 12.10.2026 - 13E, 42E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-13E-42E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "13E+19.2E+42E",
+                        "description": "Morph883 12.10.2026 - 13E, 19.2E, 42E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-13E-19.2E-42E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "0.8W+4.8E+13E",
+                        "description": "Morph883 12.10.2026 - 0.8W, 4.8E, 13E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-0.8W-4.8E-13E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "0.8W+13E+19.2E+28.2E",
+                        "description": "Morph883 12.10.2026 - 0.8W, 13E, 19.2E, 28.2E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-0.8W-13E-19.2E-28.2E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "13E+16E+19.2E+23.5E",
+                        "description": "Morph883 12.10.2026 - 13E, 16E, 19.2E, 23.5E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-13E-16E-19.2E-23.5E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "13E+19.2E+23.5E+28.2E",
+                        "description": "Morph883 12.10.2026 - 13E, 19.2E, 23.5E, 28.2E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-13E-19.2E-23.5E-28.2E.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "Motor 45W-76.5E",
+                        "description": "Morph883 12.10.2026 - full arc 45W ... 76.5E",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-Motor.sh",
+                        "image": ""
+                    },
+                    {
+                        "name": "satellites.xml (88 sats)",
+                        "description": "Morph883 12.10.2026 - all 88 Ku-Band satellites",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Morph/morph883-satellites.sh",
+                        "image": ""
+                    }
+                ]
             }
-        ],        "backups": [],
+        ],
+        "backups": [],
         "others": [
             {
                 "name": "Update Image",
