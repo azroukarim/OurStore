@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.59",
+    "version": "1.0.60",
     "categories": {
         "plugins": [
             {
@@ -508,6 +508,12 @@
                 "name": "OSCamicam Kitte888",
                 "description": "OSCamicam Kitte888 - OSCam with emu (017-Update-Kitte888) by biko-73",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/softcams/oscamicam_kitte888.sh",
+                "image": ""
+            },
+            {
+                "name": "oscam-feed-OpenATV",
+                "description": "OpenATV softcam feed - installs softcam-feed-universal (OSCam packages)",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/softcams/oscam_feed_openatv.sh",
                 "image": ""
             }
         ],
