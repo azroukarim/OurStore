@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.63",
+    "version": "1.0.64",
     "categories": {
         "plugins": [
             {
@@ -546,6 +546,12 @@
                 "name": "OpenMultiboot",
                 "description": "Multiboot manager by biko-73 - install several images and boot between them",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/multiboot/OpenMultiboot.sh",
+                "image": ""
+            },
+            {
+                "name": "NeoBoot",
+                "description": "NeoBoot by gutosie - multiboot manager, install several images and boot between them",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/multiboot/NeoBoot.sh",
                 "image": ""
             }
         ]
