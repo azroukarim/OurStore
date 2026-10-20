@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.60",
+    "version": "1.0.61",
     "categories": {
         "plugins": [
             {
@@ -37,6 +37,12 @@
                 "name": "FuryBiss",
                 "description": "FuryBiss - BISS keys manager by Islam Salama",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/FuryBiss.sh",
+                "image": ""
+            },
+            {
+                "name": "Arabic Savior",
+                "description": "Arabic Savior - Arabic keyboard and translation helper (mfaraj57 & RAED)",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/ArabicSavior.sh",
                 "image": ""
             }
         ],
