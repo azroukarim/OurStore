@@ -50,6 +50,12 @@
                 "description": "HasBahCa v2.3 - IPTV portal and playlist player by LULULLA",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/HasBahCa.sh",
                 "image": ""
+            },
+            {
+                "name": "ReaderManager",
+                "description": "ReaderManager - official installer (ismail9875)",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/ReaderManager.sh",
+                "image": ""
             }
         ],
         "plugins_islamics": [
@@ -644,6 +650,12 @@
                 "name": "Levi45 Addons",
                 "description": "Levi45 Addons v10.1-r31 - addons by Levi45",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/others/Levi45Addons.sh",
+                "image": ""
+            },
+            {
+                "name": "MagicPanelMax",
+                "description": "MagicPanelMax v12.0 - official installer (Ham-ahmed)",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/others/MagicPanelMax.sh",
                 "image": ""
             }
         ],
