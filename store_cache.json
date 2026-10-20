@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.61",
+    "version": "1.0.62",
     "categories": {
         "plugins": [
             {
@@ -43,6 +43,12 @@
                 "name": "Arabic Savior",
                 "description": "Arabic Savior - Arabic keyboard and translation helper (mfaraj57 & RAED)",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/ArabicSavior.sh",
+                "image": ""
+            },
+            {
+                "name": "HasBahCa",
+                "description": "HasBahCa v2.3 - IPTV portal and playlist player by LULULLA",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/HasBahCa.sh",
                 "image": ""
             }
         ],
@@ -183,6 +189,18 @@
                 "name": "Alkuds IPAudio",
                 "description": "Alkuds IPAudio by xximhxx - IP audio player for MAC/Xtreme portals",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/Alkuds-IPAudio.sh",
+                "image": ""
+            },
+            {
+                "name": "Stalker Portal Converter",
+                "description": "Stalker Portal Converter v1.6 - converts stalker portals to playlists (LULULLA)",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/StalkerPortalConverter.sh",
+                "image": ""
+            },
+            {
+                "name": "Vavoo",
+                "description": "Vavoo v1.88 - Vavoo streams and EPG by LULULLA",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/media/Vavoo.sh",
                 "image": ""
             }
         ],
