@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.58",
+    "version": "1.0.59",
     "categories": {
         "plugins": [
             {
@@ -13,12 +13,6 @@
                 "name": "RaedQuickSignal",
                 "description": "Quick signal info for Enigma2",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/RaedQuickSignal.sh",
-                "image": ""
-            },
-            {
-                "name": "Quran Kareem v1.0",
-                "description": "Quran Kareem",
-                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/refs/heads/main/plugins/QuranKareem.sh",
                 "image": ""
             },
             {
@@ -38,9 +32,22 @@
                 "description": "Official auto installer (by iet5 / Saiedf) - softcam manager",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/AlternativeSoftCamManager.sh",
                 "image": ""
+            },
+            {
+                "name": "FuryBiss",
+                "description": "FuryBiss - BISS keys manager by Islam Salama",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/FuryBiss.sh",
+                "image": ""
             }
         ],
-        "plugins_islamics": [],
+        "plugins_islamics": [
+            {
+                "name": "Quran Kareem v1.0",
+                "description": "Quran Kareem",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins_islamics/QuranKareem.sh",
+                "image": ""
+            }
+        ],
         "skins": [
             {
                 "name": "All",
@@ -427,6 +434,30 @@
                 "name": "Curl",
                 "description": "Install curl + CA certificates",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/others/install_curl.sh",
+                "image": ""
+            },
+            {
+                "name": "Linuxsat Panel",
+                "description": "Linuxsat Panel v3.0.6 - panel and addons by Belfagor2005",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/others/LinuxsatPanel.sh",
+                "image": ""
+            },
+            {
+                "name": "BoxPirates Panel",
+                "description": "BoxPirates Panel - installer by Lizard",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/others/BoxPiratesPanel.sh",
+                "image": ""
+            },
+            {
+                "name": "AIO Panel",
+                "description": "AIO Panel - all-in-one panel by OliOli2013",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/others/PanelAIO.sh",
+                "image": ""
+            },
+            {
+                "name": "Levi45 Addons",
+                "description": "Levi45 Addons v10.1-r31 - addons by Levi45",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/others/Levi45Addons.sh",
                 "image": ""
             }
         ],
