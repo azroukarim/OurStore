@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.57",
+    "version": "1.0.58",
     "categories": {
         "plugins": [
             {
@@ -62,13 +62,7 @@
                         "description": "OpenAtv Pure2 Egami 10.6 OpenSpa",
                         "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/skins/All/Fury-FHD.sh",
                         "image": ""
-                    },
-                        {
-                            "name": "Aglare FHD PLi",
-                            "description": "Aglare-FHD-PLI by popking159 - full HD skin (7.3)",
-                            "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/skins/All/Aglare-FHD-PLI.sh",
-                            "image": ""
-                        }
+                    }
                 ]
             },
             {
@@ -81,7 +75,14 @@
             },
             {
                 "name": "OpenPLi",
-                "items": []
+                "items": [
+                    {
+                        "name": "Aglare FHD PLi",
+                        "description": "Aglare-FHD-PLI by popking159 - full HD skin (7.3)",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/skins/OpenPLi/Aglare-FHD-PLI.sh",
+                        "image": ""
+                    }
+                ]
             },
             {
                 "name": "OpenBH",
