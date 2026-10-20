@@ -577,6 +577,17 @@
                         "image": ""
                     }
                 ]
+            },
+            {
+                "name": "Vhannibal channel-list",
+                "items": [
+                    {
+                        "name": "Motor 70E-45W",
+                        "description": "Vhannibal official - Motor 70E ... 45W (latest, id=5)",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/channels/Vhannibal/vhannibal-motor.sh",
+                        "image": ""
+                    }
+                ]
             }
         ],
         "backups": [],
