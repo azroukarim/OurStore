@@ -94,15 +94,11 @@ echo "Installing to $PLUGIN_DIR ..."
 # Preserve the user's settings (font / text size) and the last known store
 # across the reinstall, so the plugin keeps working even without network.
 SETTINGS_BAK="/tmp/wordofenigma2_settings.json"
-CACHE_BAK="/tmp/wordofenigma2_cache.json"
-rm -f "$SETTINGS_BAK" "$CACHE_BAK"
+rm -f "$SETTINGS_BAK"
 if [ -f "$PLUGIN_DIR/settings.json" ]; then
     cp "$PLUGIN_DIR/settings.json" "$SETTINGS_BAK" 2>/dev/null
 elif [ -f "$LEGACY_DIR/settings.json" ]; then
     cp "$LEGACY_DIR/settings.json" "$SETTINGS_BAK" 2>/dev/null
-fi
-if [ -f "$PLUGIN_DIR/store_cache.json" ]; then
-    cp "$PLUGIN_DIR/store_cache.json" "$CACHE_BAK" 2>/dev/null
 fi
 
 rm -rf "$PLUGIN_DIR"
@@ -124,9 +120,13 @@ if [ -f "$SETTINGS_BAK" ]; then
     cp "$SETTINGS_BAK" "$PLUGIN_DIR/settings.json" 2>/dev/null
     rm -f "$SETTINGS_BAK"
 fi
-if [ -f "$CACHE_BAK" ]; then
-    cp "$CACHE_BAK" "$PLUGIN_DIR/store_cache.json" 2>/dev/null
-    rm -f "$CACHE_BAK"
+
+# Keep the offline cache in sync with the feed that was just installed.
+# Restoring the previous cache (as older versions did) left the box with an
+# OLD item list when the first online refresh failed, so a newly added item
+# looked missing until the connection came back.
+if [ -f "$PLUGIN_DIR/feed/index.json" ]; then
+    cp "$PLUGIN_DIR/feed/index.json" "$PLUGIN_DIR/store_cache.json" 2>/dev/null
 fi
 
 find "$PLUGIN_DIR" -name "*.pyc" -delete 2>/dev/null
