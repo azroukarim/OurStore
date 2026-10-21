@@ -56,6 +56,12 @@
                 "description": "ReaderManager - official installer (ismail9875)",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/ReaderManager.sh",
                 "image": ""
+            },
+            {
+                "name": "PomBiss",
+                "description": "PomBiss - sports feed viewer plugin by Shr776 (v2.4)",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/PomBiss.sh",
+                "image": ""
             }
         ],
         "plugins_islamics": [
