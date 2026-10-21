@@ -713,6 +713,12 @@
                 "description": "OpenATV softcam feed - installs softcam-feed-universal (OSCam packages)",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/softcams/oscam_feed_openatv.sh",
                 "image": ""
+            },
+            {
+                "name": "OSCam EMU 11.726 (Biko73)",
+                "description": "OSCam EMU 11.726-r798 softcam - official installer by Biko_73",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/softcams/oscam_emu_biko.sh",
+                "image": ""
             }
         ],
         "multiboot": [
