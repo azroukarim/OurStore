@@ -62,6 +62,12 @@
                 "description": "PomBiss - sports feed viewer plugin by Shr776 (v2.4)",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/PomBiss.sh",
                 "image": ""
+            },
+            {
+                "name": "Satelliweb Live Feeds",
+                "description": "Satelliweb Live Feeds 3.4r4 by Fatima (OpenATV, Python 3.13/3.14)",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins/Satelliweb.sh",
+                "image": ""
             }
         ],
         "plugins_islamics": [
