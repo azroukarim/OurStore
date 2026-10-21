@@ -105,6 +105,12 @@
                         "description": "TeamNitro DesertFHD V3.1 skin by TeamNitro",
                         "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/skins/All/TeamNitro.sh",
                         "image": ""
+                    },
+                    {
+                        "name": "Jihad Skin 2.22",
+                        "description": "Jihad FHD skin 2.22 by Ahmed Shawky (OpenATV/OpenBH/OpenViX/Egami/OpenSPA/Pure2)",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/skins/All/Jihad.sh",
+                        "image": ""
                     }
                 ]
             },
