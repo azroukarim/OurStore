@@ -93,6 +93,12 @@
                         "description": "OpenAtv Pure2 Egami 10.6 OpenSpa",
                         "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/skins/All/Fury-FHD.sh",
                         "image": ""
+                    },
+                    {
+                        "name": "TeamNitro DesertFHD",
+                        "description": "TeamNitro DesertFHD V3.1 skin by TeamNitro",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/skins/All/TeamNitro.sh",
+                        "image": ""
                     }
                 ]
             },
