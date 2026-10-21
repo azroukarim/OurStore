@@ -331,6 +331,12 @@
                 "description": "Picons 220x132 for 13E + 19.2E - 22,818 PNGs, about 165 MB (HDD/USB)",
                 "file": "https://raw.githubusercontent.com/azroukarim/plugins/main/picons/install-picons.sh",
                 "image": ""
+            },
+            {
+                "name": "CiefpPiconManager",
+                "description": "Ciefp Picon Manager - download and manage picons (v1.0)",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/picons/CiefpPiconManager.sh",
+                "image": ""
             }
         ],
         "channels": [
