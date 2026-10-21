@@ -47,7 +47,9 @@ echo "==============================================="
 
 check_skin() {
     [ -s "$SKIN_DIR/skin.xml" ] || return 1
-    [ -d "$SKIN_DIR/main" ] || return 1
+    [ -d "$SKIN_DIR/mainmenu" ] || return 1
+    [ -d "$SKIN_DIR/menu" ] || return 1
+    [ -d "$SKIN_DIR/icons" ] || return 1
     [ -s "$SKIN_DIR/modules/skin_parameters.xml" ] || return 1
     [ -s "$SKIN_DIR/modules/skin_templates.xml" ] || return 1
     [ -s "$SKIN_DIR/modules/skin_plugins.xml" ] || return 1
@@ -187,6 +189,7 @@ else
 fi
 
 restore_all() {
+    mkdir -p "$CONV_DIR" 2>/dev/null
     rm -f "$CONV_DIR"/bu*.py 2>/dev/null
     if [ -s "$BU_LIST" ]; then
         while IFS= read -r _b; do
@@ -212,6 +215,11 @@ restore_all() {
 
 if [ -d "$SKIN_DIR" ]; then
     rm -rf "$SKIN_OLD" 2>/dev/null
+    if [ -e "$SKIN_OLD" ]; then
+        echo "!! Could not clear the old backup folder $SKIN_OLD - nothing was changed."
+        rm -rf "$WORK"
+        exit 1
+    fi
     if mv "$SKIN_DIR" "$SKIN_OLD" 2>/dev/null; then
         HAD_SKIN="1"
         echo "   old skin saved"

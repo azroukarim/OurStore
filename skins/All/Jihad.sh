@@ -492,7 +492,9 @@ else
     echo ""
     echo "==============================================="
     echo " $NAME: installation failed."
-    if [ "$HAD_SKIN" = "1" ]; then
+    if [ "$RESTORE_FAILED" = "1" ]; then
+        echo " !! Some previous files could not be restored; check the log."
+    elif [ "$HAD_SKIN" = "1" ]; then
         if [ -s "$SKIN_DIR/skin.xml" ]; then
             echo " The previous Jihad skin was restored."
         else
