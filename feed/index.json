@@ -120,7 +120,14 @@
             },
             {
                 "name": "OpenATV",
-                "items": []
+                "items": [
+                    {
+                        "name": "oDreamy FHD Dual",
+                        "description": "oDreamy FHD Dual skin by buwalla for OpenATV (17.08.2026)",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/skins/OpenATV/oDreamy-FHD-Dual.sh",
+                        "image": ""
+                    }
+                ]
             },
             {
                 "name": "OpenPLi",
@@ -130,6 +137,12 @@
                         "description": "Aglare-FHD-PLI by popking159 - full HD skin (7.3)",
                         "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/skins/OpenPLi/Aglare-FHD-PLI.sh",
                         "image": ""
+                    },
+                    {
+                        "name": "oDreamy FHD Dual",
+                        "description": "oDreamy FHD Dual skin by buwalla for OpenPLi (17.08.2026)",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/skins/OpenPLi/oDreamy-FHD-Dual.sh",
+                        "image": ""
                     }
                 ]
             },
@@ -138,8 +151,30 @@
                 "items": []
             },
             {
+                "name": "BlackHole",
+                "items": [
+                    {
+                        "name": "oDreamy FHD Dual",
+                        "description": "oDreamy FHD Dual skin by buwalla for BlackHole (17.08.2026)",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/skins/BlackHole/oDreamy-FHD-Dual.sh",
+                        "image": ""
+                    }
+                ]
+            },
+            {
                 "name": "OpenSPA",
                 "items": []
+            },
+            {
+                "name": "OpenTsimage",
+                "items": [
+                    {
+                        "name": "oDreamy FHD Dual",
+                        "description": "oDreamy FHD Dual skin by buwalla for OpenTsimage (17.08.2026)",
+                        "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/skins/OpenTsimage/oDreamy-FHD-Dual.sh",
+                        "image": ""
+                    }
+                ]
             },
             {
                 "name": "Pure2",
