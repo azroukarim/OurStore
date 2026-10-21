@@ -733,6 +733,12 @@
                 "description": "NeoBoot by gutosie - multiboot manager, install several images and boot between them",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/multiboot/NeoBoot.sh",
                 "image": ""
+            },
+            {
+                "name": "MOHBoot",
+                "description": "MOH Boot - multiboot image manager by mido00020",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/multiboot/MOHBoot.sh",
+                "image": ""
             }
         ]
     }
