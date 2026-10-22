@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.65",
+    "version": "1.0.66",
     "categories": {
         "plugins": [
             {
@@ -395,6 +395,12 @@
                 "name": "CiefpPiconManager",
                 "description": "Ciefp Picon Manager - download and manage picons (v1.0)",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/picons/CiefpPiconManager.sh",
+                "image": ""
+            },
+            {
+                "name": "Chocholousek Picons",
+                "description": "Chocholousek Picons - automatic picon downloader and updater by s3n0",
+                "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/picons/ChocholousekPicons.sh",
                 "image": ""
             }
         ],
