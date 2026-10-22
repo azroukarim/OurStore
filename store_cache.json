@@ -1,6 +1,6 @@
 {
     "store_name": "Word Of Enigma2",
-    "version": "1.0.64",
+    "version": "1.0.65",
     "categories": {
         "plugins": [
             {
@@ -75,6 +75,12 @@
                 "name": "Quran Kareem v1.0",
                 "description": "Quran Kareem",
                 "file": "https://raw.githubusercontent.com/azroukarim/OurStore/main/plugins_islamics/QuranKareem.sh",
+                "image": ""
+            },
+            {
+                "name": "Saad Quran Hub v1.2",
+                "description": "Saad Quran Hub 1.2 - Quran reciters and radios with the TV picture, reader and tafsir, memorisation studio, khatma and adhkar",
+                "file": "https://github.com/azroukarim/plugins/raw/refs/heads/main/enigma2-plugin-extensions-saadquranhub_1.2_all.ipk",
                 "image": ""
             }
         ],
